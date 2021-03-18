@@ -1,0 +1,215 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+This software is in the public domain under CC0 1.0 Universal plus a 
+Grant of Patent License.
+
+To the extent possible under law, the author(s) have dedicated all
+copyright and related and neighboring rights to this software to the
+public domain worldwide. This software is distributed without any
+warranty.
+
+You should have received a copy of the CC0 Public Domaicrn Dedication
+along with this software (see the LICENSE.md file). If not, see
+<http://creativecommons.org/publicdomain/zero/1.0/>.
+-->
+<services xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/service-definition-2.1.xsd">
+    <service verb="get" noun="BalanceSheet">
+        <out-parameters>
+            <parameter name="balanceSheet" type="Map"/>
+        </out-parameters>
+        <actions>
+            <service-call out-map="context"
+                name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner"/>
+            <entity-find entity-name="mantle.party.time.TimePeriod" list="periods">
+                <econdition field-name="partyId" from="ownerPartyId"/>
+                <econdition field-name="timePeriodTypeId" value="FiscalMonth"/>
+            </entity-find>
+            <set field="count" from="periods.size()"/>
+            <while condition="count">
+                <script> periodList = []
+                         periodList.add(periods[--count].timePeriodId)</script>
+            </while>
+            <service-call
+                name="mantle.ledger.LedgerReportServices.run#BalanceSheet"
+                in-map="[organizationPartyId: ownerPartyId, 
+                                    timePeriodIdList: periodList,
+                                    childOrgPeriods: false]"
+                out-map="context"/>
+            <!--log message="$classInfoById"/-->
+            <script>
+                def currencyFormat = currencyFormat ?: "#,##0.00";
+
+                def showClass(Map classInfo, int depth) { // 24
+                    if (!classInfo.totalBalanceByTimePeriod.ALL &amp;&amp; 
+                        !classInfo.totalPostedByTimePeriod.All) return;
+                    def classInfoData = [:]
+                    classInfoData.description = ec.l10n.localize(classInfo.className);
+                    classInfoData.id = classInfo.glAccountClassEnumId;
+                    classInfoData.periodsAmount = [];
+                    timePeriodIdList.each { timePeriodId -> // 31
+                        classInfoData.periodsAmount.add(classInfo.balanceByTimePeriod[timePeriodId] ?: 0);
+                    }
+                    classInfoData.children = [];
+                    classInfo.childClassInfoList.each { childClassInfo -> // 67
+                        def tempClass = showClass(childClassInfo, depth + 1); 
+                        if (tempClass) classInfoData.children.add(tempClass); //67
+                    }
+                    def newClassInfoData = [:]
+                    classInfo.glAccountInfoList.each { glAccountInfo ->
+                        newClassInfoData.children = [];
+                        newClassInfoData.description = accountCodeFormatter.valueToString(glAccountInfo.accountCode) + ": " + glAccountInfo.accountName;
+                        newClassInfoData.id = glAccountInfo.accountCode;
+                        newClassInfoData.periodsAmount = [];
+                        timePeriodIdList.each { timePeriodId -> // 31
+                            newClassInfoData.periodsAmount.add(glAccountInfo.postedByTimePeriod[timePeriodId] ?: 0);
+                        }
+                        classInfoData.children.add(newClassInfoData); 
+                    }
+                    return classInfoData;
+                }
+                if(classInfoById.ASSET) asset = showClass(classInfoById.ASSET, 1);
+                if(classInfoById.LIABILITY) liability = showClass(classInfoById.LIABILITY, 1);
+                if(classInfoById.EQUITY) equity = showClass(classInfoById.EQUITY, 1);
+                if(classInfoById.DISTRIBUTION) distribution = showClass(classInfoById.DISTRIBUTION, 1);
+                def header = [:];
+                header.title = "$organizationName - ${ec.l10n.localize("Balance Sheet")} " +
+                    "${ec.l10n.format(ec.user.nowTimestamp, 'dd MMM yyyy HH:mm')}";
+                header.children = [];
+                timePeriodIdList.each { timePeriodId -> // 88
+                    header.children.add(timePeriodIdMap[timePeriodId].periodName); // 93
+                }
+                /*
+                BalanceSheet: [
+                    classInfoHeader[ title: string, periodsAmounts: [string,string,....],
+                    classInfoData[  id: string.
+                                    description: string,
+                                    periodsAmount: [string, string ....],
+                                    children: [classInfoData, classInfoData....]
+                ]
+                */
+            </script>
+            <set field="balanceSheet" from="[:]"/>
+            <set field="balanceSheet.asset" from="asset"/>
+            <set field="balanceSheet.liability" from="liability"/>
+            <set field="balanceSheet.equity" from="equity"/>
+            <set field="balanceSheet.distribution" from="distribution"/>
+            <set field="balanceSheet.header" from="header"/>
+        </actions>
+    </service>
+
+    <service verb="get" noun="Ledger">
+        <out-parameters>
+            <parameter name="glAccountList"/>
+        </out-parameters>
+        <actions>
+            <service-call out-map="context" 
+                name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner"/>
+            <service-call in-map="organizationPartyId: ownerPartyId"
+                name="mantle.ledger.LedgerServices.recalculate#GlAccountOrgSummaries"/>
+            <entity-find list="dbGlAccounts" 
+                entity-name="mantle.ledger.account.GlAccountAndOrganization">
+                <econdition field-name="partyId" from="ownerPartyId"/>
+                <order-by field-name="glAccountId"/>
+            </entity-find>
+            <set field="glAccountList" from="[]"/>
+            <script>
+
+                def getGlAccountTree(dbGlAccount, dept) {
+                    def glAccount = [:];
+                    glAccount.l = dept;
+                    glAccount.id = dbGlAccount.glAccountId.substring(0,3) + '-' + dbGlAccount.glAccountId.substring(3,5);
+                    glAccount.isDebit = dbGlAccount.isDebit;
+                    glAccount.accountName = ec.l10n.localize(dbGlAccount.accountName);
+                    glAccount.postedBalance = dbGlAccount.postedBalance ?: 0;
+                    glAccount.rollUp = new BigDecimal(dbGlAccount.postedBalance?:"0");
+                    glAccount.classId = dbGlAccount.glAccountClassEnumId;
+                    def dependents = dbGlAccounts.findAll { 
+                        dbGlAccount.glAccountId == it.parentGlAccountId
+                    }
+                    glAccount.children = [];
+                    dependents.each {
+                        def glAccountSave = getGlAccountTree(it, dept + 1)
+                        glAccount.rollUp = glAccount.rollUp.add(glAccountSave.rollUp); 
+                        glAccount.children.add(glAccountSave)
+                    }
+                    return glAccount;
+                }
+
+                def rootAccounts = dbGlAccounts.findAll {
+                    it.parentGlAccountId == null }
+                rootAccounts.each {
+                    glAccountList.add(getGlAccountTree(it, 1));
+                }
+            </script>
+        </actions>
+    </service>
+    <service verb="get" noun="Transaction">
+        <description> get a accounting single or all transactions</description>
+        <in-parameters>
+            <parameter name="acctgTransId"/>
+            <parameter name="start" default-value="0" type="Integer"/>
+            <parameter name="limit" default-value="20" type="Integer"/>
+            <parameter name="search"/>
+        </in-parameters>
+        <out-parameters>
+            <parameter name="acctgTrans" type="Map"/>
+            <parameter name="acctgTransList" type="List"/>
+        </out-parameters>
+        <actions>
+            <service-call  out-map="context"
+                name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner"/>
+            <if condition="search">
+                <set field="search" value="%${search}%"/></if>
+            <entity-find  offset="start" limit="limit" list="entries"
+                entity-name="mantle.ledger.transaction.AcctgTransAndEntry">
+                <econdition field-name="organizationPartyId" from="ownerPartyId"/>
+                <econdition field-name="isPosted" value="Y"/>
+                <econditions combine="or">
+                    <econdition field-name="txDescription"
+                        operator="like" from="search" ignore-if-empty="true"/>
+                    <econdition field-name="acctgTransId"
+                        operator="like" from="search" ignore-if-empty="true"/>
+                    <econdition field-name="otherPartyId"
+                        operator="like" from="search" ignore-if-empty="true"/>
+                </econditions>
+                <order-by field-name="-transactionDate"/>
+            </entity-find>
+            <if condition="!acctgTransId">
+                <set field="acctgTransList" from="[]"/></if>
+            <set field="lastEntry" from="null"/>
+            <iterate entry="entry" list="entries">
+                <if condition="lastEntry &amp;&amp; lastEntry.acctgTransId != entry.acctgTransId">
+                    <script>acctgTransList.add(acctgTransOut)</script>
+                </if>   
+                <if condition="!lastEntry || lastEntry.acctgTransId != entry.acctgTransId">
+                    <set field="acctgTransOut" from="[
+                        transactionId: entry.acctgTransId,
+                        description: entry.txDescription,
+                        assetId: entry.txAssetId,
+                        date: entry.transactionDate,
+                        otherPartyId: entry.otherPartyId,
+                        entries: [],
+                    ]"/>
+                </if>
+                <set field="itemOut" from="[
+                        amount: entry.amount,
+                        debitCreditFlag: entry.debitCreditFlag,
+                        glAccountId: entry.glAccountId,
+                        productId: entry.productId,
+                        description: entry.description,
+                        paymentId: entry.paymentId,
+                        invoiceId: entry.invoiceId,
+                        invoiceItemSeqId: entry.invoiceItemSeqId
+                    ]"/>
+                <script>acctgTransOut.entries.add(itemOut)</script>
+                <if condition="acctgTransId">
+                    <set field="acctgTrans" from="acctgTransOut"/>
+                    <else>
+                        <script>acctgTransList.add(acctgTransOut)</script>
+                    </else>
+                </if>
+            </iterate>
+        </actions>
+    </service>
+
+</services>

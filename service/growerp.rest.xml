@@ -79,9 +79,11 @@ along with this software (see the LICENSE.md file). If not, see
             <method type="delete"><service name="growerp.100.CrmServices100.delete#Opportunity"/></method></resource>
         <!-- Accounting -->
         <resource name="BalanceSheet">
-            <method type="get"><service name="growerp.100.AccntgRepServices100.get#BalanceSheet"/></method></resource>
+            <method type="get"><service name="growerp.100.AccountingServices100.get#BalanceSheet"/></method></resource>
+        <resource name="Ledger">
+            <method type="get"><service name="growerp.100.AccountingServices100.get#Ledger"/></method></resource>
     </resource>
-
+    
     <!-- nativescript REST interface -->
     <!-- Login and Register, security -->
     <resource name="Ping"  require-authentication="anonymous-all">

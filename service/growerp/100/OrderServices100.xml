@@ -45,7 +45,8 @@ along with this software (see the LICENSE.md file). If not, see
 
             <set field="finDocs" from="[]"/>
             <set field="finDocItems" from="[]"/>
-            <set field="finDoc" from="[:]"/>
+            <if condition="id">
+                <set field="finDoc" from="[:]"/></if>
 
             <if condition="sales == true">
                 <set field="vendorPartyId" from="ownerPartyId"/>
@@ -116,7 +117,7 @@ along with this software (see the LICENSE.md file). If not, see
                             paymentId: item.paymentId,
                             description: item.orderName,
                             statusId: orderStatusValues[item.statusId],
-                            createdDate: item.placedDate.toString().substring(0,19) + 'Z',
+                            creationDate: item.placedDate.toString().substring(0,19) + 'Z',
                             sales: (item.vendorPartyId == ownerPartyId).toString(),
                             docType: docType,
                             otherUser: userOut.user,
@@ -168,7 +169,7 @@ along with this software (see the LICENSE.md file). If not, see
                             from="['InvoiceIncoming','InvoiceReceived','InvoiceApproved']"/>
                     </else>
                 </if>
-                <if condition="id"><!-- single document -->
+                <if condition="id">
                     <entity-find
                             entity-name="growerp.order.InvoiceAndItem" list="items">
                         <econdition field-name="invoiceId" from="id"/>
@@ -219,7 +220,7 @@ along with this software (see the LICENSE.md file). If not, see
                             paymentId: item.paymentId,
                             description: item.description,
                             statusId: invoiceStatusValues[item.statusId],
-                            createdDate: item.invoiceDate.toString().substring(0,19) + 'Z',
+                            creationDate: item.invoiceDate.toString().substring(0,19) + 'Z',
                             otherUser: userOut.user,
                             grandTotal: item.invoiceTotal.toString(),
                             ]"/>
@@ -299,7 +300,7 @@ along with this software (see the LICENSE.md file). If not, see
                         invoiceId: item.invoiceId,
                         paymentId: item.paymentId,
                         statusId: paymentStatusValues[item.statusId],
-                        createdDate: item.effectiveDate ? item.effectiveDate.toString().substring(0,19) + 'Z' : null,
+                        creationDate: item.effectiveDate ? item.effectiveDate.toString().substring(0,19) + 'Z' : null,
                         sales: sales.toString(),
                         docType: docType,
                         otherUser: userOut.user,
@@ -312,6 +313,92 @@ along with this software (see the LICENSE.md file). If not, see
                         </else>
                     </if>
                 </iterate>
+            </if>
+            <if condition="docType == 'transaction'">
+                <set field="paymentStatusValues" from="[
+                    PmntProposed: 'NotPosted',
+                    PmntDelivered: 'Posted',
+                    ]"/>
+                <set field="openStatusList"
+                    from="['NotPosted']"/>
+                <if condition="id">
+                    <entity-find  offset="start" limit="limit" list="entries"
+                        entity-name="mantle.ledger.transaction.AcctgTransAndEntry">
+                        <econdition field-name="organizationPartyId" from="ownerPartyId"/>
+                        <econdition field-name="isPosted" value="Y"/>
+                        <econdition field-name="acctgTransId" from="id"/>
+                    </entity-find>
+                    <else>
+                        <if condition="open == true">
+                            <set field="status" from="openStatusList"/></if>
+                        <entity-find  offset="start" limit="limit" list="items"
+                                entity-name="mantle.ledger.transaction.AcctgTransAndEntry">
+                            <econdition field-name="organizationPartyId" from="ownerPartyId"/>
+                            <econdition field-name="isPosted" value="Y"/>
+                            <econditions combine="or">
+                                <econdition field-name="txDescription"
+                                    operator="like" from="search" ignore-if-empty="true"/>
+                                <econdition field-name="acctgTransId"
+                                    operator="like" from="search" ignore-if-empty="true"/>
+                                <econdition field-name="otherPartyId"
+                                    operator="like" from="search" ignore-if-empty="true"/>
+                            </econditions>
+                            <order-by field-name="-transactionDate"/>
+                            <order-by field-name="itemSeqId"/>
+                        </entity-find>
+                    </else>
+                </if>
+                <set field="lastItem" from="null"/>
+                <iterate entry="item" list="items">
+                    <if condition="lastItem &amp;&amp; lastItem.acctgTransId != item.acctgTransId">
+                        <script>
+                            finDocOut.grandTotal = grandTotal.toString();
+                            finDocs.add(finDocOut)
+                        </script>
+                    </if>   
+                    <if condition="!lastItem || lastItem.acctgTransId != item.acctgTransId">
+                        <entity-find list="others" 
+                                entity-name="growerp.mobile.CompanyPersonAndLoginGroup">
+                            <econdition field-name="companyPartyId" from="item.otherPartyId"/>
+                            <date-filter/><select-field field-name="userPartyId"/></entity-find>
+                        <service-call name="growerp.100.PartyServices100.get#User"
+                            in-map="[userPartyId: others[0].userPartyId]" out-map="userOut"/>
+                        <set field="finDocOut" from="[
+                            docType: docType,
+                            paymentId: item.paymentId,
+                            invoiceId: item.invoiceId,
+                            transactionId: item.acctgTransId,
+                            statusId: item.isPosted == 'Y'? 'Posted' : 'NotPosted',
+                            description: item.txDescription,
+                            creationDate: item.transactionDate.toString().substring(0,19) + 'Z',
+                            otherUser: userOut.user,
+                            grandTotal: '',
+                            items: [],
+                        ]"/>
+                        <set field="grandTotal" from="BigDecimal.ZERO" type="BigDecimal"/>
+                    </if>
+                    <set field="finDocItem" from="[
+                            itemSeqId: item.acctgTransEntrySeqId,
+                            amount: item.debitCreditFlag == 'D'? item.amount : (item.amount * -1),
+                            glAccountId: item.glAccountId,
+                            productId: item.productId,
+                            description: item.description,
+                        ]"/>
+                    <set field="grandTotal" from="grandTotal.add(item.amount)"/>
+                    <script>finDocOut.items.add(finDocItem)</script>
+                    <set field="lastItem" from="item"/>
+                </iterate>
+                <if condition="lastItem">
+                    <if condition="id">
+                        <set field="finDoc" from="finDocOut"/>
+                        <else>
+                            <script>
+                                finDocOut.grandTotal = grandTotal.toString();
+                                finDocs.add(finDocOut)
+                            </script>
+                        </else>
+                    </if> 
+                </if>
             </if>
         </actions>
     </service>
@@ -468,7 +555,6 @@ along with this software (see the LICENSE.md file). If not, see
                 <return error="true" message="Document ${finDocIn.docType} not supported yet...."/></if>
             <service-call name="growerp.100.OrderServices100.get#FinDoc"
                 in-map="inMap" out-map="context"/>
-            <log message="======update out put: $finDoc"/>
         </actions>
     </service>
 
@@ -506,7 +592,6 @@ along with this software (see the LICENSE.md file). If not, see
                 <entity-update value-field="orderHeader"/>
             </if>
             <!-- handle status changes -->
-            <log message="===new status: ${order.statusId}"/>
             <if condition="order.statusId != items[0].statusId">
                 <if condition="order.statusId == 'OrderPlaced'">
                     <service-call in-map="context" out-map="context"
