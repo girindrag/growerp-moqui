@@ -274,6 +274,7 @@ along with this software (see the LICENSE.md file). If not, see
                 <set field="apiKey" from="ec.user.getLoginKey()"/>
                 <set field="moquiSessionToken" from="ec.web.sessionToken"/>
                 <service-call name="growerp.100.GeneralServices100.get#Stats" out-map="context"/>
+                <service-call name="growerp.100.GeneralServices100.get#ItemTypes" out-map="context"/>
             </if>
         </actions>
     </service>
@@ -315,6 +316,30 @@ along with this software (see the LICENSE.md file). If not, see
             <service-call name="update#moqui.security.UserAccount"
                     in-map="[username:username, disabled:'N', disabledDateTime:null,
                     successiveFailedLogins:0]"/>
+        </actions>
+    </service>
+
+    <service verb="get" noun="ItemTypes">
+        <description>itemtypes for orderItem and invoiceItem</description>
+        <out-parameters>
+            <parameter name="itemTypes" type="Map"/>
+        </out-parameters>
+        <actions>
+            <set field="itemTypes" from="[:]"/>
+            <set field="itemTypes['sales']" from="[]"/>
+            <entity-find entity-name="moqui.basic.EnumAndGroup" list="salesItemTypes">
+                <econdition field-name="enumGroupEnumId" value="EngItemsSales"/>
+                <order-by field-name="description"/></entity-find>
+            <iterate list="salesItemTypes" entry="itemType">
+                <script>itemTypes['sales'].add([itemTypeId: itemType.enumId, description: itemType.description])</script>
+            </iterate>
+            <set field="itemTypes['purchase']" from="[]"/>
+            <entity-find entity-name="moqui.basic.EnumAndGroup" list="purchaseItemTypes">
+                <econdition field-name="enumGroupEnumId" operator="in" value="EngItemsPurchase,EngItemsProduct"/>
+                <order-by field-name="description"/></entity-find>
+            <iterate list="purchaseItemTypes" entry="itemType">
+                <script>itemTypes['purchase'].add([itemTypeId: itemType.enumId, description: itemType.description])</script>
+            </iterate>
         </actions>
     </service>
 

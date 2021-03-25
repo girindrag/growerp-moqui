@@ -26,73 +26,71 @@ along with this software (see the LICENSE.md file). If not, see
         <actions>
             <if condition="docType == 'order'">
                 <set field="orderStatusValues" from="[
-                    OrderOpen: 'finDocPrep',
-                    finDocPrep: 'OrderOpen',
-                    OrderPlaced: 'finDocCreated',
-                    finDocCreated:'OrderPlaced',
-                    OrderApproved: 'finDocApproved',
-                    finDocApproved: 'OrderApproved',
-                    OrderCompleted: 'finDocCompleted',
-                    finDocCompleted: 'OrderCompleted',
-                    OrderCancelled: 'finDocCancelled',
-                    finDocCancelled:'OrderCancelled'
+                    OrderOpen: 'FinDocPrep',
+                    FinDocPrep: 'OrderOpen',
+                    OrderPlaced: 'FinDocCreated',
+                    FinDocCreated:'OrderPlaced',
+                    OrderApproved: 'FinDocApproved',
+                    FinDocApproved: 'OrderApproved',
+                    OrderCompleted: 'FinDocCompleted',
+                    FinDocCompleted: 'OrderCompleted',
+                    OrderCancelled: 'FinDocCancelled',
+                    FinDocCancelled:'OrderCancelled'
                 ]"/>
                 <set field="convertedStatusId" from="orderStatusValues[statusId]"/>
             </if>
             <if condition="docType == 'invoice'">
-                <log message="====convert $sales $docType $statusId $convertedStatusId"/>
                 <if condition="sales == true">
                     <set field="invoiceStatusValues" from="[
-                        InvoiceInProcess: 'finDocPrep',
-                        finDocPrep: 'InvoiceInProcess',
-                        InvoiceFinalized: 'finDocCreated',
-                        finDocCreated:' InvoiceFinalized',
-                        InvoiceSent: 'finDocApproved',
-                        finDocApproved: 'InvoiceSent',
-                        InvoicePmtRecvd: 'finDocCompleted',
-                        finDocCompleted: 'InvoicePmtRecvd',
-                        InvoiceCancelled: 'finDocCancelled',
-                        finDocCancelled: 'InvoiceCancelled'
+                        InvoiceInProcess: 'FinDocPrep',
+                        FinDocPrep: 'InvoiceInProcess',
+                        InvoiceFinalized: 'FinDocCreated',
+                        FinDocCreated:' InvoiceFinalized',
+                        InvoiceSent: 'FinDocApproved',
+                        FinDocApproved: 'InvoiceSent',
+                        InvoicePmtRecvd: 'FinDocCompleted',
+                        FinDocCompleted: 'InvoicePmtRecvd',
+                        InvoiceCancelled: 'FinDocCancelled',
+                        FinDocCancelled: 'InvoiceCancelled'
                         ]"/>
                     <else>
                         <set field="invoiceStatusValues" from="[
-                            InvoiceIncoming: 'finDocPrep',
-                            finDocPrep: 'InvoiceIncoming',
-                            InvoiceReceived: 'finDocCreated',
-                            finDocCreated: 'InvoiceReceived',
-                            InvoiceApproved: 'finDocApproved',
-                            finDocApproved: 'InvoiceApproved',
-                            InvoicePmtSent: 'finDocCompleted',
-                            finDocCompleted: 'InvoicePmtSent',
-                            InvoiceCancelled: 'finDocCancelled',
-                            finDocCancelled: 'InvoiceCancelled'
+                            InvoiceIncoming: 'FinDocPrep',
+                            FinDocPrep: 'InvoiceIncoming',
+                            InvoiceReceived: 'FinDocCreated',
+                            FinDocCreated: 'InvoiceReceived',
+                            InvoiceApproved: 'FinDocApproved',
+                            FinDocApproved: 'InvoiceApproved',
+                            InvoicePmtSent: 'FinDocCompleted',
+                            FinDocCompleted: 'InvoicePmtSent',
+                            InvoiceCancelled: 'FinDocCancelled',
+                            FinDocCancelled: 'InvoiceCancelled'
                             ]"/>
                     </else>
                 </if>
                 <set field="convertedStatusId" from="invoiceStatusValues[statusId]"/>
-                <log message="====convert $sales $docType $statusId $convertedStatusId"/>
             </if>
             <if condition="docType == 'payment'">
                     <set field="paymentStatusValues" from="[
-                        PmntProposed: 'finDocPrep',
-                        finDocPrep: 'PmntProposed',
-                        PmntPromised: 'finDocCreated',
-                        finDocCreated: 'PmntPromised',
-                        PmntAuthorized: 'finDocApproved',
-                        finDocApproved: 'PmntAuthorized',
-                        PmntDelivered: 'finDocCompleted',
-                        finDocCompleted: 'PmntDelivered',
-                        PmntCancelled: 'finDocCancelled',
-                        finDocCancelled: 'PmntCancelled'
+                        PmntProposed: 'FinDocPrep',
+                        FinDocPrep: 'PmntProposed',
+                        PmntPromised: 'FinDocCreated',
+                        FinDocCreated: 'PmntPromised',
+                        PmntAuthorized: 'FinDocApproved',
+                        FinDocApproved: 'PmntAuthorized',
+                        PmntDelivered: 'FinDocCompleted',
+                        FinDocCompleted: 'PmntDelivered',
+                        PmntCancelled: 'FinDocCancelled',
+                        FinDocCancelled: 'PmntCancelled'
                     ]"/>
                 <set field="convertedStatusId" from="paymentStatusValues[statusId]"/>
             </if>
             <if condition="docType == 'transaction'">
                 <set field="transactionStatusValues" from="[
-                        NotPosted: 'finDocPrep',
-                        finDocPrep: 'NotPosted',
-                        Posted: 'finDocCompleted',
-                        finDocCompleted: 'Posted',
+                        NotPosted: 'FinDocPrep',
+                        FinDocPrep: 'NotPosted',
+                        Posted: 'FinDocCompleted',
+                        FinDocCompleted: 'Posted',
                     ]"/>
                 <set field="convertedStatusId" from="transactionStatusValues[statusId]"/>
             </if>
@@ -118,7 +116,7 @@ along with this software (see the LICENSE.md file). If not, see
             <parameter name="finDoc" type="Map"/>
         </out-parameters>
         <actions>
-            <service-call out-map="context"
+             <service-call out-map="context"
                 name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner"/>
             <if condition="startDate">
                 <set field="tsDate"
@@ -140,8 +138,8 @@ along with this software (see the LICENSE.md file). If not, see
 
             <if condition="docType == 'order'">
                 <if condition="id"><!-- single document -->
-                    <entity-find
-                            entity-name="growerp.order.OrderHeaderPartItemAndParties" list="items">
+                    <entity-find list="items"
+                            entity-name="growerp.order.OrderHeaderPartItemAndParties">
                         <econdition field-name="orderId" from="id"/>
                         <econditions combine="or">
                             <econdition field-name="vendorPartyId" from="ownerPartyId"/>
@@ -178,8 +176,10 @@ along with this software (see the LICENSE.md file). If not, see
                     </if>   
                     <if condition="!lastItem || lastItem.orderId != item.orderId">
                         <if condition="item.customerPartyId == ownerPartyId">
+                            <set field="sales" value="false" type="Boolean"/>
                             <set field="otherCompanyPartyId" from="item.vendorPartyId"/>
                             <else>
+                                <set field="sales" value="true" type="Boolean"/>
                                 <set field="otherCompanyPartyId" from="item.customerPartyId"/>
                             </else>
                         </if>
@@ -202,6 +202,7 @@ along with this software (see the LICENSE.md file). If not, see
                             creationDate: item.placedDate.toString().substring(0,19) + 'Z',
                             sales: sales.toString(),
                             docType: docType,
+                            sales: sales.toString(),
                             otherUser: userOut.user,
                             grandTotal: item.grandTotal.toString(),
                             ]"/>
@@ -264,6 +265,12 @@ along with this software (see the LICENSE.md file). If not, see
                         <script>finDocs.add(finDocOut)</script>
                     </if>   
                     <if condition="!lastItem || lastItem.invoiceId != item.invoiceId">
+                        <if condition="item.fromPartyId == ownerPartyId">
+                            <set field="sales" value="true" type="Boolean"/>
+                            <else>
+                                <set field="sales" value="false" type="Boolean"/>
+                            </else>
+                        </if>
                         <entity-find list="others" 
                                 entity-name="growerp.mobile.CompanyPersonAndLoginGroup">
                             <econdition field-name="companyPartyId" from="sales ? item.toPartyId : item.fromPartyId"/>
@@ -274,7 +281,6 @@ along with this software (see the LICENSE.md file). If not, see
                             in-map="[userPartyId: others[0].userPartyId]" out-map="userOut"/>
                         <service-call name="growerp.100.OrderServices100.convert#StatusId"
                             in-map="[sales: sales, docType: docType, statusId: item.statusId]" out-map="context"/>
-                        <log message="=====${item.statusId}  ${convertedStatusId} $sales $docType"/>
                         <set field="finDocOut" from="[
                             docType: docType,
                             sales: sales.toString(),
@@ -343,6 +349,12 @@ along with this software (see the LICENSE.md file). If not, see
                     </else>
                 </if>
                 <iterate entry="item" list="items">
+                    <if condition="item.toPartyId == ownerPartyId">
+                        <set field="sales" value="true" type="Boolean"/>
+                        <else>
+                            <set field="sales" value="false" type="Boolean"/>
+                        </else>
+                    </if>
                     <entity-find list="others" 
                         entity-name="growerp.mobile.CompanyPersonAndLoginGroup">
                         <econdition field-name="companyPartyId" from="sales ? item.fromPartyId : item.toPartyId"/>
@@ -447,18 +459,17 @@ along with this software (see the LICENSE.md file). If not, see
                     <set field="lastItem" from="item"/>
                 </iterate>
                 <if condition="lastItem">
+                    <set field="finDocOut.grandTotal" from="grandTotal.toString()"/>
                     <if condition="id">
                         <set field="finDoc" from="finDocOut"/>
                         <else>
                             <script>
-                                finDocOut.grandTotal = grandTotal.toString();
                                 finDocs.add(finDocOut)
                             </script>
                         </else>
                     </if> 
                 </if>
             </if>
-            <log message="======$finDocs"/>
         </actions>
     </service>
 
@@ -477,10 +488,10 @@ along with this software (see the LICENSE.md file). If not, see
             <if condition="finDocIn.docType == 'order'">
                 <service-call name="growerp.100.OrderServices100.create#Order"
                     in-map="[order: finDocIn]" out-map="context"/>
+                <set field="inMap" from="[id: orderId, docType: 'order']"/>
                 <else>
                     <return error="true" message="Document ${finDoc.docType} not supported yet...."/>
                 </else>
-                <set field="inMap" from="[id: finDocIn.orderId, docType: 'order']"/>
             </if>
             <service-call name="growerp.100.OrderServices100.get#FinDoc"
                 in-map="inMap" out-map="context"/>
@@ -492,7 +503,7 @@ along with this software (see the LICENSE.md file). If not, see
         <in-parameters>
             <parameter name="order" required="true" type="Map"/></in-parameters>
         <out-parameters>
-            <parameter name="order"/></out-parameters>
+            <parameter name="orderId"/></out-parameters>
         <actions>
             <service-call out-map="context"
                 name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner"/>

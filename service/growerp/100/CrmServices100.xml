@@ -103,6 +103,7 @@ along with this software (see the LICENSE.md file). If not, see
             <service-call name="create#mantle.sales.opportunity.SalesOpportunity"
                 in-map="[estimatedAmount: opportunity.estAmount,
                         opportunityName: opportunity.opportunityName,
+                        description: opportunity.description,
                         estimatedProbability: opportunity.estProbability,
                         ownerPartyId: ownerPartyId,
                         nextStep: opportunity.nextStep,
