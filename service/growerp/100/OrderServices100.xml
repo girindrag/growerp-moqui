@@ -385,12 +385,6 @@ along with this software (see the LICENSE.md file). If not, see
                 </iterate>
             </if>
             <if condition="docType == 'transaction'">
-                <set field="paymentStatusValues" from="[
-                    PmntProposed: 'NotPosted',
-                    PmntDelivered: 'Posted',
-                    ]"/>
-                <set field="openStatusList"
-                    from="['NotPosted']"/>
                 <if condition="id">
                     <entity-find  offset="start" limit="limit" list="entries"
                         entity-name="mantle.ledger.transaction.AcctgTransAndEntry">
@@ -414,7 +408,7 @@ along with this software (see the LICENSE.md file). If not, see
                                     operator="like" from="search" ignore-if-empty="true"/>
                             </econditions>
                             <order-by field-name="-transactionDate"/>
-                            <order-by field-name="itemSeqId"/>
+                            <order-by field-name="acctgTransEntrySeqId"/>
                         </entity-find>
                     </else>
                 </if>
@@ -433,12 +427,16 @@ along with this software (see the LICENSE.md file). If not, see
                             <date-filter/><select-field field-name="userPartyId"/></entity-find>
                         <service-call name="growerp.100.PartyServices100.get#User"
                             in-map="[userPartyId: others[0].userPartyId]" out-map="userOut"/>
+                        <service-call name="growerp.100.OrderServices100.convert#StatusId"
+                            in-map="[docType: 'transaction', 
+                                statusId: item.isPosted == 'Y'? 'Posted' : 'NotPosted']" out-map="context"/>
                         <set field="finDocOut" from="[
-                            docType: docType,
+                            docType: 'transaction',
+                            sales: 'true',
                             paymentId: item.paymentId,
                             invoiceId: item.invoiceId,
                             transactionId: item.acctgTransId,
-                            statusId: item.isPosted == 'Y'? 'Posted' : 'NotPosted',
+                            statusId: convertedStatusId,
                             description: item.txDescription,
                             creationDate: item.transactionDate.toString().substring(0,19) + 'Z',
                             otherUser: userOut.user,
