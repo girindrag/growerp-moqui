@@ -483,6 +483,9 @@ along with this software (see the LICENSE.md file). If not, see
             <script>Object finDocIn = new groovy.json.JsonSlurper().parseText(finDoc).finDoc</script>
             <service-call out-map="context"
                 name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner"/>
+            <if condition="!finDocIn.otherUser || !finDocIn.otherUser.companyPartyId">
+                <return error="true" message="Other user required with valid companyPartyId"/>
+            </if>
             <if condition="finDocIn.docType == 'order'">
                 <service-call name="growerp.100.OrderServices100.create#Order"
                     in-map="[order: finDocIn]" out-map="context"/>

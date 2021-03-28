@@ -231,6 +231,7 @@ along with this software (see the LICENSE.md file). If not, see
             <parameter name="company" type="Map"/>
             <parameter name="passwordChange" default="false"/>
             <parameter name="stats"/>
+            <parameter name="itemTypes"/>
         </out-parameters>
         <actions>
             <entity-find-one entity-name="moqui.security.UserAccount" 
