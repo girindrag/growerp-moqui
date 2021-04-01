@@ -113,10 +113,9 @@ along with this software (see the LICENSE.md file). If not, see
         </in-parameters>
         <out-parameters>
             <parameter name="finDocs" type="List"/>
-            <parameter name="finDoc" type="Map"/>
         </out-parameters>
         <actions>
-             <service-call out-map="context"
+            <service-call out-map="context"
                 name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner"/>
             <if condition="startDate">
                 <set field="tsDate"
@@ -128,8 +127,6 @@ along with this software (see the LICENSE.md file). If not, see
 
             <set field="finDocs" from="[]"/>
             <set field="finDocItems" from="[]"/>
-            <if condition="id">
-                <set field="finDoc" from="[:]"/></if>
 
             <if condition="sales == true">
                 <set field="vendorPartyId" from="ownerPartyId"/>
@@ -221,12 +218,7 @@ along with this software (see the LICENSE.md file). If not, see
                 </iterate>
                 <if condition="lastItem">
                     <set field="finDocOut.items" from="finDocItems"/>
-                    <if condition="id">
-                        <set field="finDoc" from="finDocOut"/>
-                        <else>
-                            <script>finDocs.add(finDocOut)</script>
-                        </else>
-                    </if> 
+                    <script>finDocs.add(finDocOut)</script>
                 </if>
             </if>
             <if condition="docType == 'invoice'">
@@ -308,15 +300,7 @@ along with this software (see the LICENSE.md file). If not, see
                 </iterate>
                 <if condition="lastItem">
                     <set field="finDocOut.items" from="finDocItems"/>
-                    <if condition="id">
-                        <set field="finDoc" from="finDocOut"/>
-                        <else>
-                            <script>finDocs.add(finDocOut)</script>
-                        </else>
-                    </if> 
-                </if>
-                <if condition="id">
-                    <set field="finDoc" from="finDocOut"/>
+                    <script>finDocs.add(finDocOut)</script>
                 </if>
             </if>
             <if condition="docType == 'payment'">
@@ -376,12 +360,7 @@ along with this software (see the LICENSE.md file). If not, see
                         otherUser: userOut.user,
                         grandTotal: item.amount.toString(),
                         ]"/>
-                    <if condition="id">
-                        <set field="finDoc" from="finDocOut"/>
-                        <else>
-                            <script>finDocs.add(finDocOut)</script>
-                        </else>
-                    </if>
+                    <script>finDocs.add(finDocOut)</script>
                 </iterate>
             </if>
             <if condition="docType == 'transaction'">
@@ -458,14 +437,7 @@ along with this software (see the LICENSE.md file). If not, see
                 </iterate>
                 <if condition="lastItem">
                     <set field="finDocOut.grandTotal" from="grandTotal.toString()"/>
-                    <if condition="id">
-                        <set field="finDoc" from="finDocOut"/>
-                        <else>
-                            <script>
-                                finDocs.add(finDocOut)
-                            </script>
-                        </else>
-                    </if> 
+                    <script>finDocs.add(finDocOut)</script>
                 </if>
             </if>
         </actions>
