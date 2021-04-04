@@ -98,6 +98,25 @@ along with this software (see the LICENSE.md file). If not, see
             <iterate list="purchaseItemTypes" entry="itemType">
                 <script>itemTypes['purchase'].add([itemTypeId: itemType.enumId, description: itemType.description])</script>
             </iterate>
+            <!-- postal address -->
+            <entity-find list="addresses"
+                entity-name="mantle.party.contact.PartyContactMechPostalAddressOnly">
+                <econdition field-name="partyId" from="companyPartyId"/>
+                <econdition field-name="contactMechPurposeId" value="PostalPrimary"/>
+            </entity-find>
+            <if condition="addresses">
+                <set field="address" from="[
+                address1: addresses.address1,
+                address2: addresses.address2,
+                city: addresses.city,
+                postalCode: addresses.postalCode,
+                province: addresses.stateProvince,
+                country: addresses.country,
+                ]"/>
+            </if>
+            <entity-find-one entity-name="mantle.party.Party" value-field="party">
+                <field-map field-name="partyId" from="companyPartyId"/>
+            </entity-find-one>
             <set field="company" from="[
                 partyId: companyPartyId,
                 name: org.organizationName,
@@ -106,7 +125,10 @@ along with this software (see the LICENSE.md file). If not, see
                 email: emailAddress,
                 currencyId: org.baseCurrencyUomId,
                 image: imageFile,
-                itemTypes: itemTypes
+                itemTypes: itemTypes,
+                address: address,
+                vatPerc: party?.vatPerc.toString(),
+                salesPerc: party?.salesPerc.toString(),
                 ]"/>
         </actions>
     </service>
@@ -161,7 +183,44 @@ along with this software (see the LICENSE.md file). If not, see
                     in-map="[type: 'company', id: compIn.partyId,
                         base64: compIn.image]"/>
             </if>
-            <service-call name="growerp.100.PartyServices100.get#Company" out-map="context"/>
+            <!-- postal address -->
+            <if condition="compIn.address?.address1">
+                <service-call out-map="context"
+                    name="mantle.party.ContactServices.findOrCreate#PartyPostalAddress"
+                    in-map="[
+                        contactMechPurposeId: 'PostalPrimary',
+                        partyId: compIn.partyId,
+                        address1: compIn.address.address1,
+                        address2: compIn.address.address2,
+                        city: compIn.address.city,
+                        country: compIn.address.country,
+                        postalCode: compIn.address.postalCode,
+                        stateProvinceGeoId: compIn.address.province,
+                    ]"/>
+            </if>
+            <!-- sales/vat tax percentage -->
+            <if condition="compIn.salesPerc || compIn.vatPerc">
+                <entity-find-one
+                    entity-name="mantle.party.Party" value-field="party" for-update="true">
+                    <field-map field-name="partyId" from="compIn.partyId"/>
+                </entity-find-one>
+                <if condition="compIn.vatPerc != null"> 
+                    <set field="party.vatPerc" from="Integer.parseInt(compIn.vatPerc)"/>
+                    <else>
+                        <set field="party.vatPerc" from="null"/>
+                    </else>
+                </if>
+                <if condition="compIn.salesPerc != null"> 
+                    <set field="party.salesPerc" from="Integer.parseInt(compIn.salesPerc)"/>
+                    <else>
+                        <set field="party.salesPerc" from="null"/>
+                    </else>
+                </if>
+                <entity-update value-field="party"/>
+            </if>
+            <!-- return updated company -->
+            <service-call
+                name="growerp.100.PartyServices100.get#Company" out-map="context"/>
         </actions>
     </service>
 
