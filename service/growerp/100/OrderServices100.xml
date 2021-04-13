@@ -449,7 +449,7 @@ along with this software (see the LICENSE.md file). If not, see
             <parameter name="finDoc" type="String"/>
         </in-parameters>
         <out-parameters>
-            <parameter name="finDoc"></parameter>
+            <parameter name="finDocs"></parameter>
         </out-parameters>
         <actions>
             <script>Object finDocIn = new groovy.json.JsonSlurper().parseText(finDoc).finDoc</script>
@@ -545,7 +545,7 @@ along with this software (see the LICENSE.md file). If not, see
             <parameter name="finDoc"/>
         </in-parameters>
         <out-parameters>
-            <parameter name="finDoc" type="Map"></parameter>
+            <parameter name="finDocs" type="Map"></parameter>
         </out-parameters>
         <actions>
             <script>Object finDocIn = new groovy.json.JsonSlurper().parseText(finDoc).finDoc</script>
