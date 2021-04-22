@@ -15,11 +15,13 @@ along with this software (see the LICENSE.md file). If not, see
 <services xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/service-definition-2.1.xsd">
 
     <service verb="get" noun="Products" authenticate="false">
-        <description> get a single, or all products (will page lateron</description>
+        <description> get a single, or all products</description>
         <in-parameters>
             <parameter name="companyPartyId"/>
             <parameter name="categoryId"/>
             <parameter name="productId"/>
+            <parameter name="productTypeId"/>
+            <parameter name="assetClassId"/>
             <parameter name="start" default-value="0" type="Integer"/>
             <parameter name="limit" default-value="10" type="Integer"/>
             <parameter name="filter"/>
@@ -58,6 +60,10 @@ along with this software (see the LICENSE.md file). If not, see
                     entity-name="growerp.mobile.product.ProductAndPriceAndProductCategory"
                         list="productList">
                         <econdition field-name="ownerPartyId" from="companyPartyId"/>
+                        <econdition field-name="productTypeEnumId"
+                            from="productTypeId" ignore-if-empty="true"/>
+                        <econdition field-name="assetClassEnumId"
+                            from="assetClassId" ignore-if-empty="true"/>
                         <econdition field-name="categoryId" ignore-if-empty="true"/>
                         <econdition field-name="productId" operator="is-not-null"/>
                         <econdition field-name="productId" ignore-if-empty="true"/>
@@ -91,6 +97,11 @@ along with this software (see the LICENSE.md file). If not, see
                     </script>
                     <continue/>
                 </if>
+                <entity-find-count entity-name="mantle.product.asset.Asset" count-field="assetCount">
+                    <econdition field-name="statusId" operator="not-equals" value="AstDeactivated"/>
+                    <econdition field-name="classEnumId" from="product.assetClassEnumId"/>
+                    <econdition field-name="assetTypeEnumId" from="product.assetTypeEnumId"/>
+                </entity-find-count>
                 <entity-find entity-name="mantle.product.ProductContent" list="contents">
                     <econdition field-name="productId" from="product.productId"/>
                     <econdition field-name="productContentTypeEnumId" from="contentTypeId"/>
@@ -105,6 +116,7 @@ along with this software (see the LICENSE.md file). If not, see
                     price: product.price.toString(),
                     categoryId: product.categoryId,
                     categoryName: product.categoryName,
+                    assetCount: assetCount.toString(),
                     image: imageFile? imageFile : null]"/>
                 <if condition="productId">
                     <set field="product" from="productOut"/>
@@ -235,6 +247,153 @@ along with this software (see the LICENSE.md file). If not, see
         </actions>
     </service>
 
+    <service verb="get" noun="Assets">
+        <description> get a single, or all assets</description>
+        <in-parameters>
+            <parameter name="companyPartyId"/>
+            <parameter name="productId"/>
+            <parameter name="assetId"/>
+            <parameter name="assetClassId"/>
+            <parameter name="start" default-value="0" type="Integer"/>
+            <parameter name="limit" default-value="10" type="Integer"/>
+            <parameter name="filter"/>
+            <parameter name="search"/>
+        </in-parameters>
+        <out-parameters>
+            <parameter name="asset" type="Map"/>
+            <parameter name="assets" type="List"/>
+            <parameter name="count" type="Integer"/>
+        </out-parameters>
+        <actions>
+            <service-call out-map="context"
+                name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner"/>
+            <if condition="filter">
+                <set field="filter" value="%${filter}%"/></if>
+            <if condition="search">
+                <set field="search" value="%${search}%"/></if>
+            <entity-find offset="start" limit="limit" list="assetList"
+                entity-name="mantle.product.asset.AssetAndProduct">
+                <econdition field-name="classEnumId"
+                    from="assetClassId" ignore-if-empty="true"/>
+                <econdition field-name="ownerPartyId" from="companyPartyId"/>
+                <econdition field-name="productId" ignore-if-empty="true"/>
+                <econdition field-name="assetName" operator="like"
+                    from="filter" ignore-if-empty="true"/>
+                <econdition field-name="statusId" operator="not-equals" value="AstDeactivated"/>
+                <econditions combine="or">
+                    <econdition field-name="assetId"
+                        operator="like" from="search" ignore-if-empty="true"/>
+                    <econdition field-name="assetName"
+                        operator="like" from="search" ignore-if-empty="true"/>
+                </econditions>
+                <order-by field-name="assetName"/>
+            </entity-find>
+            <if condition="!assetId">
+                <set field="assets" from="[]"/>
+            </if>
+            <iterate entry="asset" list="assetList">
+                <if condition="filter">
+                    <script>
+                        assets.add([
+                            assetId: asset.assetId,
+                            assetName: asset.assetName,
+                            productName: asset.productName
+                                ])
+                    </script>
+                    <continue/>
+                </if>
+                <service-call name="growerp.100.OrderServices100.convert#StatusId"
+                in-map="[docType: 'asset', statusId: asset.statusId]" out-map="context"/>
+                <set field="assetOut" from="[
+                    assetId: asset.assetId,
+                    statusId: convertedStatusId,
+                    assetTypeId: asset.assetTypeEnumId,
+                    assetClassId: asset.classEnumId,
+                    assetName: asset.assetName,
+                    quantityOnHand: asset.quantityOnHandTotal? asset.quantityOnHandTotal.toString() : '0',
+                    availableToPromise: asset.availableToPromiseTotal? asset.availableToPromiseTotal.toString() : '0',
+                    productId: asset.productId,
+                    productName: asset.productName
+                    ]"/>
+                <if condition="assetId">
+                    <set field="asset" from="assetOut"/>
+                    <else>
+                        <script>assets.add(assetOut)</script>
+                    </else>
+                </if>
+            </iterate>
+        </actions>
+    </service>
+
+    <service verb="create" noun="Asset">
+        <description> Create a Asset </description>
+        <in-parameters>
+            <parameter name="asset" required="true"/>
+        </in-parameters>
+        <out-parameters>
+            <parameter name="asset"/>
+        </out-parameters>
+        <actions>
+            <script> // convert JSON data
+                Object assetIn = new groovy.json.JsonSlurper().parseText(asset).asset</script>
+            <service-call name="growerp.100.PartyServices100.get#Company" out-map="context"/>
+            <set field="ownerPartyId" from="company.partyId"/>
+            <service-call name="create#mantle.product.asset.Asset" in-map="[
+                assetTypeEnumId: 'AstTpRental',
+                classEnumId: assetIn.assetClassId,
+                assetName: assetIn.assetName,
+                description: assetIn.description,
+                ownerPartyId: company.partyId,
+                assetTypeEnumId: 'PtAsset',
+                assetClassEnumId: 'AsClsInventoryFin']" out-map="context" />
+            <service-call name="growerp.100.CatgProdServices100.get#Assets"
+                in-map="[assetId: assetId]" out-map="context"/>
+        </actions>
+    </service>
+
+    <service verb="update" noun="Asset">
+        <description> Update an existing Asset</description>
+        <in-parameters>
+            <parameter name="asset" required="true"/>
+        </in-parameters>
+        <out-parameters>
+            <parameter name="asset"/>
+        </out-parameters>
+        <actions>
+            <script> // convert JSON data
+                Object assetIn = new groovy.json.JsonSlurper().parseText(asset).asset</script>
+            <if condition="!assetIn.assetId"><return error="true" message="AssetId required"/></if>
+            <service-call name="growerp.100.GeneralServices100.get#RelatedCompanyPartyId"
+                out-map="context"/>
+            <entity-find-one value-field="asset" entity-name="mantle.product.asset.Asset" for-update="true">
+                <field-map field-name="assetId" from="assetIn.assetId"/>
+                <field-map field-name="ownerPartyId"/></entity-find-one>
+            <if condition="!asset"><return error="true" message="asset ${assetIn.assetId} not found!}"/></if>
+            <if condition="assetIn.assetName &amp;&amp; asset.assetName != assetIn.assetName">
+                <set field="asset.assetName" from="assetIn.assetName"/>
+                <entity-update value-field="asset"/></if>
+            <service-call name="growerp.100.CatgProdServices100.get#Assets"
+                in-map="[assetId: assetIn.assetId]" out-map="context"/>
+            </actions>
+    </service>
+
+    <service verb="delete" noun="Asset">
+        <description> Delete a Asset </description>
+        <in-parameters>
+            <parameter name="assetId" required="true"/>
+        </in-parameters>
+        <out-parameters>
+            <parameter name="assetId"/>
+        </out-parameters>
+        <actions>
+            <service-call name="growerp.mobile.MobilePartyServices.get#RelatedCompanyPartyId" out-map="context"/>
+            <entity-find-one value-field="asset" entity-name="mantle.product.asset.Asset" for-update="true">
+                <field-map field-name="assetId"/><field-map field-name="ownerPartyId"/> </entity-find-one>
+            <set field="asset.statusId" value="AstDeactivated"/>
+            <entity-update value-field="asset"/>
+        </actions>
+    </service>
+    
     <service verb="get" noun="ProductCategories" authenticate="false">
         <description> get a single or all categories to group products by drinks , salads, deserts etc</description>
         <in-parameters>
@@ -244,6 +403,7 @@ along with this software (see the LICENSE.md file). If not, see
             <parameter name="limit" default-value="20" type="Integer"/>
             <parameter name="filter"/>
             <parameter name="search"/>
+            <parameter name="classificationId"/>
         </in-parameters>
         <out-parameters>
             <parameter name="category" type="Map"/>
@@ -259,11 +419,13 @@ along with this software (see the LICENSE.md file). If not, see
                 <entity-find entity-name="mantle.party.Organization" list="parties" limit="1">
                     <order-by field-name="partyId"/></entity-find>
                 <set field="companyPartyId" from="parties[0].partyId"/>
-                <log message="Using first allocated companyPartyId"/></if>
-            <entity-find
-                entity-name="mantle.product.category.ProductCategory" list="rootList">
-                <econdition field-name="ownerPartyId" from="companyPartyId"/>
-                <econdition field-name="productCategoryTypeEnumId" value="PctRoot"/>
+            <log message="Using first allocated companyPartyId"/></if>
+            <!-- get root category from productStore -->
+            <service-call  name="growerp.100.PartyServices100.verifyAndGet#ProductStore"
+                in-map="[companyPartyId: companyPartyId, classificationId: classificationId]"
+                out-map="context"/>
+            <entity-find entity-name="mantle.product.store.ProductStoreCategory" list="rootList">
+                <econdition field-name="productStoreId" from="productStore.productStoreId"/>
             </entity-find>
             <if condition="rootList">
                 <set field="parentProductCategoryId" from="rootList[0].productCategoryId"/>
@@ -437,6 +599,171 @@ along with this software (see the LICENSE.md file). If not, see
                 <entity-update value-field="rollUpList[0]"/>
             <else>
                 <return error="true" message="could not find rollup for category: ${productCategoryId}"/></else></if>
+        </actions>
+    </service>
+
+    <service verb="get" noun="AssetGanntRental">
+        <out-parameters>
+            <parameter name="ganntLines"/>
+        </out-parameters>
+        <actions>
+            <service-call out-map="context"
+                name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner"/>
+            <entity-find entity-name="growerp.order.OrderHeaderPartItemPartiesAndReservation" list="orders">
+                <econdition field-name="vendorPartyId" from="ownerPartyId"/>
+                <econdition field-name="partStatusId" operator="in" from="['OrderPlaced','OrderApproved']"/>
+                <econdition field-name="rentalFromDate" operator="is-not-null"/>
+                <econdition field-name="rentalThruDate" operator="is-not-null"/>
+                <select-field field-name="orderId"/>
+                <select-field field-name="orderItemSeqId"/>
+                <select-field field-name="itemDescription"/>
+                <select-field field-name="customerPartyId"/>
+                <select-field field-name="assetId"/>
+                <select-field field-name="rentalFromDate"/>
+                <select-field field-name="rentalThruDate"/>
+                <select-field field-name="productId"/>
+                <order-by field-name="assetId"/><!-- get already assigned assetId first -->
+                <order-by field-name="rentalFromDate"/>
+            </entity-find>
+            <log message="=====orders found: ${orders.size()}"/>
+            <entity-find entity-name="mantle.product.asset.Asset" list="assets">
+                <econdition field-name="ownerPartyId"/>
+                <econdition field-name="statusId" value="AstAvailable"/>
+                <order-by field-name="productId"/>
+            </entity-find>
+            <set field="lines" from="[]"/>
+            <iterate list="orders" entry="order"><!-- list of orders -->
+                <log message="===processing ${order.orderId}/${order.orderItemSeqId} prod: ${order.productId} ${order.itemDescription}"/>
+                <set field="assetId" from="order.assetId"/>
+                <if condition="!assetId"><!-- no assetId assigned yet, find one -->
+                    <set field="prodAssets" from="assets.findAll{ it.productId == order.productId }"/>
+                    <iterate list="prodAssets" entry="asset"><!-- list of available assets -->
+                        <log message="===process p:${asset.productId} a:${asset.assetId} ${asset.assetName}"/>
+                        <if condition="!lines.find{
+                            it.productId == order.productId &amp;&amp;
+                            (it.assetId == null || it.assetId == asset.assetId) &amp;&amp;
+                            ((it.rentalFromDate &lt;= order.rentalFromDate &amp;&amp;
+                            it.rentalThruDate &gt;= order.rentalFromDate) ||
+                            (it.rentalFromDate &lt;= order.rentalThruDate &amp;&amp;
+                            it.rentalThruDate &gt;= order.rentalThruDate))   }">
+                            <set field="assetId" from="asset.assetId"/>
+                            <set field="assetName" from="asset.assetName"/>
+                            <log message="===asset $assetName used, date not found"/>
+                            <break/>
+                        </if>
+                    </iterate>
+                    <else><!-- get assetName from asset list-->
+                        <set field="assetName" from="assets.find{ it.assetId == assetId}[0].assetName"/>
+                    </else>
+                </if>
+                <if condition="!assetId">
+                    <log message="===could not find an free asset for ${order.productId} ${order.itemDescription} ${order.rentalFromDate} ${order.rentalThruDate}"/>
+                    <else>
+                        <set field="ganntLine" from="[
+                            assetId: assetId, assetName: assetName,
+                            productId: order.productId,
+                            rentalFromDate: order.rentalFromDate,
+                            rentalThruDate: order.rentalThruDate,
+                            customerPartyId: order.customerPartyId 
+                           ]"/>
+                        <script>lines.add(ganntLine)</script>
+                    </else>
+                </if>
+            </iterate>
+            <!-- merge assets and reservations -->
+            <script>lines.sort{a, b ->  a.assetId.compareTo(b.assetId) }</script>
+            <script>assets.sort{a, b ->  a.assetId.compareTo(b.assetId) }</script>
+            <set field="ganntLines" from="[]"/>
+            <iterate list="assets" entry="asset">
+                <set field="assetLines" from="lines.findAll{ it.assetId == asset.assetId }"/>
+                <if condition="assetLines">
+                    <iterate list="assetLines" entry="line">
+                        <entity-find-one entity-name="mantle.party.Organization" value-field="org">
+                            <field-map field-name="partyId" from="line.customerPartyId"/>
+                        </entity-find-one>
+                        <set field="ganntLine" from="[
+                            assetId: line.assetId, assetName: line.assetName,
+                            productId: line.productId,
+                            fromDate: ec.l10n.format(line.rentalFromDate,'yyyy-MM-dd'),
+                            thruDate: ec.l10n.format(line.rentalThruDate,'yyyy-MM-dd'),
+                            customerPartyId: order.customerPartyId,
+                            customerName: org.organizationName
+                        ]"/>
+                    <script>ganntLines.add(ganntLine)</script>
+                    </iterate>
+                    <else>
+                        <script>ganntLines.add([assetId: asset.assetId, assetName: asset.assetName])</script>
+                    </else>
+                </if>
+            </iterate>
+            <log message="=======$ganntLines"/>
+        </actions>
+    </service>
+
+    <service verb="get" noun="AssetRentalAvailable">
+        <in-parameters>
+            <parameter name="productId" required="true"/>
+            <parameter name="rentalFromDate" required="true"/>
+            <parameter name="rentalThruDate" required="true"/>
+        </in-parameters>
+        <out-parameters>
+            <parameter name="assetId"/>
+        </out-parameters>
+        <actions>
+            <service-call out-map="context"
+                name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner"/>
+            <entity-find entity-name="growerp.order.OrderHeaderPartItemPartiesAndReservation" list="orders">
+                <econdition field-name="vendorPartyId" from="ownerPartyId"/>
+                <econdition field-name="partStatusId" operator="in" from="['OrderPlaced','OrderApproved']"/>
+                <econdition field-name="rentalFromDate" operator="is-not-null"/>
+                <econdition field-name="rentalThruDate" operator="is-not-null"/>
+                <econdition field-name="productId" from="productId"/>
+                <select-field field-name="assetId"/>
+                <select-field field-name="rentalFromDate"/>
+                <select-field field-name="rentalThruDate"/>
+                <select-field field-name="productId"/>
+                <order-by field-name="assetId"/><!-- get already assigned assetId first -->
+                <order-by field-name="rentalFromDate"/>
+            </entity-find>
+            <script>orders.add(orders[orders.size-1])</script>
+            <set field="orders[orders.size-1].productId" from="productId"/>
+            <set field="orders[orders.size-1].rentalFromDate" from="rentalFromdate"/>
+            <set field="orders[orders.size-1].rentalThruDate" from="rentalThrudate"/>
+            <log message="=====orders found: ${orders.size()}"/>
+            <entity-find entity-name="mantle.product.asset.Asset" list="assets">
+                <econdition field-name="ownerPartyId"/>
+                <econdition field-name="statusId" value="AstAvailable"/>
+                <econdition field-name="productId" from="productId"/>
+                <order-by field-name="assetId"/>
+            </entity-find>
+            <set field="lines" from="[]"/>
+            <iterate list="orders" entry="order"><!-- list of orders -->
+                <log message="===processing ${order.rentalFromdate.toString()}"/>
+                <set field="assetId" from="order.assetId"/>
+                <if condition="!assetId"><!-- no assetId assigned yet, find one -->
+                    <iterate list="assets" entry="asset"><!-- list of available assets -->
+                        <log message="===process p:${asset.productId} a:${asset.assetId} ${asset.assetName}"/>
+                        <if condition="!lines.find{
+                            it.productId == order.productId &amp;&amp;
+                            (it.assetId == null || it.assetId == asset.assetId) &amp;&amp;
+                            ((it.rentalFromDate &lt;= order.rentalFromDate &amp;&amp;
+                            it.rentalThruDate &gt;= order.rentalFromDate) ||
+                            (it.rentalFromDate &lt;= order.rentalThruDate &amp;&amp;
+                            it.rentalThruDate &gt;= order.rentalThruDate))   }">
+                            <set field="assetId" from="asset.assetId"/>
+                            <set field="assetName" from="asset.assetName"/>
+                            <log message="===asset $assetName used, date not found"/>
+                            <break/>
+                        </if>
+                    </iterate>
+                    <else><!-- get assetName from asset list-->
+                        <set field="assetName" from="assets.find{ it.assetId == assetId}[0].assetName"/>
+                    </else>
+                </if>
+                <if condition="!assetId">
+                    <log message="===could not find a free asset for ${order.productId}"/>
+                </if>
+            </iterate>
         </actions>
     </service>
     

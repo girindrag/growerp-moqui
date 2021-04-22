@@ -436,7 +436,7 @@ along with this software (see the LICENSE.md file). If not, see
             <if condition="!userIn.userGroupId">
                 <return error="true" message="userGroupId not supplied to update user"/></if>
             <if condition="userIn.userGroupId != oldValue.user.userGroupId">
-                <if condition="oldValue.user.userGroupid == 'GROWERP_M_ADMIN'">
+                <if condition="oldValue.user.userGroupId == 'GROWERP_M_ADMIN'">
                     <!-- check if only a single admin: cannot change -->
                     <service-call name="growerp.100.GeneralServices100.get#RelatedCompanyPartyId" 
                         in-map="[userPartyId: userIn.partyId]" out-map="company"/>
@@ -494,7 +494,7 @@ along with this software (see the LICENSE.md file). If not, see
             <!-- check if this user has an admin account -->
             <service-call name="growerp.100.PartyServices100.get#User"
                 in-map="[userPartyId: partyId]" out-map="oldValue"/>
-            <if condition="oldValue.user.userGroupid == 'GROWERP_M_ADMIN'">
+            <if condition="oldValue.user.userGroupId == 'GROWERP_M_ADMIN'">
                 <!-- check if only a single admin: cannot change -->
                 <service-call name="growerp.100.GeneralServices100.get#RelatedCompanyPartyId" 
                     in-map="[userPartyId: partyId]" out-map="company"/>
@@ -563,22 +563,9 @@ along with this software (see the LICENSE.md file). If not, see
                 <service-call name="create#mantle.party.PartyClassificationAppl"
                     in-map="[partyId: companyPartyId, partyClassificationId: classificationId]"
                     out-map="context" />
-                <!-- create productStore -->
-                <service-call name="create#mantle.product.store.ProductStore"
-                    out-map="context" in-map="[organizationPartyId: companyPartyId,
-                        storeName: 'First Store of ' + companyName,
-                        requireInventory: 'N',
-                        reservationOrderEnumId:'AsResOrdNoRes',
-                        defaultCurrencyUomId: currencyId]" />
-                <!-- create root category -->
-                <service-call name="create#mantle.product.category.ProductCategory" out-map="context" 
-                    in-map="[ownerPartyId: companyPartyId, productCategoryTypeEnumId: 'PctRoot',
-                        categoryName: 'Root category for: ' + classificationId]" />
-                <!-- connect to productstore -->
-                <service-call name="create#mantle.product.store.ProductStoreCategory" 
-                    in-map="[productCategoryId: productCategoryId,
-                        storeCategoryTypeEnumId: 'PsctBrowseRoot',
-                        productStoreId: productStoreId, fromDate: fromDate]" />
+                <!-- create productStore every claasification/appname have their own store, login should check -->
+                <service-call  name="growerp.100.PartyServices100.verifyAndGet#ProductStore"
+                    in-map="[companyPartyId: companyPartyId, classificationId: classificationId]"/>
                 <!-- set company in as ACTIVE_ORGANIZATION UserPreference -->
                 <service-call name="create#moqui.security.UserPreference"
                     in-map="[userId: userAccount.userId, preferenceKey: 'ACTIVE_ORGANIZATION',
@@ -625,6 +612,86 @@ along with this software (see the LICENSE.md file). If not, see
                 </if>
         </actions>
     </service>
+    <service verb="verifyAndGet" noun="ProductStore">
+        <in-parameters>
+            <parameter name="companyPartyId" required="true"/>
+            <parameter name="classificationId" required="true"/>
+        </in-parameters>
+        <out-parameters>
+            <parameter name="productStore"/>
+        </out-parameters>
+        <actions>
+            <!-- get productStore with classification(appname) -->
+            <entity-find entity-name="mantle.product.store.ProductStore" list="stores">
+                <econdition field-name="organizationPartyId" from="companyPartyId"/>
+                <econdition field-name="storeName" from="classificationId"/>
+            </entity-find>
+            <if condition="stores">
+                <set field="productStore" from="stores[0]"/>
+                <return/>
+            </if>
+            <!-- create inventory facility if not there yet-->
+            <entity-find entity-name="mantle.facility.Facility" list="facilities">
+                <econdition field-name="ownerPartyId" from="companyPartyId"/>
+            </entity-find>
+            <if condition="facilities">
+                <set field="facilityId" from="facilities[0].facilityId"/>
+                <else>
+                    <service-call name="create#mantle.facility.Facility"
+                    in-map="[ownerPartyId: companyPartyId, facilityTypeEnumId: 'FcTpWarehouse',
+                        facilityName: 'Inventory', assetAllowOtherOwner: 'N']"
+                    out-map="context"/>
+                </else>
+            </if>
+            <!-- create map for productStore -->
+            <set field="inMap" from="[
+                organizationPartyId: companyPartyId,
+                storeName: classificationId,
+                inventoryFacilityId: facilityId,
+                ]"/>
+            <if condition="classificationId == 'AppAdmin'">
+                <set field="inMap" from="inMap + [
+                requireInventory: 'N',
+                reservationOrderEnumId:'AsResOrdNoRes',
+                ]"/>
+            </if>
+            <if condition="classificationId == 'AppHotel'">
+                <set field="inMap" from="inMap + [
+                requireInventory: 'N',
+                reservationOrderEnumId:'AsResAutoApproved',
+                ]"/>
+            </if>
+            <!-- create productStore -->
+            <service-call name="create#mantle.product.store.ProductStore"
+                out-map="context" in-map="inMap" />
+            <!-- create root category if required -->
+            <entity-find list="catgs"
+                entity-name="mantle.product.category.ProductCategory">
+                <econdition field-name="ownerPartyId" from="companyPartyId"/>
+                <econdition field-name="productCategoryTypeEnumId" value="PctRoot"/>
+            </entity-find>
+            <if condition="catgs">
+                <set field="productCategoryId" from="catgs[0].productCategoryId"/>
+                <else>
+                    <service-call name="create#mantle.product.category.ProductCategory" out-map="context" 
+                        in-map="[ownerPartyId: companyPartyId, productCategoryTypeEnumId: 'PctRoot',
+                            categoryName: 'Root category for: ' + classificationId]" />
+                </else>
+            </if>
+            <!-- connect to productstore -->
+            <service-call name="create#mantle.product.store.ProductStoreCategory" 
+                in-map="[productCategoryId: productCategoryId,
+                    storeCategoryTypeEnumId: 'PsctBrowseRoot',
+                    productStoreId: productStoreId,
+                    fromDate: fromDate]" />
+            <entity-find entity-name="mantle.product.store.ProductStore" list="stores">
+                <econdition field-name="organizationPartyId" from="companyPartyId"/>
+                <econdition field-name="storeName" from="classificationId"/>
+            </entity-find>
+            <set field="productStore" from="stores[0]"/>
+        </actions>
+    </service>
+
     <!--internal service used in register to run async-->
     <service verb="load" noun="DefaultData" authenticate="anonymous-all" transaction-timeout="3600">
         <!-- not reachable outside -->
@@ -633,10 +700,10 @@ along with this software (see the LICENSE.md file). If not, see
             <parameter name="userPartyId" required="true"/>
             <parameter name="currencyId"/>
             <parameter name="classificationId"/>
-            <parameter name="counter" default="5" type="Integer"/>
+            <parameter name="counterMax" default="1" type="Integer"/>
         </in-parameters>
         <actions>
-            <script>sleep(2000)</script><!-- wait for registration bove to commit -->
+            <script>sleep(2000)</script><!-- wait for registration above to commit -->
             <entity-find entity-name="mantle.product.category.ProductCategory" list="rootList">
                 <econdition field-name="productCategoryTypeEnumId" value="PctRoot"/>
                 <econdition field-name="ownerPartyId" from="companyPartyId"/></entity-find>
@@ -644,58 +711,43 @@ along with this software (see the LICENSE.md file). If not, see
                 <return error="true" message="Root category not found for companyId: $companyPartyId"/></if>
             <set field="rootProductCategoryId" from="rootList[0].productCategoryId"/>
 
-            <!-- structure of data, image should be in dbresource://GrowERP/images/...Medium.jpg-->
-            <!-- format of the data should be in the catalog format: 
-                https://github.com/growerp/growerp/blob/packages/models/lib/catalog.dart -->
-            <set field="product1" from="[ productName: 'cola', description:'description', price: 34, image: 'cola']"/>    
-            <set field="product2" from="[ productName: 'wiskey', description:'description', price: 31, image: 'wiskey']"/>    
-            <set field="products1" from="[ product1, product2]"/>
-            <set field="category1" from="[categoryName: 'drinks', description: 'catg description', image: 'drinks', image: 'drinks', 
-                                        products: products1]"/>    
-            <set field="product3" from="[ productName: 'macaroni', description:'description',
-                                        price: 12, image: 'macaroni']"/>    
-            <set field="product4" from="[ productName: 'hamburger', description:'description', price: 33, image: 'hamburger']"/>    
-            <set field="products2" from="[ product3, product4]"/>
-            <set field="category2" from="[categoryName: 'food', description: 'catg description', image: 'drinks', image: 'food',
-                                        products: products2]"/>    
-            <set field="categories" from="[category1, category2]"/>    
+            <set field="companyCount" from="companyPartyId.substring(3,6)"/>
+           
+            <set field="users" from= "[
+                [ firstName: 'James-a', lastName: 'Smith', emailAddress: 'james@example.com',
+                    locale: 'EN', username: 'james', userGroupId: 'GROWERP_M_ADMIN' ,
+                    image: 'demoFaces/1_m.jpg'],
+                [ firstName: 'John-e', lastName: 'Williams', emailAddress: 'john@example.com',
+                    locale: 'EN', username: 'john', userGroupId: 'GROWERP_M_EMPLOYEE',
+                    image: 'demoFaces/2_m.jpg' ],
+                [ firstName: 'Robert-c', lastName: 'Johnson', emailAddress: 'robert@example.com',
+                    locale: 'EN', username: 'robert', userGroupId: 'GROWERP_M_CUSTOMER',
+                    image: 'demoFaces/3_m.jpg', companyName: 'Trust Fund-c'],
+                [ firstName: 'Michael-l', lastName: 'Brown', emailAddress: 'michael@example.com',
+                    locale: 'EN', username: 'michael', userGroupId: 'GROWERP_M_LEAD',
+                    image: 'demoFaces/4_m.jpg', companyName: 'Academic Advantage-l'],
+                [ firstName: 'William-s', lastName: 'Jones', emailAddress: 'william@example.com',
+                    locale: 'EN', username: 'william', userGroupId: 'GROWERP_M_SUPPLIER',
+                    image: 'demoFaces/5_m.jpg', companyName: 'Gables Tutoring And Test Prep-s'],
 
-            <set field="users" from=
-            "[
-                [ firstName: 'Jan', lastName: 'Admin1', emailAddress: 'jan1@example.com',
-                locale: 'EN', username: 'jan1', externalId: 'ext',
-                userGroupId: 'GROWERP_M_ADMIN' ],
-                [ firstName: 'Jan', lastName: 'Employee1', emailAddress: 'jan2@example.com',
-                    locale: 'EN', username: 'jan2', externalId: 'ext',
-                    userGroupId: 'GROWERP_M_EMPLOYEE' ],
-                [ firstName: 'Jan', lastName: 'Customer1', emailAddress: 'jan3@example.com',
-                    locale: 'EN', username: 'jan3', externalId: 'ext',
-                    userGroupId: 'GROWERP_M_CUSTOMER', companyName: 'Customer org1'],
-                [ firstName: 'Jan', lastName: 'lead1', emailAddress: 'jan4@example.com',
-                    locale: 'EN', username: 'jan4', externalId: 'ext',
-                    userGroupId: 'GROWERP_M_LEAD',  companyName: 'Lead org1'],
-                [ firstName: 'Jan', lastName: 'Supplier1', emailAddress: 'jan5@example.com',
-                    locale: 'EN', username: 'jan5', externalId: 'ext',
-                    userGroupId: 'GROWERP_M_SUPPLIER', companyName: 'Supplier org1'],
-                [ firstName: 'Jan', lastName: 'Admin2', emailAddress: 'jan11@example.com',
-                    locale: 'EN', username: 'jan11', externalId: 'ext',
-                    userGroupId: 'GROWERP_M_ADMIN'],
-                [ firstName: 'Jan', lastName: 'Employee2', emailAddress: 'jan12@example.com',
-                    locale: 'EN', username: 'jan12', externalId: 'ext',
-                    userGroupId: 'GROWERP_M_EMPLOYEE' ],
-                [ firstName: 'Jan', lastName: 'Customer2', emailAddress: 'jan13@example.com',
-                    locale: 'EN', username: 'jan13', externalId: 'ext',
-                    userGroupId: 'GROWERP_M_CUSTOMER' , companyName: 'Customer org2'],
-                [ firstName: 'Jan', lastName: 'lead2', emailAddress: 'jan14@example.com',
-                    locale: 'EN', username: 'jan14', externalId: 'ext',
-                    userGroupId: 'GROWERP_M_LEAD' , companyName: 'Lead org2'],
-                [ firstName: 'Jan', lastName: 'Supplier2', emailAddress: 'jan15@example.com',
-                    locale: 'EN', username: 'jan15', externalId: 'ext',
-                    userGroupId: 'GROWERP_M_SUPPLIER' , companyName: 'Supplier org2'],
+                [ firstName: 'David-a', lastName: 'Miller', emailAddress: 'david@example.com',
+                    locale: 'EN', username: 'david', userGroupId: 'GROWERP_M_ADMIN',
+                    image: 'demoFaces/6_m.jpg'],
+                [ firstName: 'Mary-e', lastName: 'Davis', emailAddress: 'Mary@example.com',
+                    locale: 'EN', username: 'mary', userGroupId: 'GROWERP_M_EMPLOYEE',
+                    image: 'demoFaces/1_f.jpg' ],
+                [ firstName: 'Linda-c', lastName: 'Garcia', emailAddress: 'linda@example.com',
+                    locale: 'EN', username: 'linda', userGroupId: 'GROWERP_M_CUSTOMER',
+                    image: 'demoFaces/2_f.jpg', companyName: 'Miami Learning Center-c'],
+                [ firstName: 'Barbara-l', lastName: 'Rodriguez', emailAddress: 'Barbara@example.com',
+                    locale: 'EN', username: 'Barbara', userGroupId: 'GROWERP_M_LEAD',
+                    image: 'demoFaces/3_f.jpg', companyName: 'TestMasters-l'],
+                [ firstName: 'Maria-s', lastName: 'Wilson', emailAddress: 'maria@example.com',
+                    locale: 'EN', username: 'maria', userGroupId: 'GROWERP_M_SUPPLIER',
+                    image: 'demoFaces/4_f.jpg', companyName: 'Wavelength Suppliers-s'],
             ]"/>
 
-            <set field="opportunities" from="
-            [
+            <set field="opportunities" from="[
                 [ opportunityName: 'The best opportunity', description: 'the best oppr description',
                     nextStep: 'not sure yet', estAmount: 1000, estProbability: 33,
                     opportunityStageId: 'Prospecting'],
@@ -704,131 +756,158 @@ along with this software (see the LICENSE.md file). If not, see
                     opportunityStageId: 'Proposal']
             ]"/>
 
-            <set field="orderItem1" from="[ quantity: 5, price: 22.1]"/>    
-            <set field="orderItem2" from="[ quantity: 9, price: 33.4]"/>    
-            <set field="orderItems1" from="[ orderItem1, orderItem2]"/>
-            <set field="order1" from="[ orderItems: orderItems1 ]"/>
-            <set field="orderItem3" from="[ quantity: 3, price: 12.1]"/>    
-            <set field="orderItem4" from="[ quantity: 2, price: 13.4]"/>    
-            <set field="orderItems2" from="[ orderItem1, orderItem2]"/>
-            <set field="order2" from="[ orderItems: orderItems2 ]"/> 
-            <set field="orders" from="[order1, order2]"/>
-
             <set field="nowDate" from="ec.user.nowTimestamp"/>
-            <while condition="counter--">
-                <iterate list="categories" entry="el">
-                    <service-call name="create#mantle.product.category.ProductCategory"
-                        in-map="[categoryName: counter.toString() + el.categoryName,
-                                description: el.description,
-                                productCategoryTypeEnumId: 'PctCatalog',
-                                ownerPartyId: companyPartyId]"
-                        out-map="context"/>
-                    <service-call 
-                        name="create#mantle.product.category.ProductCategoryRollup"
-                        in-map="[parentProductCategoryId: rootProductCategoryId,
-                                productCategoryId: productCategoryId]"/>
-                    <service-call name="create#ProductCategoryContent" in-map="[
-                        productCategoryId: productCategoryId,
-                        categoryContentTypeEnumId: 'PcctImageThumbNail',
-                        contentLocation: 'dbresource://GrowERP/images/' +
-                            el.image + 'Small.png']" />
-                    <service-call name="create#ProductCategoryContent" in-map="[
-                        productCategoryId: productCategoryId,
-                        categoryContentTypeEnumId: 'PcctImageMedium',
-                        contentLocation: 'dbresource://GrowERP/images/' +
-                            el.image + 'Medium.png']" />
-                    <set field="index" type="Integer" value="0"/>
-                    <iterate list="el.products" entry="product">
+            <set field="counter" value="0" type="Integer"/>
+            <while condition="counter++ &lt; counterMax">
+
+                <!-- products and categories -->
+                <!-- products  -->
+                <set field="productsAdmin" from="[
+                    [ productName: 'cola', description:'The traditional american drink', price: 1.4, image: 'cola', categoryName: 'drinks'],
+                    [ productName: 'wiskey', description:'Yes, from Scotland', price: 5.21, image: 'wiskey', categoryName: 'drinks'],
+                    [ productName: 'macaroni', description:'yes from Italy', price: 8.40, image: 'macaroni', categoryName: 'Food'],
+                    [ productName: 'hamburger', description:'Another US special', price: 6.50, image: 'hamburger', categoryName: 'Food']
+                ]"/>    
+
+                <set field="productsHotel" from="[
+                    [ productName: 'Single Room', description:'The Single bed room',
+                        productTypeId: 'PtAssetUse', assetClassId: 'AsClsRoom', assetTypeId: 'AstTpFixed',
+                        price: 50, image: 'demoRooms/room1', categoryName: 'rooms'],
+                    [ productName: 'Standard Room', description:'The Standard room',
+                        productTypeId: 'PtAssetUse', assetClassId: 'AsClsRoom', assetTypeId: 'AstTpFixed',
+                        price: 80, image: 'demoRooms/room2', categoryName: 'rooms'],
+                    [ productName: 'Deluxe Room', description:'The Deluxe room offering',
+                        productTypeId: 'PtAssetUse', assetClassId: 'AsClsRoom', assetTypeId: 'AstTpFixed',
+                        price: 170, image: 'demoRooms/room3', categoryName: 'rooms'],
+                    [ productName: 'Suite', description:'The Suite',
+                        productTypeId: 'PtAssetUse', assetClassId: 'AsClsRoom', assetTypeId: 'AstTpFixed',
+                        price: 360, image: 'demoRooms/room4', categoryName: 'rooms'],
+                    [ productName: 'Appartment', description:'The living,  two bedroom appartment',
+                        productTypeId: 'PtAssetUse', assetClassId: 'AsClsRoom', assetTypeId: 'AstTpFixed',
+                        price: 460, image: 'demoRooms/room5', categoryName: 'rooms'],
+                ]"/>  
+                <if condition="classificationId == 'AppAdmin'"><set field="productsIn" from="productsAdmin"/></if>
+                <if condition="classificationId == 'AppHotel'"><set field="productsIn" from="productsHotel"/></if>
+                <!-- for hotel just create a one count list -->
+                <if condition="classificationId != 'AppHotel' || (classificationId == 'AppHotel' &amp;&amp; counter == 1)">
+                    <iterate list="productsIn" entry="el">
+                        <entity-find entity-name="mantle.product.category.ProductCategory" list="categories">
+                            <econdition field-name="categoryName" from="el.categoryName + counter"/>
+                            <econdition field-name="ownerPartyId" from="companyPartyId"/>
+                        </entity-find>
+                        <if condition="categories">
+                            <set field="productCategoryId" from="categories[0].productCategoryId"/>
+                            <else>
+                                <service-call name="create#mantle.product.category.ProductCategory"
+                                    in-map="[categoryName: el.categoryName + (classificationId != 'AppHotel'? counter : ''),
+                                        description: el.description,
+                                        productCategoryTypeEnumId: 'PctCatalog',
+                                        ownerPartyId: companyPartyId]"
+                                    out-map="context"/>
+                                <service-call 
+                                    name="create#mantle.product.category.ProductCategoryRollup"
+                                    in-map="[parentProductCategoryId: rootProductCategoryId,
+                                            productCategoryId: productCategoryId]"/>
+                                <service-call name="create#ProductCategoryContent" in-map="[
+                                    productCategoryId: productCategoryId,
+                                    categoryContentTypeEnumId: 'PcctImageThumbNail',
+                                    contentLocation: 'dbresource://GrowERP/images/' +
+                                        el.image + 'Small.png']" />
+                                <service-call name="create#ProductCategoryContent" in-map="[
+                                    productCategoryId: productCategoryId,
+                                    categoryContentTypeEnumId: 'PcctImageMedium',
+                                    contentLocation: 'dbresource://GrowERP/images/' +
+                                        el.image + 'Medium.png']" />
+                            </else>
+                        </if>
                         <service-call name="create#mantle.product.Product" in-map="[
-                            productName: counter.toString() + product.productName,
-                            description: product.description,
+                            productTypeEnumId: el.productTypeId,
+                            assetClassEnumId: el.assetClassId,
+                            assetTypeEnumId: el.assetTypeId,
+                            productName: el.productName + (classificationId != 'AppHotel'? counter : ''),
+                            description: el.description,
                             ownerPartyId: companyPartyId,
-                            productTypeEnumId: 'PtAsset',
-                            assetTypeEnumId: 'AstTpInventory',
-                            assetClassEnumId: 'AsClsInventoryFin']" out-map="context" />
-                        <if condition="index == 0">
-                            <set field="product1" from="productId"/>
-                        </if>
-                        <if condition="index == 1">
-                            <set field="product2" from="productId"/>
-                        </if>
+                            ]" out-map="context" />
                         <service-call
                             name="create#mantle.product.category.ProductCategoryMember"
                             in-map="[productId: productId, productCategoryId: productCategoryId, fromDate: fromDate]"/>
                         <service-call name="create#mantle.product.ProductPrice"
                             in-map="[productId: productId, priceTypeEnumId: 'PptList',
-                            priceUomId: currencyId, price: product.price,
+                            priceUomId: currencyId, price: el.price,
                             fromDate: ec.user.nowTimestamp,
                             pricePurposeEnumId: 'PppPurchase']"/>
                         <service-call name="create#ProductContent" in-map="[
                             productId: productId,
                             productContentTypeEnumId: 'PcntImageSmall',
                             contentLocation: 'dbresource://GrowERP/images/' +
-                                product.image + 'Small.png']" />
+                                el.image + 'Small.png']" />
                         <service-call name="create#ProductContent" in-map="[
                             productId: productId,
                             productContentTypeEnumId: 'PcntImageMedium',
                             contentLocation: 'dbresource://GrowERP/images/' +
-                            product.image + 'Medium.png']" />
-                        <set field="index" from="index + 1"/>
+                                el.image + 'Medium.png']" />
                     </iterate>
-                </iterate>
-                <set field="index" type="Integer" value="0"/>
+
+                    <!-- assets -->
+                    <entity-find entity-name="mantle.product.store.ProductStore" list="stores">
+                        <econdition field-name="organizationPartyId" from="companyPartyId"/>
+                        <econdition field-name="storeName" from="classificationId"/>
+                    </entity-find>
+                    <set field="assetsHotel" from="[
+                        [ assetName: 'Room 1', productName: 'Single Room'],
+                        [ assetName: 'Room 2', productName: 'Single Room'],
+                        [ assetName: 'Room 3', productName: 'Single Room'],
+                        [ assetName: 'Room 4', productName: 'Standard Room'],                
+                        [ assetName: 'Room 5', productName: 'Standard Room'],                
+                        [ assetName: 'Room 6', productName: 'Standard Room'],                
+                        [ assetName: 'Room 7', productName: 'Deluxe Room'],                
+                        [ assetName: 'Room 8', productName: 'Deluxe Room'],                
+                        [ assetName: 'Room 9', productName: 'Suite'],                
+                        [ assetName: 'Room 10', productName: 'Suite'],                
+                        [ assetName: 'Room 11', productName: 'Appartment'],                
+                        ]"/>
+                    <if condition="classificationId == 'AppHotel'"><set field="assetsIn" from="assetsHotel"/></if>
+
+                    <iterate list="assetsIn" entry="asset">
+                        <entity-find entity-name="mantle.product.Product" list="products">
+                            <econdition field-name="ownerPartyId" from="companyPartyId"/>
+                            <econdition field-name="productName" from="asset.productName"/>
+                        </entity-find>
+                        <if condition="products">
+                            <set field="product" from="products[0]"/>
+                            <else>
+                                <return error="false"
+                                    message="Could not find product: ${asset.productName} on asset: ${asset.assetName}"/>
+                            </else>
+                        </if>
+                        <!-- do not put fixed asset in inventory so normal reserve process does not work -->
+                        <service-call name="create#mantle.product.asset.Asset" in-map="
+                            productId: product.productId,
+                            classEnumId: product.assetClassEnumId,
+                            assetTypeEnumId: product.assetTypeEnumId,
+                            assetName: asset.assetName,
+                            ownerPartyId: companyPartyId,
+                            statusId: 'AstAvailable',
+                            "/>
+                    </iterate>
+                </if>
+
+                <!-- users -->
                 <iterate list="users" entry="us">
                     <set field="userIn" from="groovy.json.JsonOutput.toJson([user:[
                         firstName: us.firstName,
-                        lastName: counter.toString() + us.lastName,
-                        email: companyPartyId + counter.toString() + us.emailAddress,
+                        lastName: us.lastName + counter,
+                        email: us.emailAddress.substring(0,us.emailAddress.indexOf('@')) + counter + companyCount + us.emailAddress.substring(us.emailAddress.indexOf('@')),
                         locale: 'EN',
-                        username: companyPartyId + counter.toString() + us.username,
-                        externalId: us.externalid,
+                        username: us.username + counter + companyCount,
                         userGroupId: us.userGroupId, companyName: us.companyName
                     ]])"/>
                     <service-call name="growerp.100.PartyServices100.create#User"
                             in-map="[user: userIn]" out-map="context"/>
-                    <if condition="user.userGroupId == 'GROWERP_M_LEAD'">
-                        <if condition="index%2 == 0">
-                            <set field="leadCompany1" from="user.companyPartyId"/>
-                            <set field="leadUser1" from="user.partyId"/>
-                        </if>
-                        <if condition="index%2 == 1">
-                            <set field="leadCompany2" from="user.companyPartyId"/>
-                            <set field="leadUser2" from="user.partyId"/>
-                        </if>
-                    </if>
-                    <if condition="user.userGroupId == 'GROWERP_M_CUSTOMER'">
-                        <if condition="index%2 == 0">
-                            <set field="customerCompany1" from="user.companyPartyId"/>
-                            <set field="customerUser1" from="user.partyId"/>
-                        </if>
-                        <if condition="index%2 == 1">
-                            <set field="customerCompany2" from="user.companyPartyId"/>
-                            <set field="customerUser2" from="user.partyId"/>
-                        </if>
-                    </if>
-                    <if condition="user.userGroupId == 'GROWERP_M_SUPPLIER'">
-                        <if condition="index%2 == 0">
-                            <set field="supplierCompany1" from="user.companyPartyId"/>
-                            <set field="supplierUser1" from="user.partyId"/>
-                        </if>
-                        <if condition="index%2 == 1">
-                            <set field="supplierCompany2" from="user.companyPartyId"/>
-                            <set field="supplierUser2" from="user.partyId"/>
-                        </if>
-                    </if>
-                    <if condition="user.userGroupId == 'GROWERP_M_EMPLOYEE'">
-                        <if condition="index%2 == 0">
-                                <set field="employeeCompany1" from="user.companyPartyId"/>
-                                <set field="employeeUser1" from="user.partyId"/>
-                        </if>
-                        <if condition="index%2 == 1">
-                            <set field="employeeCompany2" from="user.companyPartyId"/>
-                            <set field="employeeUser2" from="user.partyId"/>
-                        </if>
-                    </if>
-                    <set field="index" from="index + 1"/>
                 </iterate>
-                <set field="index" type="Integer" value="0"/>
+
+                <!-- opportunities -->
+                <set field="index" value="0" type="Integer"/>
                 <iterate list="opportunities" entry="opp">
                     <set field="oppIn" from="groovy.json.JsonOutput.toJson([opportunity:[
                         opportunityName: opp.opportunityName,
@@ -846,50 +925,134 @@ along with this software (see the LICENSE.md file). If not, see
                     <set field="index" from="index + 1"/>
                 </iterate>
 
+                <!-- orders -->
+                <set field="ordersAdmin" from="[
+                    [ quantity: 5, price: 22.1, orderName: 'first generated order'],
+                    [ quantity: 2, price: 20.1, orderName: 'first generated order'],
+                    [ quantity: 4, price: 29.11, orderName: 'first generated order'],
+                    [ quantity: 3, price: 12.1, orderName: 'second generated order'],
+                    [ quantity: 4, price: 10.1, orderName: 'second generated order'],
+                    [ quantity: 5, price: 19.11, orderName: 'second generated order']
+                    ]"/>
+                <!-- set time at mid day noon -->
+                <set field="nowDate" from="ec.user.nowTimestamp"/>
+                <set field="nowDate" from="ec.l10n.parseTimestamp(ec.l10n.format(nowDate, 'yyyy-MM-dd') + ' 12:00:00.000', 'yyyy-MM-dd HH:mm:ss.SSS')"/>
+                <set field="ordersHotel" from="[
+                    [ productName: 'Single Room', quantity: 1,
+                        rentalFromDate: nowDate.plus(5), 
+                        rentalThruDate: nowDate.plus(8), 
+                        price: 90, orderName: 'first generated Hotel order'],
+                    [ productName: 'Single Room', quantity: 2,
+                        rentalFromDate: nowDate.plus(15),
+                        rentalThruDate: nowDate.plus(19), 
+                        orderName: 'second generated Hotel order'],                    
+                    [ productName: 'Single Room', quantity: 1,
+                        rentalFromDate: nowDate.plus(17), quantity: 1,
+                        rentalThruDate: nowDate.plus(18), 
+                        price: 110, orderName: 'third generated Hotel order'],]"/>
+    <!--                [ productName: 'Deluxe Room', quantity: 1,
+                        rentalFromDate: nowDate.plus(20), quantity: 1,
+                        rentalThruDate: nowDate.plus(21), 
+                        price: 77, orderName: 'fourth generated Hotel order'],
+                    [ productName: 'Deluxe Room', quantity: 1, 
+                        rentalFromDate: nowDate.plus(17), quantity: 1,
+                        rentalThruDate: nowDate.plus(18), 
+                            orderName: 'fifth generated Hotel order'],
+                    [ productName: 'Suite', quantity: 1,
+                        rentalFromDate: nowDate.plus(28), quantity: 1,
+                        rentalThruDate: nowDate.plus(31), 
+                        orderName: 'fifth generated Hotel order']
+                    ]"/>
+    -->
+                <if condition="classificationId == 'AppAdmin'"><set field="ordersIn" from="ordersAdmin"/></if>
+                <if condition="classificationId == 'AppHotel'"><set field="ordersIn" from="ordersHotel"/></if>
+                <entity-find entity-name="mantle.party.PartyDetailAndRole" list="customers">
+                    <econdition field-name="ownerPartyId" from="companyPartyId"/>
+                    <econdition field-name="roleTypeId" value="Customer"/>
+                </entity-find>
+                <entity-find entity-name="mantle.party.PartyDetailAndRole" list="suppliers">
+                    <econdition field-name="ownerPartyId" from="companyPartyId"/>
+                    <econdition field-name="roleTypeId" value="Supplier"/>
+                </entity-find>
+                <entity-find-one entity-name="mantle.ledger.config.PartyAcctgPreference"
+                        value-field="aPref">
+                    <field-map field-name="organizationPartyId" from="companyPartyId"/>
+                </entity-find-one>
                 <set field="index" type="Integer" value="0"/>
-                <iterate list="orders" entry="order">
-                    <entity-find entity-name="mantle.product.store.ProductStore" list="stores">
-                        <econdition field-name="organizationPartyId" from="companyPartyId"/>
+                <iterate list="ordersIn" entry="order">
+                    <entity-find entity-name="mantle.order.OrderHeader" list="orders">
+                        <econdition field-name="orderName" from="order.orderName"/>
                     </entity-find>
-                    <entity-find-one entity-name="mantle.ledger.config.PartyAcctgPreference"
-                            value-field="aPref">
-                        <field-map field-name="organizationPartyId" from="companyPartyId"/>
-                    </entity-find-one>
-                    <service-call name="mantle.order.OrderServices.create#Order"
-                        in-map="[
-                            currencyUomId: aPref.baseCurrencyUomId,
-                            productStoreId: stores[0].productStoreId,
-                            placedDate: ec.user.nowTimestamp,
-                            customerPartyId: index%2 == 0 ? companyPartyId : customerCompany2 ,
-                            vendorPartyId: index%2 == 0 ? supplierCompany2 : companyPartyId,
-                        ]" out-map="context"/>
-                    <iterate entry="item" list="order.orderItems">
-                        <service-call
-                            name="mantle.order.OrderServices.add#OrderProductQuantity"
-                            in-map="context + [productId: index==1 ? product1 : product2,
-                                                quantity: item.quantity,
-                                                unitAmount: item.price,
-                                                currencyUomId: aPref.baseCurrencyUomId]"
-                            out-map="itemcreate"/>
-                    </iterate>
-                    <!--service-call name="growerp.100.OrderServices100.getFinDoc"
-                        in-map="[orderId: orderId]" out-map="context"/-->
+                    <if condition="orders">
+                        <set field="orderId" from="orders.orderId"/>
+                        <else>
+                            <service-call name="mantle.order.OrderServices.create#Order"
+                            in-map="[
+                                statusId: 'OrderOpen',
+                                currencyUomId: aPref.baseCurrencyUomId,
+                                productStoreId: stores[0].productStoreId,
+                                placedDate: ec.user.nowTimestamp,
+                                customerPartyId: customers[index%2].partyId,
+                                vendorPartyId: companyPartyId,
+                            ]" out-map="context"/>
+                        </else>
+                    </if>
+                    <entity-find entity-name="growerp.mobile.product.ProductAndPriceAndProductCategory" list="products">
+                        <econdition field-name="ownerPartyId" from="companyPartyId"/>
+                        <econdition field-name="productName" from="order.productName"/>
+                    </entity-find>
+                    <if condition="products">
+                        <log message="=====adding productId: ${products[0].productId}"/>
+                        <else>
+                            <log message="====could not find product: ${order.productName}"/>
+                        </else>
+                    </if>
+                    <service-call
+                        name="mantle.order.OrderServices.add#OrderProductQuantity"
+                        in-map="context + [productId: products[0].productId,
+                                            itemTypeEnumId: 'ItemRental',
+                                            description: order.productName,
+                                            unitAmount: order.price ?: products[0].price,
+                                            requiredByDate: order.reservationDate,
+                                            quantity: order.quantity]"
+                        out-map="context"/>
 
-                    <!-- set first two orders to complete -->
-                    <!--if condition="index &lt; 2">
-                        <set field="orderIn" from="groovy.json.JsonOutput.toJson([order:[
-                            orderId: orderId,statusId: 'OrderPlaced']])"/>
-                        <service-call name="growerp.100.OrderServices100.update#Order"
-                            in-map="[order: orderIn]" out-map="context"/>
-                        <set field="orderIn" from="groovy.json.JsonOutput.toJson([order:[
-                            orderId: orderId, statusId: 'OrderApproved']])"/>
-                        <service-call name="growerp.100.OrderServices100.update#Order"
-                            in-map="[order: orderIn]" out-map="context"/>
-                        <set field="orderIn" from="groovy.json.JsonOutput.toJson([order:[
-                            orderId: orderId, statusId: 'OrderCompleted']])"/>
-                        <service-call name="growerp.100.OrderServices100.update#Order"
-                            in-map="[order: orderIn]" out-map="context"/>
-                    </if-->
+                    <entity-find-count entity-name="mantle.product.asset.Asset" count-field="nbrAssets">
+                        <econdition field-name="ownerPartyId" from="companyPartyId"/>
+                        <econdition field-name="productId" from="products[0].productId"/>
+                    </entity-find-count>
+                    <log message="=====we have $nbrAssets for product: ${products[0].productName}"/>
+                    <entity-find-count entity-name="growerp.product.ProductAndAssetRental" count-field="nbrUsed" cache="false">
+                        <econdition field-name="productId" from="products[0].productId"/>
+                        <econdition field-name="ownerPartyId" from="companyPartyId"/>
+                        <econditions combine="or">
+                            <econditions combine="and"><!--order fromdate within -->
+                                <econdition field-name="rentalFromDate"
+                                    operator="less-equals" from="order.rentalFromDate"/>
+                                <econdition field-name="rentalThruDate"
+                                    operator="greater-equals" from="order.rentalFromDate"/>
+                            </econditions>
+                            <econditions combine="and"><!-- order thruDate within -->
+                                <econdition field-name="rentalFromDate"
+                                    operator="less-equals" from="order.rentalThruDate"/>
+                                <econdition field-name="rentalThruDate"
+                                    operator="greater-equals" from="order.rentalThruDate"/>
+                            </econditions>
+                        </econditions>
+                    </entity-find-count>
+                    <log message="====we used $nbrUsed assets for these dates, available: $nbrAssets, needed: ${order.quantity}"/>
+                    <if condition="nbrAssets &lt; (nbrUsed + order.quantity)">
+                        <log message="=== We have $nbrAssets rooms, we used $nbrUsed and need now another ${order.quantity} room(s)"/>
+                    </if>
+                    <!-- do not assign an asset now, just check....add at approval(incheck?) time...-->
+                    <while condition="order.quantity--">
+                        <service-call name="create#growerp.product.AssetRental"
+                            in-map="[ productId: products[0].productId,
+                            orderId: orderId, orderItemSeqId: orderItemSeqId,
+                            rentalFromDate: order.rentalFromDate, rentalThruDate: order.rentalThruDate
+                            ]"
+                        />
+                    </while>
                     <set field="index" from="index + 1"/>
                 </iterate>
 

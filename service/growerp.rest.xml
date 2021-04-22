@@ -64,6 +64,15 @@ along with this software (see the LICENSE.md file). If not, see
             <method type="put"><service name="growerp.100.CatgProdServices100.create#Product"/></method>
             <method type="patch"><service name="growerp.100.CatgProdServices100.update#Product"/></method>
             <method type="delete"><service name="growerp.100.CatgProdServices100.delete#Product"/></method></resource>
+        <resource name="Asset">
+            <method type="get"><service name="growerp.100.CatgProdServices100.get#Assets"/></method>
+            <method type="put"><service name="growerp.100.CatgProdServices100.create#Asset"/></method>
+            <method type="patch"><service name="growerp.100.CatgProdServices100.update#Asset"/></method>
+            <method type="delete"><service name="growerp.100.CatgProdServices100.delete#Asset"/></method></resource>
+        <resource name="AssetGannt">
+            <method type="get"><service name="growerp.100.CatgProdServices100.get#AssetGanntRental"/></method></resource>
+        <resource name="AssetRentalAvailable">
+            <method type="get"><service name="growerp.100.CatgProdServices100.get#AssetRentalAvailable"/></method></resource>
         <!--financial docs: order, invoice payments -->
         <resource name="FinDoc"><!-- get financial docs : order/invoice/payment -->
             <method type="get"><service name="growerp.100.OrderServices100.get#FinDoc"/></method>

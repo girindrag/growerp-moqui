@@ -223,6 +223,7 @@ along with this software (see the LICENSE.md file). If not, see
         <in-parameters>
             <parameter name="username" required="true"/>
             <parameter name="password" required="true"/>
+            <parameter name="classificationId" required="true"/>
         </in-parameters>
         <out-parameters>
             <parameter name="apiKey"/>
@@ -267,11 +268,15 @@ along with this software (see the LICENSE.md file). If not, see
                     </if>
                 </if>
             </if>
+
             <if condition="!passwordChange">
                 <script>ec.user.loginUser(username, password)</script>
+            <!-- check product store if exists when not create-->
                 <service-call name="growerp.100.PartyServices100.get#User"
                     in-map="[userPartyId: userAccount.partyId]" out-map="context"/>
                 <service-call name="growerp.100.PartyServices100.get#Company" out-map="context"/>
+                <service-call  name="growerp.100.PartyServices100.verifyAndGet#ProductStore"
+                in-map="[companyPartyId: company.partyId, classificationId: classificationId]"/>
                 <set field="apiKey" from="ec.user.getLoginKey()"/>
                 <set field="moquiSessionToken" from="ec.web.sessionToken"/>
                 <service-call name="growerp.100.GeneralServices100.get#Stats" out-map="context"/>

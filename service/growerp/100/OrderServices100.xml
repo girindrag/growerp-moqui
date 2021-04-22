@@ -24,6 +24,15 @@ along with this software (see the LICENSE.md file). If not, see
             <parameter name="convertedStatusId"/>
         </out-parameters>
         <actions>
+            <if condition="docType == 'asset'">
+                <set field="assetStatusValues" from="[
+                AstAvailable: 'Available',
+                Available: 'AstAvailable',
+                AstDeactivated: 'Deactivated',
+                Deactivated: 'AstDeactivated',
+                ]"/>
+                <set field="convertedStatusId" from="assetStatusValues[statusId]"/>
+            </if>
             <if condition="docType == 'order'">
                 <set field="orderStatusValues" from="[
                     OrderOpen: 'FinDocPrep',
@@ -136,7 +145,7 @@ along with this software (see the LICENSE.md file). If not, see
             <if condition="docType == 'order'">
                 <if condition="id"><!-- single document -->
                     <entity-find list="items"
-                            entity-name="growerp.order.OrderHeaderPartItemAndParties">
+                            entity-name="growerp.order.OrderHeaderPartItemPartiesAndReservation">
                         <econdition field-name="orderId" from="id"/>
                         <econditions combine="or">
                             <econdition field-name="vendorPartyId" from="ownerPartyId"/>
@@ -151,7 +160,7 @@ along with this software (see the LICENSE.md file). If not, see
                             <set field="status" from="statusList"/>
                         </if>
                         <entity-find offset="start" limit="limit"
-                                entity-name="growerp.order.OrderHeaderPartItemAndParties" list="items">
+                                entity-name="growerp.order.OrderHeaderPartItemPartiesAndReservation" list="items">
                             <econdition field-name="vendorPartyId" from="vendorPartyId" ignore-if-empty="true"/>
                             <econdition field-name="customerPartyId" from="customerPartyId" ignore-if-empty="true"/>
                             <econdition field-name="statusId" operator="in" from="status" ignore-if-empty="true"/>
@@ -212,6 +221,8 @@ along with this software (see the LICENSE.md file). If not, see
                         description: item.itemDescription,
                         quantity: item.quantity.toString(),
                         price: item.unitAmount.toString(),
+                        rentalFromDate: ec.l10n.format(item.rentalFromDate,'yyyy-MM-dd'),
+                        rentalThruDate: ec.l10n.format(item.rentalThruDate,'yyyy-MM-dd'),
                         ]"/>
                     <script>finDocItems.add(finDocItem)</script>
                     <set field="lastItem" from="item"/>
@@ -490,6 +501,7 @@ along with this software (see the LICENSE.md file). If not, see
             </if>
             <entity-find entity-name="mantle.product.store.ProductStore" list="stores">
                 <econdition field-name="organizationPartyId" from="ownerPartyId"/>
+                <econdition field-name="storeName" from="order.classificationId"/>
             </entity-find>
             <set field="productStoreId" from="stores[0].productStoreId"/>
             <entity-find-one entity-name="mantle.ledger.config.PartyAcctgPreference"
@@ -590,7 +602,7 @@ along with this software (see the LICENSE.md file). If not, see
             <service-call out-map="context"
                 name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner"/>
             <set field="orderId" from="order.orderId"/>
-            <entity-find entity-name="OrderHeaderPartItemAndParties" list="items">
+            <entity-find entity-name="OrderHeaderPartItemPartiesAndReservation" list="items">
                 <econdition field-name="orderId"/>
                 <econditions combine="or">
                     <econdition field-name="vendorPartyId" from="ownerPartyId"/>

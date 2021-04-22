@@ -14,7 +14,7 @@ along with this software (see the LICENSE.md file). If not, see
 -->
 <entities xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/entity-definition-2.1.xsd">
 
-    <view-entity entity-name="OrderHeaderPartItemAndParties" package="growerp.order">
+    <view-entity entity-name="OrderHeaderPartItemPartiesAndReservation" package="growerp.order">
         <member-entity entity-alias="ORHD" entity-name="mantle.order.OrderHeader"/>
         <member-entity entity-alias="OPRT" entity-name="mantle.order.OrderPart" join-from-alias="ORHD">
             <key-map field-name="orderId"/></member-entity>
@@ -26,9 +26,16 @@ along with this software (see the LICENSE.md file). If not, see
         <member-entity entity-alias="OPAY" entity-name="mantle.account.payment.Payment"
             join-from-alias="ORHD" join-optional="true">
             <key-map field-name="orderId"/></member-entity>
+        <member-entity entity-alias="RESERV" entity-name="growerp.product.AssetRental"
+            join-from-alias="OITEM" join-optional="true">
+            <key-map field-name="orderId"/><key-map field-name="orderItemSeqId"/>
+            </member-entity>
         <alias-all entity-alias="ORHD"/>
         <alias-all entity-alias="OPRT"><exclude field="priority"/><exclude field="statusId"/></alias-all>
         <alias-all entity-alias="OITEM"/>
+        <alias name="rentalFromDate" entity-alias="RESERV"/>
+        <alias name="rentalThruDate" entity-alias="RESERV"/>
+        <alias name="assetId" entity-alias="RESERV"/>
         <alias name="invoiceId" entity-alias="OINV"/>
         <alias name="paymentId" entity-alias="OPAY"/>
         <alias name="partStatusId" entity-alias="OPRT" field="statusId"/>
@@ -209,6 +216,9 @@ along with this software (see the LICENSE.md file). If not, see
         <alias name="fromDate" entity-alias="MEM"/>
         <alias name="thruDate" entity-alias="MEM"/>
         <alias name="productId" entity-alias="PROD"/>
+        <alias name="productTypeEnumId" entity-alias="PROD"/>
+        <alias name="assetTypeEnumId" entity-alias="PROD"/>
+        <alias name="assetClassEnumId" entity-alias="PROD"/>
         <alias name="productName" entity-alias="PROD"/>
         <alias name="description" entity-alias="PROD"/>
         <alias name="ownerPartyId" entity-alias="PROD"/>
@@ -380,6 +390,14 @@ along with this software (see the LICENSE.md file). If not, see
             field="contactMechPurposeId" entity-alias="LEADPCM"/>
         <alias name="leadEmail" field="infoString" entity-alias="LEADCM"/>
         <entity-condition><date-filter/></entity-condition>
+</view-entity>
+
+<view-entity entity-name="ProductAndAssetRental" package="growerp.product">
+    <member-entity entity-alias="PROD" entity-name="mantle.product.Product"/>
+    <member-entity entity-alias="RENTAL" entity-name="growerp.product.AssetRental"
+        join-from-alias="PROD"><key-map field-name="productId"/></member-entity>
+    <alias-all entity-alias="PROD"/>
+    <alias-all entity-alias="RENTAL"><exclude field="assetId"/></alias-all>
 </view-entity>
 
 </entities>

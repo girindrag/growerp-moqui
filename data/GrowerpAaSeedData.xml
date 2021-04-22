@@ -21,7 +21,7 @@ along with this software (see the LICENSE.md file). If not, see
             storeDelete="N" storeMarkSeen="Y" storeSkipSeen="Y" mailUsername="mobile@growerp.com" mailPassword="xxxxxxx"/-->
 
      <!-- allocate companies to application -->
-    <moqui.basic.Enumeration description="Mobile App user" enumId="PcltMobileApp" enumTypeId="PartyClassificationType"/>
+    <moqui.basic.Enumeration description="Mobile App Name used by company" enumId="PcltMobileApp" enumTypeId="PartyClassificationType"/>
     <mantle.party.PartyClassification partyClassificationId="AppAdmin" classificationTypeEnumId="PcltMobileApp" description="Admin app to maintain backoffice data, products, categories, orders"/>
     <mantle.party.PartyClassification partyClassificationId="AppRestaurant" classificationTypeEnumId="PcltMobileApp" description="App for restaurant,cafe,bar"/>
     <mantle.party.PartyClassification partyClassificationId="AppEcommerceShop" classificationTypeEnumId="PcltMobileApp" description="App for Ecommerce and shop"/>
@@ -101,9 +101,9 @@ along with this software (see the LICENSE.md file). If not, see
                 screenRenderMode="text"/>
     </moqui.basic.email.EmailTemplate>
     <!-- Paypal account -->
-    <mantle.account.method.PaymentGatewayConfig paymentGatewayConfigId="PaypalDemo"/>
+    <!--mantle.account.method.PaymentGatewayConfig paymentGatewayConfigId="PaypalDemo"/>
     <mantle.account.method.PaymentMethod PaymentMethodId="PayPalDemo" paymentMethodTypeEnumId="PmtPayPalAccount"
-            paymentGatewayConfigId="PaypalDemo"/>
+            paymentGatewayConfigId="PaypalDemo"/-->
 
     <!-- ========== Scheduled ServiceJob Data ========== -->
     <!-- Handy cron strings: [0 0 2 * * ?] every night at 2:00 am, [0 0/15 * * * ?] every 15 minutes, [0 0/2 * * * ?] every 2 minutes -->
@@ -118,5 +118,10 @@ along with this software (see the LICENSE.md file). If not, see
         <parameters parameterName="daysToKeep" parameterValue="90"/>
     </moqui.service.job.ServiceJob>
 
+    <!-- update seed data -->
+    <!--<growerp.InstallServices.deleteAssetClass/> existing calsses used in accounting -->
+    <moqui.basic.Enumeration description="Hotel Room" enumId="AsClsRoom" enumTypeId="AssetClass"/>
+    <moqui.basic.Enumeration description="Restaurant Table" enumId="AsClsTable" enumTypeId="AssetClass"/>
+    <moqui.basic.Enumeration description="Restaurant Table Area" enumId="AsClsTableArea" enumTypeId="AssetClass"/>
 
 </entity-facade-xml>

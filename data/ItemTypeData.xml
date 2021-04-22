@@ -32,8 +32,8 @@ along with this software (see the LICENSE.md file). If not, see
     <moqui.basic.Enumeration description="Sales" enumId="ItemSales" enumTypeId="ItemType"/>
     <moqui.basic.Enumeration description="Product" enumId="ItemProduct" parentEnumId="ItemSales" enumTypeId="ItemType"/>
     <moqui.basic.Enumeration description="Service Product" enumId="ItemServiceProduct" parentEnumId="ItemSales" enumTypeId="ItemType"/>
-    <!--moqui.basic.Enumeration description="Rental" enumId="ItemRental" parentEnumId="ItemSales" enumTypeId="ItemType"/>
-    <moqui.basic.Enumeration description="Rental Deposit" enumId="ItemRentalDeposit" enumTypeId="ItemType"/>
+    <moqui.basic.Enumeration description="Rental" enumId="ItemRental" parentEnumId="ItemSales" enumTypeId="ItemType"/>
+    <!--moqui.basic.Enumeration description="Rental Deposit" enumId="ItemRentalDeposit" enumTypeId="ItemType"/>
     <moqui.basic.Enumeration description="Replacement" enumId="ItemReplacement" parentEnumId="ItemSales" enumTypeId="ItemType"/>
 
     <moqui.basic.Enumeration description="Work Effort" enumId="ItemWorkEffort" parentEnumId="ItemSales" enumTypeId="ItemType"/>
@@ -43,11 +43,11 @@ along with this software (see the LICENSE.md file). If not, see
     <moqui.basic.Enumeration description="Additional Feature" enumId="ItemAddtlFeature" parentEnumId="ItemSales" enumTypeId="ItemType"/>
     <moqui.basic.Enumeration description="Warranty" enumId="ItemWarranty" parentEnumId="ItemSales" enumTypeId="ItemType"/>
     <moqui.basic.Enumeration description="Marketing Package Adjustment" enumId="ItemMkgtPkgAdj" parentEnumId="ItemSales" enumTypeId="ItemType"/>
-    <moqui.basic.Enumeration description="Third Party" enumId="ItemSalesThirdParty" parentEnumId="ItemSales" enumTypeId="ItemType"/>
+    <moqui.basic.Enumeration description="Third Party" enumId="ItemSalesThirdParty" parentEnumId="ItemSales" enumTypeId="ItemType"/-->
 
 
     <moqui.basic.Enumeration description="Asset - Inventory" enumId="ItemInventory" enumTypeId="ItemType"/>
-    <moqui.basic.Enumeration description="Asset - Fixed Asset" enumId="ItemAsset" enumTypeId="ItemType"/-->
+    <moqui.basic.Enumeration description="Asset - Fixed Asset" enumId="ItemAsset" enumTypeId="ItemType"/>
     <!-- simplify to use ItemAsset for all, map based on assetTypeEnumId and classEnumId
     <moqui.basic.Enumeration description="Purchase" enumId="ItemPurchase" parentEnumId="ItemPurchase" enumTypeId="ItemType"/>
     <moqui.basic.Enumeration description="Asset Equipment" enumId="ItemAssetEquipment" parentEnumId="ItemPurchase" enumTypeId="ItemType"/>
@@ -238,8 +238,8 @@ along with this software (see the LICENSE.md file). If not, see
 
     <moqui.basic.EnumGroupMember enumId="ItemProduct" enumGroupEnumId="EngItemsSales"/>
     <moqui.basic.EnumGroupMember enumId="ItemServiceProduct" enumGroupEnumId="EngItemsSales"/>
-    <!--moqui.basic.EnumGroupMember enumId="ItemRental" enumGroupEnumId="EngItemsSales"/>
-    <moqui.basic.EnumGroupMember enumId="ItemRentalDeposit" enumGroupEnumId="EngItemsSales"/>
+    <moqui.basic.EnumGroupMember enumId="ItemRental" enumGroupEnumId="EngItemsSales"/>
+    <!--moqui.basic.EnumGroupMember enumId="ItemRentalDeposit" enumGroupEnumId="EngItemsSales"/>
 
     <moqui.basic.EnumGroupMember enumId="ItemWorkEffort" enumGroupEnumId="EngItemsSales"/>
     <moqui.basic.EnumGroupMember enumId="ItemTimeEntry" enumGroupEnumId="EngItemsSales"/>
@@ -390,9 +390,9 @@ along with this software (see the LICENSE.md file). If not, see
 
     <moqui.basic.EnumGroupMember enumId="ItemProduct" enumGroupEnumId="EngItemsProduct"/>
     <moqui.basic.EnumGroupMember enumId="ItemServiceProduct" enumGroupEnumId="EngItemsProduct"/>
-    <!--moqui.basic.EnumGroupMember enumId="ItemRental" enumGroupEnumId="EngItemsProduct"/>
-    <moqui.basic.EnumGroupMember enumId="ItemReplacement" enumGroupEnumId="EngItemsProduct"/>
-    <moqui.basic.EnumGroupMember enumId="ItemInventory" enumGroupEnumId="EngItemsProduct"/>
+    <moqui.basic.EnumGroupMember enumId="ItemRental" enumGroupEnumId="EngItemsProduct"/>
+    <!--moqui.basic.EnumGroupMember enumId="ItemReplacement" enumGroupEnumId="EngItemsProduct"/>
+    <moqui.basic.EnumGroupMember enumId="ItemInventory" enumGroupEnumId="EngItemsProduct"/-->
     <moqui.basic.EnumGroupMember enumId="ItemAsset" enumGroupEnumId="EngItemsProduct"/>
-    <moqui.basic.EnumGroupMember enumId="ItemExpSupplies" enumGroupEnumId="EngItemsProduct"/-->
+    <!--moqui.basic.EnumGroupMember enumId="ItemExpSupplies" enumGroupEnumId="EngItemsProduct"/-->
 </entity-facade-xml>

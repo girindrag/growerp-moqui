@@ -31,4 +31,20 @@ along with this software (see the LICENSE.md file). If not, see
     <extend-entity entity-name="PostalAddress" package="mantle.party.contact">
         <field name="stateProvince" type="text-medium"></field>
     </extend-entity>
+
+    <entity entity-name="AssetRental" package="growerp.product" cache="never">
+        <field name="assetRentalId" type="id" is-pk="true"/>
+        <field name="assetId" type="id"/>
+        <field name="productId" type="id"/>
+        <field name="orderId" type="id"/>
+        <field name="orderItemSeqId" type="id"/>
+        <field name="rentalFromDate" type="date-time"/>
+        <field name="rentalThruDate" type="date-time"/>
+        <relationship type="one" related="mantle.product.asset.Asset" short-alias="asset"/>
+        <relationship type="one" related="mantle.product.Product" short-alias="product"/>
+        <relationship type="one-nofk" related="mantle.order.OrderHeader" short-alias="orderHeader"/>
+        <relationship type="one" related="mantle.order.OrderItem" short-alias="orderItem"/>
+    </entity>
+
+
 </entities>
