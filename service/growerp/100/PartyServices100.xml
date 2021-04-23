@@ -700,7 +700,7 @@ along with this software (see the LICENSE.md file). If not, see
             <parameter name="userPartyId" required="true"/>
             <parameter name="currencyId"/>
             <parameter name="classificationId"/>
-            <parameter name="counterMax" default="1" type="Integer"/>
+            <parameter name="counterMax" default="5" type="Integer"/>
         </in-parameters>
         <actions>
             <script>sleep(2000)</script><!-- wait for registration above to commit -->
@@ -789,7 +789,7 @@ along with this software (see the LICENSE.md file). If not, see
                 <if condition="classificationId == 'AppAdmin'"><set field="productsIn" from="productsAdmin"/></if>
                 <if condition="classificationId == 'AppHotel'"><set field="productsIn" from="productsHotel"/></if>
                 <!-- for hotel just create a one count list -->
-                <if condition="classificationId != 'AppHotel' || (classificationId == 'AppHotel' &amp;&amp; counter == 1)">
+                <if condition="classificationId == 'AppAdmin' || (classificationId == 'AppHotel' &amp;&amp; counter == 1)">
                     <iterate list="productsIn" entry="el">
                         <entity-find entity-name="mantle.product.category.ProductCategory" list="categories">
                             <econdition field-name="categoryName" from="el.categoryName + counter"/>
@@ -800,7 +800,7 @@ along with this software (see the LICENSE.md file). If not, see
                             <else>
                                 <service-call name="create#mantle.product.category.ProductCategory"
                                     in-map="[categoryName: el.categoryName + (classificationId != 'AppHotel'? counter : ''),
-                                        description: el.description,
+                                        description: el.categoryName,
                                         productCategoryTypeEnumId: 'PctCatalog',
                                         ownerPartyId: companyPartyId]"
                                     out-map="context"/>
@@ -927,12 +927,12 @@ along with this software (see the LICENSE.md file). If not, see
 
                 <!-- orders -->
                 <set field="ordersAdmin" from="[
-                    [ quantity: 5, price: 22.1, orderName: 'first generated order'],
-                    [ quantity: 2, price: 20.1, orderName: 'first generated order'],
-                    [ quantity: 4, price: 29.11, orderName: 'first generated order'],
-                    [ quantity: 3, price: 12.1, orderName: 'second generated order'],
-                    [ quantity: 4, price: 10.1, orderName: 'second generated order'],
-                    [ quantity: 5, price: 19.11, orderName: 'second generated order']
+                    [ quantity: 5, price: 22.1, orderName: 'first generated order', productName: 'cola'],
+                    [ quantity: 2, price: 20.1, orderName: 'first generated order', productName: 'wiskey'],
+                    [ quantity: 4, price: 29.11, orderName: 'first generated order', productName: 'macaroni'],
+                    [ quantity: 3, price: 12.1, orderName: 'second generated order', productName: 'hamburger'],
+                    [ quantity: 4, price: 10.1, orderName: 'second generated order', productName: 'macaroni'],
+                    [ quantity: 5, price: 19.11, orderName: 'second generated order', productName: 'wiskey']
                     ]"/>
                 <!-- set time at mid day noon -->
                 <set field="nowDate" from="ec.user.nowTimestamp"/>
@@ -999,7 +999,7 @@ along with this software (see the LICENSE.md file). If not, see
                     </if>
                     <entity-find entity-name="growerp.mobile.product.ProductAndPriceAndProductCategory" list="products">
                         <econdition field-name="ownerPartyId" from="companyPartyId"/>
-                        <econdition field-name="productName" from="order.productName"/>
+                        <econdition field-name="productName" operator="like" value="${order.productName}%"/>
                     </entity-find>
                     <if condition="products">
                         <log message="=====adding productId: ${products[0].productId}"/>
@@ -1021,7 +1021,6 @@ along with this software (see the LICENSE.md file). If not, see
                         <econdition field-name="ownerPartyId" from="companyPartyId"/>
                         <econdition field-name="productId" from="products[0].productId"/>
                     </entity-find-count>
-                    <log message="=====we have $nbrAssets for product: ${products[0].productName}"/>
                     <entity-find-count entity-name="growerp.product.ProductAndAssetRental" count-field="nbrUsed" cache="false">
                         <econdition field-name="productId" from="products[0].productId"/>
                         <econdition field-name="ownerPartyId" from="companyPartyId"/>
@@ -1040,7 +1039,7 @@ along with this software (see the LICENSE.md file). If not, see
                             </econditions>
                         </econditions>
                     </entity-find-count>
-                    <log message="====we used $nbrUsed assets for these dates, available: $nbrAssets, needed: ${order.quantity}"/>
+                    <!--log message="====we used $nbrUsed assets for these dates, available: $nbrAssets, needed: ${order.quantity}"/-->
                     <if condition="nbrAssets &lt; (nbrUsed + order.quantity)">
                         <log message="=== We have $nbrAssets rooms, we used $nbrUsed and need now another ${order.quantity} room(s)"/>
                     </if>
