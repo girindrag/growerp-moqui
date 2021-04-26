@@ -65,8 +65,7 @@ along with this software (see the LICENSE.md file). If not, see
         </out-parameters>
         <actions>
             <if condition="!companyPartyId &amp;&amp; ec.user &amp;&amp; ec.user.userAccount?.partyId">
-                <service-call name="growerp.100.GeneralServices100.get#RelatedCompanyPartyId" out-map="context"/>
-                <set field="companyPartyId" from="ownerPartyId"/>
+                <service-call name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner" out-map="context"/>
             </if>
             <if condition="!companyPartyId"><return/></if><!-- return null if no company found -->
             <entity-find-one entity-name="growerp.mobile.party.CompanyPreferenceAndClassification" value-field="org">
@@ -148,8 +147,8 @@ along with this software (see the LICENSE.md file). If not, see
                 Object compIn = new groovy.json.JsonSlurper().parseText(company).company
             </script>
             <!-- check access user belongs to this company override companyPartyId-->
-            <service-call name="growerp.100.GeneralServices100.get#RelatedCompanyPartyId"
-                out-map="context"/>
+            <service-call out-map="context" 
+                name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner"/>
             <set field="compIn.partyId" from="ownerPartyId"/>
             <!-- get old values -->
             <service-call name="growerp.100.PartyServices100.get#Company" out-map="oldValue"/>
@@ -438,11 +437,11 @@ along with this software (see the LICENSE.md file). If not, see
             <if condition="userIn.userGroupId != oldValue.user.userGroupId">
                 <if condition="oldValue.user.userGroupId == 'GROWERP_M_ADMIN'">
                     <!-- check if only a single admin: cannot change -->
-                    <service-call name="growerp.100.GeneralServices100.get#RelatedCompanyPartyId" 
+                    <service-call name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner" 
                         in-map="[userPartyId: userIn.partyId]" out-map="company"/>
                     <entity-find entity-name="growerp.mobile.CompanyPersonAndLoginGroup" list="admins">
                         <econdition field-name="userGroupId" value="GROWERP_M_ADMIN"/>
-                        <econdition field-name="companyPartyId" from="company.partyId" />
+                        <econdition field-name="companyPartyId" from="company.companyPartyId" />
                         <date-filter/></entity-find>
                     <if condition="admins.size() == 1">
                         <return error="true" message="You need at least a single Admin in your company: cannot remove this one!"/></if>
@@ -496,11 +495,11 @@ along with this software (see the LICENSE.md file). If not, see
                 in-map="[userPartyId: partyId]" out-map="oldValue"/>
             <if condition="oldValue.user.userGroupId == 'GROWERP_M_ADMIN'">
                 <!-- check if only a single admin: cannot change -->
-                <service-call name="growerp.100.GeneralServices100.get#RelatedCompanyPartyId" 
+                <service-call name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner" 
                     in-map="[userPartyId: partyId]" out-map="company"/>
                 <entity-find entity-name="growerp.mobile.CompanyPersonAndLoginGroup" list="admins">
                     <econdition field-name="userGroupId" value="GROWERP_M_ADMIN"/>
-                    <econdition field-name="companyPartyId" from="company.partyId" />
+                    <econdition field-name="companyPartyId" from="company.companyPartyId" />
                     <date-filter/></entity-find>
                 <if condition="admins.size() == 1">
                     <return error="true" message="You need at least a single Admin in your company: cannot delete this one!"/></if>
@@ -703,7 +702,7 @@ along with this software (see the LICENSE.md file). If not, see
             <parameter name="counterMax" default="5" type="Integer"/>
         </in-parameters>
         <actions>
-            <script>sleep(2000)</script><!-- wait for registration above to commit -->
+            <script>sleep(3000)</script><!-- wait for registration above to commit -->
             <entity-find entity-name="mantle.product.category.ProductCategory" list="rootList">
                 <econdition field-name="productCategoryTypeEnumId" value="PctRoot"/>
                 <econdition field-name="ownerPartyId" from="companyPartyId"/></entity-find>
@@ -1036,6 +1035,12 @@ along with this software (see the LICENSE.md file). If not, see
                                     operator="less-equals" from="order.rentalThruDate"/>
                                 <econdition field-name="rentalThruDate"
                                     operator="greater-equals" from="order.rentalThruDate"/>
+                            </econditions>
+                            <econditions combine="and"><!-- both outside -->
+                                <econdition field-name="rentalFromDate"
+                                    operator="greater-equals" from="order.rentalFromDate"/>
+                                <econdition field-name="rentalThruDate"
+                                    operator="less-equals" from="order.rentalThruDate"/>
                             </econditions>
                         </econditions>
                     </entity-find-count>
