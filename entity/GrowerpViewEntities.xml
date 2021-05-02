@@ -28,14 +28,18 @@ along with this software (see the LICENSE.md file). If not, see
             <key-map field-name="orderId"/></member-entity>
         <member-entity entity-alias="RESERV" entity-name="growerp.product.AssetRental"
             join-from-alias="OITEM" join-optional="true">
-            <key-map field-name="orderId"/><key-map field-name="orderItemSeqId"/>
-            </member-entity>
+            <key-map field-name="orderId"/><key-map field-name="orderItemSeqId"/></member-entity>
+        <member-entity entity-alias="ASSET" entity-name="mantle.product.asset.Asset"
+            join-from-alias="RESERV" join-optional="true">
+            <key-map field-name="assetId"/></member-entity>
         <alias-all entity-alias="ORHD"/>
         <alias-all entity-alias="OPRT"><exclude field="priority"/><exclude field="statusId"/></alias-all>
         <alias-all entity-alias="OITEM"/>
         <alias name="rentalFromDate" entity-alias="RESERV"/>
         <alias name="rentalThruDate" entity-alias="RESERV"/>
+        <alias name="assetRentalId" entity-alias="RESERV"/>
         <alias name="assetId" entity-alias="RESERV"/>
+        <alias name="assetName" entity-alias="ASSET"/>
         <alias name="invoiceId" entity-alias="OINV"/>
         <alias name="paymentId" entity-alias="OPAY"/>
         <alias name="partStatusId" entity-alias="OPRT" field="statusId"/>
@@ -397,7 +401,7 @@ along with this software (see the LICENSE.md file). If not, see
     <member-entity entity-alias="RENTAL" entity-name="growerp.product.AssetRental"
         join-from-alias="PROD"><key-map field-name="productId"/></member-entity>
     <alias-all entity-alias="PROD"/>
-    <alias-all entity-alias="RENTAL"><exclude field="assetId"/></alias-all>
+    <alias-all entity-alias="RENTAL"/>
 </view-entity>
 
 </entities>

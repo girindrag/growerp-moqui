@@ -183,19 +183,54 @@ along with this software (see the LICENSE.md file). If not, see
                         base64: compIn.image]"/>
             </if>
             <!-- postal address -->
-            <if condition="compIn.address?.address1">
-                <service-call out-map="context"
-                    name="mantle.party.ContactServices.findOrCreate#PartyPostalAddress"
-                    in-map="[
-                        contactMechPurposeId: 'PostalPrimary',
-                        partyId: compIn.partyId,
-                        address1: compIn.address.address1,
-                        address2: compIn.address.address2,
-                        city: compIn.address.city,
-                        country: compIn.address.country,
-                        postalCode: compIn.address.postalCode,
-                        stateProvinceGeoId: compIn.address.province,
-                    ]"/>
+            <if condition="compIn.address?.country">
+                <entity-find entity-name="moqui.basic.Geo" list="countries">
+                    <econdition field-name="geoName" from="compIn.address.country"/>
+                    <econdition field-name="geoTypeEnumId" value="GEOT_COUNTRY"/>
+                </entity-find>
+                <if condition="compIn.address.addressId">
+                    <entity-find list="addr"
+                        entity-name="mantle.party.contact.PartyContactMechPostalAddress">
+                        <econdition field-name="partyId" from="compIn.partyId"/>
+                        <econdition field-name="contactMechId" from="compIn.address.addressId"/>
+                    </entity-find>
+                    <if condition="
+                        compIn.address.address1 != addr[0].address1 ||
+                        compIn.address.address2 != addr[0].address2 ||
+                        compIn.address.city != addr[0].city ||
+                        compIn.address.postalCode != addr[0].postalCode ||
+                        compIn.address.stateProvince != addr[0].province ||
+                        compIn.address.countryGeoId != countries[0].geoId
+                        ">
+                        <entity-find-one for-update="true"
+                            entity-name="mantle.party.contact.ContactMech" value-field="cm">
+                            <field-map field-name="contactMechId" from="compIn.address.addressId"/>
+                        </entity-find-one>
+                        <script>
+                            cm.address1 = compIn.address.address1;
+                            cm.address2 = compIn.address.address2;
+                            cm.city = compIn.address.city;
+                            cm.potalCode = compIn.address.postalCode;
+                            cm.provinceState = compIn.address.province;
+                            cm.countryGeoId = countries[0].geoId;
+                        </script>
+                        <entity-update value-field="cm"/>
+                    </if>
+                    <else>
+                        <service-call
+                            name="mantle.party.ContactServices.findOrCreate#PartyPostalAddress"
+                            in-map="[
+                                contactMechPurposeId: 'PostalPrimary',
+                                partyId: compIn.partyId,
+                                address1: compIn.address.address1,
+                                address2: compIn.address.address2,
+                                city: compIn.address.city,
+                                country: compIn.address.country,
+                                postalCode: compIn.address.postalCode,
+                                stateProvince: compIn.address.province,
+                            ]"/>
+                    </else>
+                </if>    
             </if>
             <!-- sales/vat tax percentage -->
             <if condition="compIn.salesPerc || compIn.vatPerc">
@@ -294,7 +329,27 @@ along with this software (see the LICENSE.md file). If not, see
                 <if condition="contents">    
                     <service-call name="growerp.100.ImageServices100.download#Image"
                         in-map="[contentLocation: contents[0].contentLocation]" out-map="context"/></if>
-                <!-- listing -->
+                <!-- postal address -->
+                <entity-find list="addresses"
+                    entity-name="mantle.party.contact.PartyContactMechPostalAddressOnly">
+                    <econdition field-name="partyId" from="userPartyId"/>
+                    <econdition field-name="contactMechPurposeId" value="PostalPrimary"/>
+                </entity-find>
+                <if condition="addresses">
+                    <entity-find entity-name="moqui.basic.Geo" list="countries">
+                        <econdition field-name="geoId" from="addresses[0].countryGeoId"/>
+                        <econdition field-name="geoTypeEnumId" value="GEOT_COUNTRY"/>
+                    </entity-find>
+                    <set field="address" from="[
+                        addressId: addresses[0].contactMechId,
+                        address1: addresses[0].address1,
+                        address2: addresses[0].address2,
+                        city: addresses[0].city,
+                        postalCode: addresses[0].postalCode,
+                        province: addresses[0].stateProvince,
+                        country: countries[0].geoName,
+                        ]"/>
+                </if>
                 <set field="userOut" from="[
                     partyId: userInfo?.userPartyId,
                     email: userInfo?.emailAddress,
@@ -306,24 +361,22 @@ along with this software (see the LICENSE.md file). If not, see
                     language: userInfo?.locale.toString(),
                     companyPartyId: userInfo.companyPartyId,
                     companyName: userInfo.companyName,
-                    image: imageFile]"/>
+                    image: imageFile,
+                    userId: userInfo?.userId,
+                    locale: userInfo?.locale,
+                    externalId: userInfo?.externalId,
+                    address: address]"/>
 
                 <if condition="!userPartyId">
                     <script>users.add(userOut)</script>
                     <else>
-                        <!-- more info for single user -->
-                        <set field="user1" from="[
-                            userId: userInfo?.userId,
-                            userGroupId: userInfo?.userGroupId,
-                            locale: userInfo?.locale,
-                            externalId: userInfo?.externalId]"/>
                         <set field="user" from="userOut"/>
-                        <script>user.putAll(user1)</script>
                     </else>
                 </if>
             </iterate>
             <!--if condition="users &amp;&amp; !userPartyId">
                 <log message="====getusers=result: ${users.size()}"/>
+                <log message="====first party: ${users[0]}"/>
                 <script>users.sort{a, b -> 
                     a.lastName.compareToIgnoreCase(b.lastName) } </script>
                 </if>
@@ -399,6 +452,25 @@ along with this software (see the LICENSE.md file). If not, see
                 <service-call name="growerp.100.ImageServices100.upload#Image"
                     in-map="[type: 'user', id: userIn.partyId,
                         base64: userIn.image]"/>
+            </if>
+            <if condition="userIn.address">
+                <entity-find entity-name="moqui.basic.Geo" list="countries">
+                    <econdition field-name="geoName" from="userIn.address.country"/>
+                    <econdition field-name="geoTypeEnumId" value="GEOT_COUNTRY"/>
+                </entity-find>
+                <service-call
+                    name="mantle.party.ContactServices.create#PostalAddress"
+                    out-map="context"
+                    in-map="[
+                        address1: userIn.address.address1,
+                        address2: userIn.address.address2,
+                        city: userIn.address.city,
+                        postalCode: userIn.address.postalCode,
+                        stateProvince: userIn.address.province,
+                        countryGeoId: countries[0].geoId,
+                        contactMechPurposeId: 'PostalPrimary',
+                        partyId: userPartyId
+                        ]"/>
             </if>
             <service-call name="growerp.100.PartyServices100.get#User"
                 in-map="[userPartyId: userPartyId]" out-map="context"/>
@@ -476,6 +548,56 @@ along with this software (see the LICENSE.md file). If not, see
                 <set field="companyParty.organizationName" from="userIn.companyName"/>
                 <entity-update value-field="companyParty"/>
             </if>
+            <!-- update postal address -->
+            <if condition="userIn.address">
+                <entity-find entity-name="moqui.basic.Geo" list="countries">
+                    <econdition field-name="geoName" from="userIn.address.country"/>
+                    <econdition field-name="geoTypeEnumId" value="GEOT_COUNTRY"/>
+                </entity-find>
+                <if condition="userIn.address.addressId">
+                    <entity-find list="addr"
+                        entity-name="mantle.party.contact.PartyContactMechPostalAddress">
+                        <econdition field-name="partyId" from="userIn.partyId"/>
+                        <econdition field-name="contactMechId" from="userIn.address.addressId"/>
+                    </entity-find>
+                    <if condition="
+                        userIn.address.address1 != addr[0].address1 ||
+                        userIn.address.address2 != addr[0].address2 ||
+                        userIn.address.city != addr[0].city ||
+                        userIn.address.postalCode != addr[0].postalCode ||
+                        userIn.address.stateProvince != addr[0].province ||
+                        userIn.address.country != countries[0].geoName
+                        ">
+                        <entity-find-one for-update="true"
+                            entity-name="mantle.party.contact.ContactMech" value-field="cm">
+                            <field-map field-name="contactMechId" from="userIn.address.addressId"/>
+                        </entity-find-one>
+                        <script>
+                            cm.address1 = userIn.address.address1;
+                            cm.address2 = userIn.address.address2;
+                            cm.city = userIn.address.city;
+                            cm.potalCode = userIn.address.postalCode;
+                            cm.provinceState = userIn.address.province;
+                            cm.countryGeoId = countries[0].geoId;
+                        </script>
+                        <entity-update value-field="cm"/>
+                    </if>
+                <else>
+                    <!-- create new postal address -->
+                    <service-call
+                        name="mantle.party.ContactServices.findOrCreate#PartyPostalAddress"
+                        in-map="[
+                            contactMechPurposeId: 'PostalPrimary',
+                            partyId: userIn.partyId,
+                            address1: userIn.address.address1,
+                            address2: userIn.address.address2,
+                            city: userIn.address.city,
+                            countryGeoId: countries[0].geoId,
+                            postalCode: userIn.address.postalCode,
+                            stateProvince: userIn.address.province,
+                        ]"/>
+                </else>
+            </if></if>    
             <!-- return updated user -->
             <service-call name="growerp.100.PartyServices100.get#User"
                 in-map="[userPartyId: userIn.partyId]" out-map="context"/>
@@ -657,7 +779,7 @@ along with this software (see the LICENSE.md file). If not, see
             <if condition="classificationId == 'AppHotel'">
                 <set field="inMap" from="inMap + [
                 requireInventory: 'N',
-                reservationOrderEnumId:'AsResAutoApproved',
+                reservationOrderEnumId:'AsResOrdNoRes',
                 ]"/>
             </if>
             <!-- create productStore -->
@@ -699,7 +821,7 @@ along with this software (see the LICENSE.md file). If not, see
             <parameter name="userPartyId" required="true"/>
             <parameter name="currencyId"/>
             <parameter name="classificationId"/>
-            <parameter name="counterMax" default="5" type="Integer"/>
+            <parameter name="counterMax" default="1" type="Integer"/>
         </in-parameters>
         <actions>
             <script>sleep(3000)</script><!-- wait for registration above to commit -->
@@ -853,17 +975,17 @@ along with this software (see the LICENSE.md file). If not, see
                         <econdition field-name="storeName" from="classificationId"/>
                     </entity-find>
                     <set field="assetsHotel" from="[
-                        [ assetName: 'Room 1', productName: 'Single Room'],
-                        [ assetName: 'Room 2', productName: 'Single Room'],
-                        [ assetName: 'Room 3', productName: 'Single Room'],
-                        [ assetName: 'Room 4', productName: 'Standard Room'],                
-                        [ assetName: 'Room 5', productName: 'Standard Room'],                
-                        [ assetName: 'Room 6', productName: 'Standard Room'],                
-                        [ assetName: 'Room 7', productName: 'Deluxe Room'],                
-                        [ assetName: 'Room 8', productName: 'Deluxe Room'],                
-                        [ assetName: 'Room 9', productName: 'Suite'],                
-                        [ assetName: 'Room 10', productName: 'Suite'],                
-                        [ assetName: 'Room 11', productName: 'Appartment'],                
+                        [ assetName: '01', productName: 'Single Room'],
+                        [ assetName: '02', productName: 'Single Room'],
+                        [ assetName: '03', productName: 'Single Room'],
+                        [ assetName: '04', productName: 'Standard Room'],                
+                        [ assetName: '05', productName: 'Standard Room'],                
+                        [ assetName: '06', productName: 'Standard Room'],                
+                        [ assetName: '07', productName: 'Deluxe Room'],                
+                        [ assetName: '08', productName: 'Deluxe Room'],                
+                        [ assetName: '09', productName: 'Suite'],                
+                        [ assetName: '10', productName: 'Suite'],                
+                        [ assetName: '11', productName: 'Appartment'],                
                         ]"/>
                     <if condition="classificationId == 'AppHotel'"><set field="assetsIn" from="assetsHotel"/></if>
 
@@ -948,8 +1070,8 @@ along with this software (see the LICENSE.md file). If not, see
                     [ productName: 'Single Room', quantity: 1,
                         rentalFromDate: nowDate.plus(17), quantity: 1,
                         rentalThruDate: nowDate.plus(18), 
-                        price: 110, orderName: 'third generated Hotel order'],]"/>
-    <!--                [ productName: 'Deluxe Room', quantity: 1,
+                        price: 110, orderName: 'third generated Hotel order'],
+                    [ productName: 'Deluxe Room', quantity: 1,
                         rentalFromDate: nowDate.plus(20), quantity: 1,
                         rentalThruDate: nowDate.plus(21), 
                         price: 77, orderName: 'fourth generated Hotel order'],
@@ -962,7 +1084,7 @@ along with this software (see the LICENSE.md file). If not, see
                         rentalThruDate: nowDate.plus(31), 
                         orderName: 'fifth generated Hotel order']
                     ]"/>
-    -->
+    
                 <if condition="classificationId == 'AppAdmin'"><set field="ordersIn" from="ordersAdmin"/></if>
                 <if condition="classificationId == 'AppHotel'"><set field="ordersIn" from="ordersHotel"/></if>
                 <entity-find entity-name="mantle.party.PartyDetailAndRole" list="customers">
@@ -996,12 +1118,13 @@ along with this software (see the LICENSE.md file). If not, see
                             ]" out-map="context"/>
                         </else>
                     </if>
+                    <log message="====looking for productname: ${order.productName}"/>
                     <entity-find entity-name="growerp.mobile.product.ProductAndPriceAndProductCategory" list="products">
                         <econdition field-name="ownerPartyId" from="companyPartyId"/>
                         <econdition field-name="productName" operator="like" value="${order.productName}%"/>
                     </entity-find>
                     <if condition="products">
-                        <log message="=====adding productId: ${products[0].productId}"/>
+                        <log message="=====adding productId: ${products[0].productId} ${products[0].productName}"/>
                         <else>
                             <log message="====could not find product: ${order.productName}"/>
                         </else>
@@ -1015,40 +1138,6 @@ along with this software (see the LICENSE.md file). If not, see
                                             requiredByDate: order.reservationDate,
                                             quantity: order.quantity]"
                         out-map="context"/>
-
-                    <entity-find-count entity-name="mantle.product.asset.Asset" count-field="nbrAssets">
-                        <econdition field-name="ownerPartyId" from="companyPartyId"/>
-                        <econdition field-name="productId" from="products[0].productId"/>
-                    </entity-find-count>
-                    <entity-find-count entity-name="growerp.product.ProductAndAssetRental" count-field="nbrUsed" cache="false">
-                        <econdition field-name="productId" from="products[0].productId"/>
-                        <econdition field-name="ownerPartyId" from="companyPartyId"/>
-                        <econditions combine="or">
-                            <econditions combine="and"><!--order fromdate within -->
-                                <econdition field-name="rentalFromDate"
-                                    operator="less-equals" from="order.rentalFromDate"/>
-                                <econdition field-name="rentalThruDate"
-                                    operator="greater-equals" from="order.rentalFromDate"/>
-                            </econditions>
-                            <econditions combine="and"><!-- order thruDate within -->
-                                <econdition field-name="rentalFromDate"
-                                    operator="less-equals" from="order.rentalThruDate"/>
-                                <econdition field-name="rentalThruDate"
-                                    operator="greater-equals" from="order.rentalThruDate"/>
-                            </econditions>
-                            <econditions combine="and"><!-- both outside -->
-                                <econdition field-name="rentalFromDate"
-                                    operator="greater-equals" from="order.rentalFromDate"/>
-                                <econdition field-name="rentalThruDate"
-                                    operator="less-equals" from="order.rentalThruDate"/>
-                            </econditions>
-                        </econditions>
-                    </entity-find-count>
-                    <!--log message="====we used $nbrUsed assets for these dates, available: $nbrAssets, needed: ${order.quantity}"/-->
-                    <if condition="nbrAssets &lt; (nbrUsed + order.quantity)">
-                        <log message="=== We have $nbrAssets rooms, we used $nbrUsed and need now another ${order.quantity} room(s)"/>
-                    </if>
-                    <!-- do not assign an asset now, just check....add at approval(incheck?) time...-->
                     <while condition="order.quantity--">
                         <service-call name="create#growerp.product.AssetRental"
                             in-map="[ productId: products[0].productId,

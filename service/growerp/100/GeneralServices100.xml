@@ -218,6 +218,24 @@ along with this software (see the LICENSE.md file). If not, see
         </actions>
     </service>
 
+    <service verb="get" noun="CountryList" authenticate="anonymous-all">
+        <description>
+            Get country list for registration.
+        </description>
+        <out-parameters>
+            <parameter name="countryList" type="List"/>
+        </out-parameters>
+        <actions>
+            <entity-find entity-name="moqui.basic.Geo" list="allCountryList">
+                <econdition field-name="geoTypeEnumId" value="GEOT_COUNTRY"/><order-by field-name="description"/>
+            </entity-find>
+            <set field="countryList" from="[]"/>
+            <iterate entry="country" list="allCountryList">
+                <script>currencyList.add("${country.geoId.} [${country.geoName}]")</script>
+            </iterate>
+        </actions>
+    </service>
+
     <service verb="login" noun="User" authenticate="anonymous-all">
         <description>service to return an apikey if user/password ok, when not check for a reset password</description>
         <in-parameters>

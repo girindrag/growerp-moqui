@@ -221,6 +221,8 @@ along with this software (see the LICENSE.md file). If not, see
                         description: item.itemDescription,
                         quantity: item.quantity.toString(),
                         price: item.unitAmount.toString(),
+                        assetId: item.assetId,
+                        assetName: item.assetName,
                         rentalFromDate: ec.l10n.format(item.rentalFromDate,'yyyy-MM-dd'),
                         rentalThruDate: ec.l10n.format(item.rentalThruDate,'yyyy-MM-dd'),
                         ]"/>
@@ -469,6 +471,9 @@ along with this software (see the LICENSE.md file). If not, see
             <if condition="!finDocIn.otherUser || !finDocIn.otherUser.companyPartyId">
                 <return error="true" message="Other user required with valid companyPartyId"/>
             </if>
+            <service-call name="growerp.100.OrderServices100.convert#StatusId"  out-map="context"
+                in-map="[sales: finDocIn?.sales, docType: finDocIn.docType, statusId: finDocIn.statusId]"/>
+            <set field="finDocIn.statusId" from="convertedStatusId"/>
             <if condition="finDocIn.docType == 'order'">
                 <service-call name="growerp.100.OrderServices100.create#Order"
                     in-map="[order: finDocIn]" out-map="context"/>
@@ -508,30 +513,52 @@ along with this software (see the LICENSE.md file). If not, see
                     value-field="aPref">
                 <field-map field-name="organizationPartyId" from="ownerPartyId"/>
             </entity-find-one>
-            <set field="currencyId" from="aPref.baseCurrencyUomId"/>
-            <set field="placedDate" from="ec.user.nowTimestamp"/>
+            <set field="currencyUomId" from="aPref.baseCurrencyUomId"/>
             <service-call name="mantle.order.OrderServices.create#Order"
-                in-map="context + [orderName: order.description]" out-map="context"/>
-            <iterate entry="item" list="order.items">
-                <if condition="item.productId">
+                in-map="context + [
+                    orderName: order.description,
+                ]" out-map="context"/>
+            <iterate  list="order.items" entry="item">
+                <if condition="item.itemTypeId == 'ItemProduct'">
                     <service-call
-                            name="mantle.order.OrderServices.add#OrderProductQuantity"
-                        in-map="context + [productId: item.productId,
+                        name="mantle.order.OrderServices.add#OrderProductQuantity"
+                        in-map="context + [ itemTypeId: item.itemTypeId,
+                                            productId: item.productId,
                                             quantity: item.quantity,
-                                            unitAmount: item.price,
-                                            currencyUomId: currencyId]"
-                        out-map="itemcreate"/>
-                    <else>
-                        <service-call
-                            name="mantle.order.OrderServices.create#OrderItem"
-                        in-map="context + [itemDescription: item.description,
+                                            unitAmount: item.price]"
+                        out-map="context"/>
+                <else-if condition="item.itemTypeId == 'ItemRental'">
+                    <service-call
+                        name="mantle.order.OrderServices.add#OrderProductQuantity"
+                        in-map="context + [ itemTypeId: item.itemTypeId,
+                                            productId: item.productId,
                                             quantity: item.quantity,
-                                            unitAmount: item.price,
-                                            currencyUomId: currencyId]"
+                                            unitAmount: item.price]"
+                        out-map="context"/>
+                    <set field="count" from="item.quantity" type="Integer"/>
+                    <while condition="count-- &gt; 0">
+                        <service-call name="create#growerp.product.AssetRental"
+                            in-map="[   productId: item.productId,
+                                        orderId: orderId,
+                                        orderItemSeqId: orderItemSeqId,
+                                        rentalFromDate: item.rentalFromDate,
+                                        rentalThruDate: item.rentalThruDate
+                                    ]"/>
+                    </while></else-if>
+                <else>
+                    <service-call name="mantle.order.OrderServices.create#OrderItem"
+                        in-map="context + [itemTypeId: item.itemTypeId,
+                                            itemDescription: item.description,
+                                            quantity: item.quantity,
+                                            unitAmount: item.price]"
                         out-map="itemcreate"/>
-                    </else>
-                </if>
+                </else></if>
             </iterate>
+            <if condition="order.statusId == 'OrderPlaced'">
+                <set field="order.orderId" from="orderId"/>
+                <service-call in-map="[order: order]"
+                name="growerp.100.OrderServices100.update#Order"/>
+            </if>
         </actions>
     </service>
 
@@ -565,11 +592,9 @@ along with this software (see the LICENSE.md file). If not, see
                 in-map="[sales: finDocIn?.sales, docType: finDocIn.docType, statusId: finDocIn.statusId]"/>
             <set field="finDocIn.statusId" from="convertedStatusId"/>
             <if condition="finDocIn.docType == 'order'">
-            <log message="=======start order update ========="/>
                 <service-call name="growerp.100.OrderServices100.update#Order"
                     in-map="[order: finDocIn]"/>
                 <set field="inMap" from="[id: finDocIn.orderId, docType: 'order']"/>
-            <log message="=======finish order update ========="/>
             </if>
             <if condition="finDocIn.docType == 'invoice'">
                 <service-call name="update#mantle.account.invoice.Invoice"
@@ -591,8 +616,59 @@ along with this software (see the LICENSE.md file). If not, see
         </actions>
     </service>
 
+    <service verb="get" noun="AssetsAvailableForProduct">
+        <in-parameters>
+            <parameter name="productId" required="true"/>
+            <parameter name="fromDate" type="Timestamp" required="true"/>
+            <parameter name="thruDate" type="Timestamp" required="true"/>
+        </in-parameters>
+        <out-parameters>
+            <parameter name="availableAssetIds" type="List"/>
+        </out-parameters>
+        <actions>
+            <log message="======$productId $fromDate $thruDate"/>
+            <service-call out-map="context"
+                name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner"/>
+            <entity-find entity-name="mantle.product.asset.Asset" list="assets">
+                <econdition field-name="ownerPartyId" from="ownerPartyId"/>
+                <econdition field-name="productId" from="productId"/>
+            </entity-find>
+            <set field="availableAssetIds" from="[]"/>
+            <iterate list="assets" entry="asset">
+                <entity-find-count entity-name="growerp.product.ProductAndAssetRental"
+                     count-field="nbrUsed" cache="false">
+                     <econdition field-name="productId" from="productId"/>
+                     <econdition field-name="assetId" from="asset.assetId"/>
+                     <econdition field-name="ownerPartyId" from="ownerPartyId"/>
+                    <econditions combine="or">
+                        <econditions combine="and"><!--order fromdate within -->
+                            <econdition field-name="rentalFromDate"
+                                operator="less-equals" from="fromDate"/>
+                            <econdition field-name="rentalThruDate"
+                                operator="greater-equals" from="fromDate"/>
+                        </econditions>
+                        <econditions combine="and"><!-- order thruDate within -->
+                            <econdition field-name="rentalFromDate"
+                                operator="less-equals" from="thruDate"/>
+                            <econdition field-name="rentalThruDate"
+                                operator="greater-equals" from="thruDate"/>
+                        </econditions>
+                        <econditions combine="and"><!-- both outside -->
+                            <econdition field-name="rentalFromDate"
+                                operator="greater-equals" from="fromDate"/>
+                            <econdition field-name="rentalThruDate"
+                                operator="less-equals" from="thruDate"/>
+                        </econditions>
+                    </econditions>
+                </entity-find-count>
+                <if condition="nbrUsed == 0">
+                    <script>availableAssetIds.add(asset.assetId)</script>
+                </if>
+            </iterate>
+        </actions>
+    </service>    
     <service verb="update" noun="Order">
-        <description> Update the order by re-creating only in the 'OrderOpen' status'.</description>
+            <description> Update the order by re-creating only in the 'OrderOpen' status'.</description>
         <in-parameters>
             <parameter name="order" required="true" type="Map"/></in-parameters>
         <actions>
@@ -627,12 +703,42 @@ along with this software (see the LICENSE.md file). If not, see
                 <if condition="order.statusId == 'OrderPlaced'">
                     <service-call in-map="context" out-map="context"
                         name="mantle.order.OrderServices.place#Order"/>
+                    <!-- assign asset when rental order (one item per order only)-->
+                    <log message="======start date: ${items[0].rentalFromDate}"/>
+                    <if condition="items[0].rentalFromDate &amp;&amp;
+                                        items[0].rentalThruDate">
+                        <service-call
+                            name="growerp.100.OrderServices100.get#AssetsAvailableForProduct"
+                            in-map="productId: items[0].productId,
+                                    fromDate: items[0].rentalFromDate,
+                                    thruDate: items[0].rentalThruDate"
+                            out-map="context"/>
+                        <log message="=========assets: ${availableAssetIds}"/>
+                        <log message="==========items: ${items}"/>
+                        <if condition="availableAssetIds.size() &lt; items.size()">
+                            <return error="true" message="not enough assets available for this date: required ${items.size()} available: ${availableAssetIds.size()}"/>
+                        </if>
+                        <set field="index" value="0" type="Integer"/>
+                        <iterate list="items" entry="item">
+                            <entity-find-one entity-name="growerp.product.AssetRental" value-field="assetRental">
+                                <field-map field-name="assetRentalId" from="item.assetRentalId"/>
+                            </entity-find-one>
+                            <set field="assetRental.assetId" from="availableAssetIds[index++]"/>
+                            <entity-update value-field="assetRental"/>
+                        </iterate>
+                    </if>
+                </if>
+                <if condition="order.statusId == 'OrderApproved'">
+                    <service-call name="mantle.order.OrderServices.approve#Order"
+                        in-map="context"/>
+                    <!-- create invoice -->
                     <if condition="order.sales == 'true'">
                         <set field="invStatusId" value="InvoiceFinalized"/>
                         <else>
                             <set field="invStatusId" value="InvoiceReceived"/>
                         </else>
                     </if>
+                    <!-- create payment -->
                     <service-call in-map="context + [statusId: invStatusId]" out-map="context"
                         name="mantle.account.InvoiceServices.create#EntireOrderPartInvoice"/>
                     <service-call in-map="context" out-map="context"
@@ -642,10 +748,6 @@ along with this software (see the LICENSE.md file). If not, see
                     <set field="payment.statusId" value="PmntAuthorized"/>
                     <service-call
                         name="update#mantle.account.payment.Payment" in-map="payment"/>
-                </if>
-                <if condition="order.statusId == 'OrderApproved'">
-                    <service-call name="mantle.order.OrderServices.approve#Order"
-                        in-map="context"/>
                 </if>
                 <if condition="order.statusId == 'OrderCompleted'">
                     <service-call name="mantle.order.OrderServices.complete#Order"
