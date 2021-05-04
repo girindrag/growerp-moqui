@@ -1064,8 +1064,8 @@ along with this software (see the LICENSE.md file). If not, see
                         rentalThruDate: nowDate.plus(8), 
                         price: 90, orderName: 'first generated Hotel order'],
                     [ productName: 'Single Room', quantity: 2,
-                        rentalFromDate: nowDate.plus(15),
-                        rentalThruDate: nowDate.plus(19), 
+                        rentalFromDate: nowDate.plus(10),
+                        rentalThruDate: nowDate.plus(15), 
                         orderName: 'second generated Hotel order'],                    
                     [ productName: 'Single Room', quantity: 1,
                         rentalFromDate: nowDate.plus(17), quantity: 1,
@@ -1076,12 +1076,12 @@ along with this software (see the LICENSE.md file). If not, see
                         rentalThruDate: nowDate.plus(21), 
                         price: 77, orderName: 'fourth generated Hotel order'],
                     [ productName: 'Deluxe Room', quantity: 1, 
-                        rentalFromDate: nowDate.plus(17), quantity: 1,
-                        rentalThruDate: nowDate.plus(18), 
+                        rentalFromDate: nowDate.plus(12), quantity: 1,
+                        rentalThruDate: nowDate.plus(14), 
                             orderName: 'fifth generated Hotel order'],
                     [ productName: 'Suite', quantity: 1,
-                        rentalFromDate: nowDate.plus(28), quantity: 1,
-                        rentalThruDate: nowDate.plus(31), 
+                        rentalFromDate: nowDate.plus(4), quantity: 1,
+                        rentalThruDate: nowDate.plus(11), 
                         orderName: 'fifth generated Hotel order']
                     ]"/>
     
@@ -1146,6 +1146,9 @@ along with this software (see the LICENSE.md file). If not, see
                             ]"
                         />
                     </while>
+                    <set field="order.orderId" from="orderId"/>
+                    <service-call in-map="[order: [orderId: orderId, statusId:'OrderPlaced']]"
+                        name="growerp.100.OrderServices100.update#Order"/>
                     <set field="index" from="index + 1"/>
                 </iterate>
 

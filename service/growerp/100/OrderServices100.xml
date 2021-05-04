@@ -18,18 +18,27 @@ along with this software (see the LICENSE.md file). If not, see
         <in-parameters>
             <parameter name="docType" required="true"/>
             <parameter name="sales" type="Boolean"/>
-            <parameter name="statusId" required="true"/>
+            <parameter name="statusId"/>
         </in-parameters>
         <out-parameters>
             <parameter name="convertedStatusId"/>
         </out-parameters>
         <actions>
+            <!-- Asset status and classEnumId translation -->
             <if condition="docType == 'asset'">
                 <set field="assetStatusValues" from="[
                 AstAvailable: 'Available',
                 Available: 'AstAvailable',
                 AstDeactivated: 'Deactivated',
                 Deactivated: 'AstDeactivated',
+                'In Use': 'AstInUse',
+                'AstInUse': 'In Use',
+                'Hotel Room': 'AsClsRoom',
+                'Restaurant Table': 'AsClsTable',
+                'Restaurant Table Area': 'AsClsTableArea',
+                'AsClsRoom': 'Hotel Room',
+                'AsClsTable': 'Restaurant Table',
+                'AsClsTableArea': 'Restaurant Table Area',
                 ]"/>
                 <set field="convertedStatusId" from="assetStatusValues[statusId]"/>
             </if>
@@ -169,6 +178,7 @@ along with this software (see the LICENSE.md file). If not, see
                                 <econdition field-name="orderId"
                                     operator="like" from="search" ignore-if-empty="true"/>
                             </econditions>
+                            <order-by field-name="rentalFromDate"/>
                             <order-by field-name="orderId"/>
                             <order-by field-name="orderItemSeqId"/>
                         </entity-find>
@@ -626,7 +636,6 @@ along with this software (see the LICENSE.md file). If not, see
             <parameter name="availableAssetIds" type="List"/>
         </out-parameters>
         <actions>
-            <log message="======$productId $fromDate $thruDate"/>
             <service-call out-map="context"
                 name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner"/>
             <entity-find entity-name="mantle.product.asset.Asset" list="assets">
@@ -691,7 +700,7 @@ along with this software (see the LICENSE.md file). If not, see
             <set field="invoiceId" from="items[0].invoiceId"/>
             <set field="orderPartSeqId" value="01"/>
             <!-- orderheader -->
-            <if condition="items[0].orderName != order.description">
+            <if condition="order.description &amp;&amp; items[0].orderName != order.description">
                 <entity-find-one entity-name="mantle.order.OrderHeader" value-field="orderHeader">
                     <field-map field-name="orderId" from="order.orderId"/>
                 </entity-find-one>
@@ -704,7 +713,6 @@ along with this software (see the LICENSE.md file). If not, see
                     <service-call in-map="context" out-map="context"
                         name="mantle.order.OrderServices.place#Order"/>
                     <!-- assign asset when rental order (one item per order only)-->
-                    <log message="======start date: ${items[0].rentalFromDate}"/>
                     <if condition="items[0].rentalFromDate &amp;&amp;
                                         items[0].rentalThruDate">
                         <service-call
@@ -713,8 +721,6 @@ along with this software (see the LICENSE.md file). If not, see
                                     fromDate: items[0].rentalFromDate,
                                     thruDate: items[0].rentalThruDate"
                             out-map="context"/>
-                        <log message="=========assets: ${availableAssetIds}"/>
-                        <log message="==========items: ${items}"/>
                         <if condition="availableAssetIds.size() &lt; items.size()">
                             <return error="true" message="not enough assets available for this date: required ${items.size()} available: ${availableAssetIds.size()}"/>
                         </if>
