@@ -56,6 +56,8 @@ along with this software (see the LICENSE.md file). If not, see
                 <set field="filter" value="%${filter}%"/></if>
             <if condition="search">
                 <set field="search" value="%${search}%"/></if>
+            <service-call name="growerp.100.OrderServices100.convert#StatusId"
+                in-map="[docType: 'asset', statusId: assetClassId]" out-map="assetClass"/>
             <entity-find offset="start" limit="limit"
                     entity-name="growerp.mobile.product.ProductAndPriceAndProductCategory"
                         list="productList">
@@ -63,7 +65,7 @@ along with this software (see the LICENSE.md file). If not, see
                         <econdition field-name="productTypeEnumId"
                             from="productTypeId" ignore-if-empty="true"/>
                         <econdition field-name="assetClassEnumId"
-                            from="assetClassId" ignore-if-empty="true"/>
+                            from="assetClass.convertedStatusId" ignore-if-empty="true"/>
                         <econdition field-name="categoryId" ignore-if-empty="true"/>
                         <econdition field-name="productId" operator="is-not-null"/>
                         <econdition field-name="productId" ignore-if-empty="true"/>
@@ -340,7 +342,6 @@ along with this software (see the LICENSE.md file). If not, see
         <actions>
             <script> // convert JSON data
                 Object assetIn = new groovy.json.JsonSlurper().parseText(asset).asset</script>
-            <log message="======${assetIn.statusId} ${assetIn.assetClassId} "/>
             <service-call out-map="context"
                 name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner"/>
             <service-call name="growerp.100.OrderServices100.convert#StatusId"
@@ -373,14 +374,13 @@ along with this software (see the LICENSE.md file). If not, see
             <script> // convert JSON data
                 Object assetIn = new groovy.json.JsonSlurper().parseText(asset).asset</script>
             <if condition="!assetIn.assetId"><return error="true" message="AssetId required"/></if>
-            <service-call name="growerp.100.GeneralServices100.get#RelatedCompanyPartyId"
-                out-map="context"/>
-            <entity-find-one value-field="asset" entity-name="mantle.product.asset.Asset" for-update="true">
+            <service-call out-map="context"
+                name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner"/>
+            <entity-find-one value-field="asset"
+                entity-name="mantle.product.asset.Asset" for-update="true">
                 <field-map field-name="assetId" from="assetIn.assetId"/>
                 <field-map field-name="ownerPartyId"/></entity-find-one>
             <if condition="!asset"><return error="true" message="asset ${assetIn.assetId} not found!}"/></if>
-
-                <log message="=====assetclass: ${assetIn.assetClassId}"/>
             <service-call name="growerp.100.OrderServices100.convert#StatusId"
                 in-map="[docType: 'asset', statusId: assetIn.statusId]" out-map="status"/>
             <service-call name="growerp.100.OrderServices100.convert#StatusId"
