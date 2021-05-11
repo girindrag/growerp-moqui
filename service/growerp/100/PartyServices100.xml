@@ -908,7 +908,6 @@ along with this software (see the LICENSE.md file). If not, see
             <parameter name="counterMax" default="1" type="Integer"/>
         </in-parameters>
         <actions>
-            <log message="====================creating default data for company: ${companyPartyId}"/>
             <script>sleep(3000)</script><!-- wait for registration above to commit -->
             <entity-find entity-name="mantle.product.category.ProductCategory" list="rootList">
                 <econdition field-name="productCategoryTypeEnumId" value="PctRoot"/>
@@ -1172,13 +1171,13 @@ along with this software (see the LICENSE.md file). If not, see
     
                 <if condition="classificationId == 'AppAdmin'"><set field="ordersIn" from="ordersAdmin"/></if>
                 <if condition="classificationId == 'AppHotel'"><set field="ordersIn" from="ordersHotel"/></if>
-                <entity-find entity-name="mantle.party.PartyDetailAndRole" list="customers">
+                <entity-find entity-name="growerp.mobile.CompanyPersonAndLoginGroup" list="customers">
                     <econdition field-name="ownerPartyId" from="companyPartyId"/>
-                    <econdition field-name="roleTypeId" value="Customer"/>
+                    <econdition field-name="userGroupId" value="GROWERP_M_CUSTOMER"/>
                 </entity-find>
-                <entity-find entity-name="mantle.party.PartyDetailAndRole" list="suppliers">
+                <entity-find entity-name="growerp.mobile.CompanyPersonAndLoginGroup" list="suppliers">
                     <econdition field-name="ownerPartyId" from="companyPartyId"/>
-                    <econdition field-name="roleTypeId" value="Supplier"/>
+                    <econdition field-name="userGroupId" value="GROWERP_M_SUPPLIER"/>
                 </entity-find>
                 <entity-find-one entity-name="mantle.ledger.config.PartyAcctgPreference"
                         value-field="aPref">
@@ -1198,7 +1197,7 @@ along with this software (see the LICENSE.md file). If not, see
                                 currencyUomId: aPref.baseCurrencyUomId,
                                 productStoreId: stores[0].productStoreId,
                                 placedDate: ec.user.nowTimestamp,
-                                customerPartyId: customers[index%2].partyId,
+                                customerPartyId: customers[index%2].companyPartyId,
                                 vendorPartyId: companyPartyId,
                             ]" out-map="context"/>
                         </else>
