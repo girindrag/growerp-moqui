@@ -265,6 +265,7 @@ along with this software (see the LICENSE.md file). If not, see
         <in-parameters>
             <parameter name="userPartyId"/><!-- if present select a single user, else a list -->
             <parameter name="userGroupId"/><!-- if present select user from particular groups-->
+            <parameter name="ownerPartyId"/><!-- required when registering company customers-->
             <parameter name="start" type="Integer" default-value="0"/>
             <parameter name="limit" type="Integer" default-value="20"/>
             <parameter name="filter"/>
@@ -280,11 +281,14 @@ along with this software (see the LICENSE.md file). If not, see
             </if>
             <if condition="search">
                 <set field="search" value="%${search}%"/></if>
-            <service-call out-map="relatedLogin"
-                name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner"/>
+            <if condition="!ownerPartyId">
+                <service-call out-map="relatedLogin"
+                    name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner"/>
+                    <set field="ownerPartyId" from="relatedLogin.ownerPartyId"/>
+            </if>
             <entity-find offset="start" limit="limit" list="userInfos"
                 entity-name="growerp.mobile.CompanyPersonAndLoginGroup">
-                <econdition field-name="ownerPartyId" from="relatedLogin.ownerPartyId"/>
+                <econdition field-name="ownerPartyId" from="ownerPartyId"/>
                 <econdition field-name="userPartyId" ignore-if-empty="true"/>
                 <econditions combine="or">
                     <econdition field-name="userPartyId" operator="like"
@@ -386,15 +390,94 @@ along with this software (see the LICENSE.md file). If not, see
         </actions>
     </service>
 
+    <service verb="register" noun="User"  authenticate="anonymous-all" >
+        <description>registration on the e-commerce webapp for a specific company just for non-employees</description>
+        <in-parameters>
+            <parameter name="ownerPartyId"/>
+            <parameter name="classificationId"/>
+            <parameter name="user" required="true"/>
+        </in-parameters>
+        <out-parameters>
+            <parameter name="user" type="Map"/>
+        </out-parameters>
+        <actions>
+            <script> // convert JSON data
+                Object userIn = new groovy.json.JsonSlurper().parseText(user).user;
+                user = null;
+            </script>
+            <log message="======$userIn"/>
+            <!-- check input parameters because anonymous access -->
+            <entity-find-one entity-name="mantle.party.Party" value-field="party">
+                <field-map field-name="partyId" from="ownerPartyId"/>
+            </entity-find-one>
+            <if condition="!party"><return message="Not a valid ownerId"/></if>
+            <entity-find-one entity-name="mantle.party.PartyClassification"
+                    value-field="classification">
+                <field-map field-name="partyClassificationId" from="classificationId"/>
+            </entity-find-one>
+            <if condition="!classification">
+                <return message="Not a valid classificationId: ${classificationId}"/></if>
+            <!-- roles -->
+            <if condition="userIn.userGroupId == 'GROWERP_M_LEAD' ||
+                    userIn.userGroupId == 'GROWERP_M_CUSTOMER'">
+                <set field="roleTypeId" value="Customer"/>
+            <else-if condition="userIn.userGroupId == 'GROWERP_M_SUPPLIER'">
+                <set field="roleTypeId" value="Supplier"/></else-if>
+            <else><return message="Not a valid userGroupId: ${userIn.userGroupId}"/></else></if>
+            <!-- password -->
+            <set field="newPassword" from="org.moqui.util.StringUtilities.getRandomString(6) + '9!'"/>
+            <set field="newPasswordVerify" from="newPassword"/>
+            <service-call name="mantle.party.PartyServices.create#Account" 
+                in-map="context + [roleTypeId: roleTypeId, loginAfterCreate: false,
+                        firstName: userIn.firstName, lastName: userIn.lastName,
+                        emailAddress: userIn.email, disabled: 'N']"
+                out-map="userAccount" />
+            <set field="userPartyId" from="userAccount.partyId"/>
+            <!-- update owner on userPartyId -->
+            <entity-find-one entity-name="mantle.party.Party"
+                    value-field="party" for-update="true">
+                <field-map field-name="partyId" from="userPartyId"/>
+            </entity-find-one>
+            <set field="party.ownerPartyId" from="ownerPartyId"/>
+            <entity-update value-field="party"/>
+            <if condition="!userIn.companyName">
+                <return error="true"
+                    message="Company name required for new lead, customer or supplier"/>
+            </if>
+            <service-call out-map="comp"
+                name="mantle.party.PartyServices.create#Organization"
+                in-map="[organizationName: userIn.companyName,
+                        ownerPartyId: ownerPartyId, roleTypeId: roleTypeId,
+                        disabled: 'N']"/>
+            <set field="companyPartyId" from="comp.partyId"/>
+            <!-- company party relationship -->
+            <service-call name="create#mantle.party.PartyRelationship"
+                in-map="[fromPartyId: userPartyId, fromRoleTypeId: 'Employee',
+                    relationshipTypeEnumId: 'PrtEmployee', fromDate: ec.user.nowTimestamp,
+                    toPartyId: companyPartyId, toRoleTypeId: roleTypeId]" />
+            <service-call name="create#moqui.security.UserGroupMember"
+                in-map="[userGroupId: userIn.userGroupId, userId: userAccount.userId]" />
+            <service-call name="org.moqui.impl.EmailServices.send#EmailTemplate" async="true">
+                <field-map field-name="emailTemplateId" value="WELCOME" />
+                <field-map field-name="toAddresses" from="userIn.email" />
+                <field-map field-name="bodyParameters" 
+                    from="[classification: classificationId.substring(3),
+                        newPassword:newPassword]" />
+            </service-call>
+            <service-call name="growerp.100.PartyServices100.get#User"
+                in-map="[ownerPartyId: ownerPartyId,userPartyId: userPartyId]" out-map="context"/>
+        </actions>
+    </service>
+
     <service verb="create" noun="User">
         <description>
             add a new user on an existing owner company
         </description>
         <in-parameters>
-            <parameter name="user"/>
+            <parameter name="user" required="true"/>
         </in-parameters>
         <out-parameters>
-            <parameter name="user"/>
+            <parameter name="user" type="Map"/>
         </out-parameters>
         <actions>
             <script> // convert JSON data
@@ -412,7 +495,7 @@ along with this software (see the LICENSE.md file). If not, see
             <service-call out-map="relComp"
                 name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner"/>
             <service-call name="mantle.party.PartyServices.create#Account" 
-                in-map="context + [roleTypeId: 'Employee', loginAfterCreate: false,
+                in-map="context + [roleTypeId: roleTypeId, loginAfterCreate: false,
                         firstName: userIn.firstName, lastName: userIn.lastName,
                         emailAddress: userIn.email, disabled: 'N']"
                 out-map="userAccount" />
@@ -441,6 +524,7 @@ along with this software (see the LICENSE.md file). If not, see
                     <set field="companyPartyId" from="relComp.ownerPartyId"/>
                 </else>
             </if>
+            <!-- company party relationship -->
             <service-call name="create#mantle.party.PartyRelationship"
                 in-map="[fromPartyId: userPartyId, fromRoleTypeId: 'Employee',
                     relationshipTypeEnumId: 'PrtEmployee', fromDate: ec.user.nowTimestamp,
@@ -824,6 +908,7 @@ along with this software (see the LICENSE.md file). If not, see
             <parameter name="counterMax" default="1" type="Integer"/>
         </in-parameters>
         <actions>
+            <log message="====================creating default data for company: ${companyPartyId}"/>
             <script>sleep(3000)</script><!-- wait for registration above to commit -->
             <entity-find entity-name="mantle.product.category.ProductCategory" list="rootList">
                 <econdition field-name="productCategoryTypeEnumId" value="PctRoot"/>
@@ -1020,7 +1105,7 @@ along with this software (see the LICENSE.md file). If not, see
                         lastName: us.lastName + counter,
                         email: us.emailAddress.substring(0,us.emailAddress.indexOf('@')) + counter + companyCount + us.emailAddress.substring(us.emailAddress.indexOf('@')),
                         locale: 'EN',
-                        username: us.username + counter + companyCount,
+                        name: us.username + counter + companyCount,
                         userGroupId: us.userGroupId, companyName: us.companyName
                     ]])"/>
                     <service-call name="growerp.100.PartyServices100.create#User"
