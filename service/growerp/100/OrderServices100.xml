@@ -199,23 +199,26 @@ along with this software (see the LICENSE.md file). If not, see
                                 <set field="otherCompanyPartyId" from="item.customerPartyId"/>
                             </else>
                         </if>
+                        <log message="=======Listing order: item.orderId  looking for company: ${otherCompanyPartyId} in CompanyPersonAndLoginGroup"/>
                         <entity-find list="others" 
                                 entity-name="growerp.mobile.CompanyPersonAndLoginGroup">
                             <econdition field-name="companyPartyId" from="otherCompanyPartyId"/>
                             <date-filter/><select-field field-name="userPartyId"/></entity-find>
                         <if condition="!others">
-                            <return error="true" message="Could not find company $otherCompanyPartyId from order ${lastItem.orderId} in view CompanyPersonAndLoginGroup"/></if>
+                            <return error="true" message="Could not find company $otherCompanyPartyId from order ${item.orderId} in view CompanyPersonAndLoginGroup"/></if>
                         <service-call name="growerp.100.PartyServices100.get#User"
                             in-map="[userPartyId: others[0].userPartyId]" out-map="userOut"/>
                         <service-call name="growerp.100.OrderServices100.convert#StatusId"
                             in-map="[sales: sales, docType: docType, statusId: item.statusId]" out-map="context"/>
+                        <log message="===========order placed date: ${item.placedDate.toString()}"/>
                         <set field="finDocOut" from="[
                             orderId: item.orderId,
                             invoiceId: item.invoiceId,
                             paymentId: item.paymentId,
                             description: item.orderName,
                             statusId: convertedStatusId,
-                            creationDate: item.placedDate.toString().substring(0,19) + 'Z',
+                            creationDate: item.entryDate.toString().substring(0,19) + 'Z',
+                            placedDate: item.placedDate ? item.entryDate.toString().substring(0,19) + 'Z' : null,
                             sales: sales.toString(),
                             docType: docType,
                             sales: sales.toString(),
