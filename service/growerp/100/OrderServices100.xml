@@ -199,7 +199,6 @@ along with this software (see the LICENSE.md file). If not, see
                                 <set field="otherCompanyPartyId" from="item.customerPartyId"/>
                             </else>
                         </if>
-                        <log message="=======Listing order: item.orderId  looking for company: ${otherCompanyPartyId} in CompanyPersonAndLoginGroup"/>
                         <entity-find list="others" 
                                 entity-name="growerp.mobile.CompanyPersonAndLoginGroup">
                             <econdition field-name="companyPartyId" from="otherCompanyPartyId"/>
@@ -210,7 +209,6 @@ along with this software (see the LICENSE.md file). If not, see
                             in-map="[userPartyId: others[0].userPartyId]" out-map="userOut"/>
                         <service-call name="growerp.100.OrderServices100.convert#StatusId"
                             in-map="[sales: sales, docType: docType, statusId: item.statusId]" out-map="context"/>
-                        <log message="===========order placed date: ${item.placedDate.toString()}"/>
                         <set field="finDocOut" from="[
                             orderId: item.orderId,
                             invoiceId: item.invoiceId,

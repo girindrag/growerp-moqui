@@ -876,7 +876,7 @@ along with this software (see the LICENSE.md file). If not, see
                 <econdition field-name="productCategoryTypeEnumId" value="PctRoot"/>
             </entity-find>
             <if condition="catgs">
-                <set field="productCategoryId" from="catgs[0].productCategoryId"/>
+                <set field="rootProductCategoryId" from="catgs[0].productCategoryId"/>
                 <else>
                     <service-call name="create#mantle.product.category.ProductCategory" out-map="context" 
                         in-map="[ownerPartyId: companyPartyId, productCategoryTypeEnumId: 'PctRoot',
@@ -885,7 +885,7 @@ along with this software (see the LICENSE.md file). If not, see
             </if>
             <!-- connect to productstore -->
             <service-call name="create#mantle.product.store.ProductStoreCategory" 
-                in-map="[productCategoryId: productCategoryId,
+                in-map="[productCategoryId: rootProductCategoryId,
                     storeCategoryTypeEnumId: 'PsctBrowseRoot',
                     productStoreId: productStoreId,
                     fromDate: fromDate]" />
@@ -894,6 +894,25 @@ along with this software (see the LICENSE.md file). If not, see
                 <econdition field-name="storeName" from="classificationId"/>
             </entity-find>
             <set field="productStore" from="stores[0]"/>
+            <!-- hotel app not using categories but need one for products -->
+            <entity-find list="categories" limit="1"
+                    entity-name="mantle.product.category.ProductCategory">
+                <econdition field-name="ownerPartyId" from="ownerPartyId"/>
+                <econdition  field-name="categoryName" value="Room Types"/>
+            </entity-find>
+            <!-- already exist? -->
+            <if condition="classificationId == 'AppHotel' &amp;&amp; !categories">
+                <service-call name="create#mantle.product.category.ProductCategory"
+                in-map="[categoryName: 'Room Types',
+                    description: 'Dummy category to connect the room types',
+                    productCategoryTypeEnumId: 'PctCatalog',
+                    ownerPartyId: companyPartyId]"
+                out-map="context"/>
+                <service-call 
+                    name="create#mantle.product.category.ProductCategoryRollup"
+                    in-map="[parentProductCategoryId: rootProductCategoryId,
+                            productCategoryId: productCategoryId]"/>
+            </if>
         </actions>
     </service>
 
