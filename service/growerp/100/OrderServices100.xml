@@ -514,7 +514,7 @@ along with this software (see the LICENSE.md file). If not, see
         <actions>
             <service-call out-map="context"
                 name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner"/>
-            <if condition="order.sales == true">
+            <if condition="order.sales == 'true'"><!-- inside order object this field is a string -->
                 <set field="vendorPartyId" from="ownerCompanyId"/>
                 <set field="customerPartyId" from="order.otherUser.companyPartyId"/>
                 <else>
@@ -689,7 +689,6 @@ along with this software (see the LICENSE.md file). If not, see
         <in-parameters>
             <parameter name="order" required="true" type="Map"/></in-parameters>
         <actions>
-            <log message="========order incoming status: ${order.statusId}"/>
             <!-- status sequence:
                 OrderOpen -> OrderPlaced -> orderApproved -> OrderCompleted
             -->
@@ -704,7 +703,7 @@ along with this software (see the LICENSE.md file). If not, see
                 </econditions>
                 <order-by field-name="orderItemSeqId"/>
             </entity-find>
-            <if condition="!items"><return error="true" message="Order not found"/></if>
+            <if condition="!items"><return error="true" message="Order not found: $orderId"/></if>
             <set field="paymentId" from="items[0].paymentId"/>
             <set field="invoiceId" from="items[0].invoiceId"/>
             <set field="orderPartSeqId" value="01"/>
@@ -747,7 +746,7 @@ along with this software (see the LICENSE.md file). If not, see
                     <service-call name="mantle.order.OrderServices.approve#Order"
                         in-map="context"/>
                     <!-- create invoice -->
-                    <if condition="order.sales == true">
+                    <if condition="order.sales == 'true'"><!-- inside order this is a string -->
                         <set field="invStatusId" value="InvoiceFinalized"/>
                         <else>
                             <set field="invStatusId" value="InvoiceReceived"/>
