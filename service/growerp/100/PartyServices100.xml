@@ -881,6 +881,7 @@ along with this software (see the LICENSE.md file). If not, see
                     <service-call name="create#mantle.product.category.ProductCategory" out-map="context" 
                         in-map="[ownerPartyId: companyPartyId, productCategoryTypeEnumId: 'PctRoot',
                             categoryName: 'Root category for: ' + classificationId]" />
+                    <set field="rootProductCategoryId" from="productCategoryId"/>
                 </else>
             </if>
             <!-- connect to productstore -->
