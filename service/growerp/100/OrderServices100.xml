@@ -58,7 +58,7 @@ along with this software (see the LICENSE.md file). If not, see
                 <set field="convertedStatusId" from="orderStatusValues[statusId]"/>
             </if>
             <if condition="docType == 'invoice'">
-                <if condition="sales == 'true'">
+                <if condition="sales == true">
                     <set field="invoiceStatusValues" from="[
                         InvoiceInProcess: 'FinDocPrep',
                         FinDocPrep: 'InvoiceInProcess',
@@ -147,7 +147,7 @@ along with this software (see the LICENSE.md file). If not, see
             <set field="finDocs" from="[]"/>
             <set field="finDocItems" from="[]"/>
 
-            <if condition="sales == 'true'">
+            <if condition="sales == true">
                 <set field="vendorPartyId" from="ownerPartyId"/>
             <else>
                 <set field="customerPartyId" from="ownerPartyId"/></else></if>
@@ -159,39 +159,38 @@ along with this software (see the LICENSE.md file). If not, see
                         <econdition field-name="customerPartyId" from="customerCompanyPartyId"/>
                         <order-by field-name="orderItemSeqId"/>
                     </entity-find>
-                    <else><if condition="id"><!-- single document -->
-                        <entity-find list="items"
-                                entity-name="growerp.order.OrderHeaderPartItemPartiesAndReservation">
-                            <econdition field-name="orderId" from="id"/>
-                            <econditions combine="or">
-                                <econdition field-name="vendorPartyId" from="ownerPartyId"/>
-                                <econdition field-name="customerPartyId" from="ownerPartyId"/>
-                            </econditions>
-                            <order-by field-name="orderItemSeqId"/>
-                        </entity-find>
-                        <else><!-- multiple documents -->
-                            <set field="statusList"
-                                from="['OrderOpen','OrderPlaced','OrderApproved']"/> <!-- OrderCompleted OrderCancelled' -->
-                            <if condition="open == 'true'">
-                                <set field="status" from="statusList"/>
-                            </if>
-                            <entity-find offset="start" limit="limit"
-                                    entity-name="growerp.order.OrderHeaderPartItemPartiesAndReservation" list="items">
-                                <econdition field-name="vendorPartyId" from="vendorPartyId" ignore-if-empty="true"/>
-                                <econdition field-name="customerPartyId" from="customerPartyId" ignore-if-empty="true"/>
-                                <econdition field-name="statusId" operator="in" from="status" ignore-if-empty="true"/>
-                                <econdition field-name="placedDate" operator="less-equals" from="tsDate" ignore-if-empty="true"/>
-                                <econditions combine="or">
-                                    <econdition field-name="orderId"
-                                        operator="like" from="search" ignore-if-empty="true"/>
-                                </econditions>
-                                <order-by field-name="rentalFromDate"/>
-                                <order-by field-name="orderId"/>
-                                <order-by field-name="orderItemSeqId"/>
-                            </entity-find>
-                        </else> 
-                    </if></else>
-               </if>
+                <else><if condition="id"><!-- single document -->
+                    <entity-find list="items"
+                            entity-name="growerp.order.OrderHeaderPartItemPartiesAndReservation">
+                        <econdition field-name="orderId" from="id"/>
+                        <econditions combine="or">
+                            <econdition field-name="vendorPartyId" from="ownerPartyId"/>
+                            <econdition field-name="customerPartyId" from="ownerPartyId"/>
+                        </econditions>
+                        <order-by field-name="orderItemSeqId"/>
+                    </entity-find>
+                <else><!-- multiple documents -->
+                    <set field="statusList"
+                        from="['OrderOpen','OrderPlaced','OrderApproved']"/> <!-- OrderCompleted OrderCancelled' -->
+                    <if condition="open == true">
+                        <set field="status" from="statusList"/>
+                    </if>
+                    <entity-find offset="start" limit="limit"
+                            entity-name="growerp.order.OrderHeaderPartItemPartiesAndReservation" list="items">
+                        <econdition field-name="vendorPartyId" from="vendorPartyId" ignore-if-empty="true"/>
+                        <econdition field-name="customerPartyId" from="customerPartyId" ignore-if-empty="true"/>
+                        <econdition field-name="statusId" operator="in" from="status" ignore-if-empty="true"/>
+                        <econdition field-name="placedDate" operator="less-equals" from="tsDate" ignore-if-empty="true"/>
+                        <econditions combine="or">
+                            <econdition field-name="orderId"
+                                operator="like" from="search" ignore-if-empty="true"/>
+                        </econditions>
+                        <order-by field-name="rentalFromDate"/>
+                        <order-by field-name="orderId"/>
+                        <order-by field-name="orderItemSeqId"/>
+                    </entity-find>
+                    </else></if></else>
+                </if>
                 <set field="lastItem" from="null"/>
                 <iterate entry="item" list="items">
                     <if condition="lastItem &amp;&amp; lastItem.orderId != item.orderId">
@@ -265,7 +264,7 @@ along with this software (see the LICENSE.md file). If not, see
                         <order-by field-name="invoiceItemSeqId"/>
                     </entity-find>
                     <else><!-- invoice list -->
-                        <if condition="open == 'true'">
+                        <if condition="open == true">
                             <set field="statusList" from="openStatusList"/></if>
                         <entity-find
                             entity-name="growerp.order.InvoiceAndItem" list="items">
@@ -348,7 +347,7 @@ along with this software (see the LICENSE.md file). If not, see
                         </econditions>
                     </entity-find>
                     <else>
-                        <if condition="open == 'true'">
+                        <if condition="open == true">
                             <set field="status" from="openStatusList"/></if>
                         <entity-find
                             entity-name="growerp.order.PaymentAndInfo" list="items">
@@ -404,7 +403,7 @@ along with this software (see the LICENSE.md file). If not, see
                         <econdition field-name="acctgTransId" from="id"/>
                     </entity-find>
                     <else>
-                        <if condition="open == 'true'">
+                        <if condition="open == true">
                             <set field="status" from="openStatusList"/></if>
                         <entity-find  offset="start" limit="limit" list="items"
                                 entity-name="mantle.ledger.transaction.AcctgTransAndEntry">
@@ -515,7 +514,7 @@ along with this software (see the LICENSE.md file). If not, see
         <actions>
             <service-call out-map="context"
                 name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner"/>
-            <if condition="order.sales == 'true'">
+            <if condition="order.sales == true">
                 <set field="vendorPartyId" from="ownerCompanyId"/>
                 <set field="customerPartyId" from="order.otherUser.companyPartyId"/>
                 <else>
@@ -748,7 +747,7 @@ along with this software (see the LICENSE.md file). If not, see
                     <service-call name="mantle.order.OrderServices.approve#Order"
                         in-map="context"/>
                     <!-- create invoice -->
-                    <if condition="order.sales == 'true'">
+                    <if condition="order.sales == true">
                         <set field="invStatusId" value="InvoiceFinalized"/>
                         <else>
                             <set field="invStatusId" value="InvoiceReceived"/>
@@ -770,7 +769,7 @@ along with this software (see the LICENSE.md file). If not, see
                         in-map="context"/>
                     <entity-find-one entity-name="mantle.account.invoice.Invoice"
                         value-field="invoice" for-update="true"/>
-                    <if condition="sales == 'true'">
+                    <if condition="sales == true">
                         <set field="invoice.statusId" value="InvoiceSent"/>
                         <else>
                             <set field="invoice.statusId" value="InvoiceReceived"/>
