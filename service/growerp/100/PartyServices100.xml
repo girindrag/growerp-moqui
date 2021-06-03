@@ -77,6 +77,12 @@ along with this software (see the LICENSE.md file). If not, see
                 <econdition field-name="partyId" from="companyPartyId"/>
                 <econdition field-name="partyContentTypeEnumId" from="contentTypeId"/>
             </entity-find>
+            <if condition="!contents">
+                <entity-find entity-name="mantle.party.PartyContent" list="contents">
+                    <econdition field-name="partyId" from="companyPartyId"/>
+                    <econdition field-name="partyContentTypeEnumId" value="PcntLogoImage"/>
+                </entity-find>
+            </if>
             <if condition="contents">
                 <service-call name="growerp.100.ImageServices100.download#Image"
                     in-map="[contentLocation: contents[0].contentLocation]" out-map="context"/>
@@ -98,19 +104,20 @@ along with this software (see the LICENSE.md file). If not, see
                 <script>itemTypes['purchase'].add([itemTypeId: itemType.enumId, description: itemType.description])</script>
             </iterate>
             <!-- postal address -->
-            <entity-find list="addresses"
+            <entity-find list="addresses" limit="1"
                 entity-name="mantle.party.contact.PartyContactMechPostalAddressOnly">
                 <econdition field-name="partyId" from="companyPartyId"/>
                 <econdition field-name="contactMechPurposeId" value="PostalPrimary"/>
             </entity-find>
             <if condition="addresses">
                 <set field="address" from="[
-                address1: addresses.address1,
-                address2: addresses.address2,
-                city: addresses.city,
-                postalCode: addresses.postalCode,
-                province: addresses.stateProvince,
-                country: addresses.country,
+                addressId: addresses[0].contactMechId,
+                address1: addresses[0].address1,
+                address2: addresses[0].address2,
+                city: addresses[0].city,
+                postalCode: addresses[0].postalCode,
+                province: addresses[0].stateProvince ? addresses[0].stateProvince : addresses[0].stateProvinceGeoId,
+                country: addresses[0].countryGeoId,
                 ]"/>
             </if>
             <entity-find-one entity-name="mantle.party.Party" value-field="party">
