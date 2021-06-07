@@ -1,33 +1,26 @@
+# GrowERP Moqui backend
 
+This is the backend to the flutter frontend at: https://github.com/growerp/growerp
 
-The easiest start is with docker:(adjust the docker-compose.yml file for domainnnames, usernames and passwords)
-
-in the docker directory:
-docker-compose -p moqui up -d
-
-will create all instances required, taking the images from hub.docker.com
-
-to run locally:
+- to run locally:
+```
 git clone https://github.com/growerp/moqui-framework.git moqui && cd moqui
 git clone https://github.com/growerp/moqui-runtime runtime
 git clone https://github.com/growerp/growerp-moqui.git runtime/component/growerp
 git clone https://github.com/growerp/PopCommerce.git runtime/component/PopCommerce
-git clone https://github.com/growerp/mantle-udm.git runtime/component/mantle-udm
+git clone https://github.com/growerp/mantle-udm.git -b growerp runtime/component/mantle-udm
 git clone https://github.com/growerp/mantle-usl.git runtime/component/mantle-usl
 git clone https://github.com/growerp/SimpleScreens.git runtime/component/SimpleScreens
 git clone https://github.com/growerp/moqui-fop.git runtime/component/moqui-fop
 ./gradlew build
 java -jar moqui.war load types=seed,seed-initial,install
 java -jar moqui.war
+```
 
 In a different terminal:
+```
 git clone https://github.com/growerp/growerp/master admin
 cd admin
 flutter run
+```
 create your first company!
-
-the mobile frontends can be downloaded here: 
---------------------------------------------
-flutter admin: growerp branch master: https://github.com/growerp/growerp/master
-flutter ecommerce: growerp branch ecommerce: https://github.com/growerp/growerp/ecommerce
-flutter hotel: growerp branch hotel: https://github.com/growerp/growerp/hotel
