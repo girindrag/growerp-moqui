@@ -282,6 +282,7 @@ along with this software (see the LICENSE.md file). If not, see
                             </econditions>
                             <order-by field-name="invoiceId"/>
                             <order-by field-name="invoiceItemSeqId"/>
+                            <use-iterator/>
                         </entity-find>                            
                     </else>
                 </if>
@@ -290,6 +291,7 @@ along with this software (see the LICENSE.md file). If not, see
                     <if condition="lastItem &amp;&amp; lastItem.invoiceId != item.invoiceId">
                         <set field="finDocOut.items" from="finDocItems"/> 
                         <script>finDocs.add(finDocOut)</script>
+                        <if condition="current++ == limit"><break/></if>
                     </if>   
                     <if condition="!lastItem || lastItem.invoiceId != item.invoiceId">
                         <if condition="item.fromPartyId == ownerPartyId">
@@ -400,7 +402,7 @@ along with this software (see the LICENSE.md file). If not, see
             </if>
             <if condition="docType == 'transaction'">
                 <if condition="id">
-                    <entity-find  offset="start" limit="limit" list="entries"
+                    <entity-find  offset="start" list="entries"
                         entity-name="mantle.ledger.transaction.AcctgTransAndEntry">
                         <econdition field-name="organizationPartyId" from="ownerPartyId"/>
                         <econdition field-name="isPosted" value="Y"/>
@@ -423,6 +425,7 @@ along with this software (see the LICENSE.md file). If not, see
                             </econditions>
                             <order-by field-name="-transactionDate"/>
                             <order-by field-name="acctgTransEntrySeqId"/>
+                            <use-iterator/>
                         </entity-find>
                     </else>
                 </if>
@@ -433,6 +436,7 @@ along with this software (see the LICENSE.md file). If not, see
                             finDocOut.grandTotal = grandTotal.toString();
                             finDocs.add(finDocOut)
                         </script>
+                        <if condition="current++ == limit"><break/></if>
                     </if>   
                     <if condition="!lastItem || lastItem.acctgTransId != item.acctgTransId">
                         <entity-find list="others" 
