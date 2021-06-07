@@ -936,6 +936,7 @@ along with this software (see the LICENSE.md file). If not, see
         </in-parameters>
         <actions>
             <script>sleep(3000)</script><!-- wait for registration above to commit -->
+            <log message="=====start creating demo data"/>
             <entity-find entity-name="mantle.product.category.ProductCategory" list="rootList">
                 <econdition field-name="productCategoryTypeEnumId" value="PctRoot"/>
                 <econdition field-name="ownerPartyId" from="companyPartyId"/></entity-find>
@@ -1081,6 +1082,7 @@ along with this software (see the LICENSE.md file). If not, see
                     </iterate>
 
                     <!-- assets -->
+                    <log message="========create assets"/>
                     <entity-find entity-name="mantle.product.store.ProductStore" list="stores">
                         <econdition field-name="organizationPartyId" from="companyPartyId"/>
                         <econdition field-name="storeName" from="classificationId"/>
@@ -1098,18 +1100,33 @@ along with this software (see the LICENSE.md file). If not, see
                         [ assetName: '10', productName: 'Suite'],                
                         [ assetName: '11', productName: 'Appartment'],                
                         ]"/>
+                    <set field="assetsAdmin" from="[
+                        [ assetName: '01', productName: 'wiskey'],
+                        [ assetName: '02', productName: 'wiskey'],
+                        [ assetName: '03', productName: 'wiskey'],
+                        [ assetName: '04', productName: 'macaroni'],
+                        [ assetName: '05', productName: 'macaroni'],
+                        [ assetName: '06', productName: 'macaroni'],
+                        [ assetName: '07', productName: 'hamburger'],
+                        [ assetName: '08', productName: 'hamburger'],
+                        [ assetName: '09', productName: 'cola'],           
+                        [ assetName: '10', productName: 'cola'],
+                        ]"/>
                     <if condition="classificationId == 'AppHotel'"><set field="assetsIn" from="assetsHotel"/></if>
+                    <if condition="classificationId == 'AppAdmin'"><set field="assetsIn" from="assetsAdmin"/></if>
 
                     <iterate list="assetsIn" entry="asset">
                         <entity-find entity-name="mantle.product.Product" list="products">
                             <econdition field-name="ownerPartyId" from="companyPartyId"/>
-                            <econdition field-name="productName" from="asset.productName"/>
+                            <econdition field-name="productName"
+                                from="asset.productName + (classificationId != 'AppHotel'? counter : '')"/>
                         </entity-find>
                         <if condition="products">
                             <set field="product" from="products[0]"/>
                             <else>
-                                <return error="false"
-                                    message="Could not find product: ${asset.productName} on asset: ${asset.assetName}"/>
+                                <log
+                                    message="While creating assets, could not find product: ${asset.productName + (classificationId != 'AppHotel'? counter : '')} on asset: ${asset.assetName}"/>
+                                <continue/>
                             </else>
                         </if>
                         <!-- do not put fixed asset in inventory so normal reserve process does not work -->
@@ -1229,7 +1246,6 @@ along with this software (see the LICENSE.md file). If not, see
                             ]" out-map="context"/>
                         </else>
                     </if>
-                    <log message="====looking for productname: ${order.productName}"/>
                     <entity-find entity-name="growerp.mobile.product.ProductAndPriceAndProductCategory" list="products">
                         <econdition field-name="ownerPartyId" from="companyPartyId"/>
                         <econdition field-name="productName" operator="like" value="${order.productName}%"/>

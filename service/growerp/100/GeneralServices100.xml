@@ -90,39 +90,39 @@ along with this software (see the LICENSE.md file). If not, see
             <entity-find-count count-field="admins"
                 entity-name="growerp.mobile.CompanyPersonAndLoginGroup">
                 <econdition field-name="ownerPartyId"/>
-                <econdition field-name="userDisabled" value="N"/>
-                <econdition field-name="companyDisabled" value="N"/>
+                <econdition field-name="userDisabled" value="N" or-null="true"/>
+                <econdition field-name="companyDisabled" value="N" or-null="true"/>
                 <econdition field-name="userGroupId" value="GROWERP_M_ADMIN"/>
             </entity-find-count>
             <entity-find-count count-field="employees"
                 entity-name="growerp.mobile.CompanyPersonAndLoginGroup">
                 <econdition field-name="ownerPartyId"/>
-                <econdition field-name="userDisabled" value="N"/>
-                <econdition field-name="companyDisabled" value="N"/>
+                <econdition field-name="userDisabled" value="N" or-null="true"/>
+                <econdition field-name="companyDisabled" value="N" or-null="true"/>
                 <econdition field-name="userGroupId" operator="in"
-                    from="['GROWERP_M_EMPLOYEE','GROWERP_M_ADMIN']"/>
+                    from="['GROWERP_M_EMPLOYEE']"/>
             </entity-find-count>
             <entity-find-count count-field="leads"
                 entity-name="growerp.mobile.CompanyPersonAndLoginGroup">
                 <econdition field-name="ownerPartyId"/>
-                <econdition field-name="userDisabled" value="N"/>
-                <econdition field-name="companyDisabled" value="N"/>
+                <econdition field-name="userDisabled" value="N" or-null="true"/>
+                <econdition field-name="companyDisabled" value="N" or-null="true"/>
                 <econdition field-name="userGroupId"
                     value="GROWERP_M_LEAD"/>
             </entity-find-count>
             <entity-find-count count-field="customers"
                 entity-name="growerp.mobile.CompanyPersonAndLoginGroup">
                 <econdition field-name="ownerPartyId"/>
-                <econdition field-name="userDisabled" value="N"/>
-                <econdition field-name="companyDisabled" value="N"/>
+                <econdition field-name="userDisabled" value="N" or-null="true"/>
+                <econdition field-name="companyDisabled" value="N" or-null="true"/>
                 <econdition field-name="userGroupId"
                     value="GROWERP_M_CUSTOMER"/>
             </entity-find-count>
             <entity-find-count count-field="suppliers"
                 entity-name="growerp.mobile.CompanyPersonAndLoginGroup">
                 <econdition field-name="ownerPartyId"/>
-                <econdition field-name="userDisabled" value="N"/>
-                <econdition field-name="companyDisabled" value="N"/>
+                <econdition field-name="userDisabled" value="N" or-null="true"/>
+                <econdition field-name="companyDisabled" value="N" or-null="true"/>
                 <econdition field-name="userGroupId"
                     value="GROWERP_M_SUPPLIER"/>
             </entity-find-count>
@@ -135,6 +135,12 @@ along with this software (see the LICENSE.md file). If not, see
                     <econdition field-name="salesDiscontinuationDate"
                         operator="greater" from="ec.user.nowTimestamp"/>
                 </econditions>
+                <econdition field-name="ownerPartyId"/>
+            </entity-find-count>
+            <entity-find-count entity-name="mantle.product.asset.Asset"
+                    count-field="assets">
+                <econdition field-name="statusId"
+                    operator="not-equals" value="AstDeactivated"/>
                 <econdition field-name="ownerPartyId"/>
             </entity-find-count>
             <entity-find-count count-field="categories"
@@ -187,6 +193,7 @@ along with this software (see the LICENSE.md file). If not, see
                 myOpportunities: myOpportunities.toString(),
                 categories: categories.toString(),
                 products: products.toString(),
+                assets: assets.toString(),
                 salesInvoicesNotPaidCount: allRecInvList ? allRecInvList[0].invoiceCount.toString() : '0',
                 salesInvoicesNotPaidAmount: allRecInvList ? allRecInvList[0].unpaidTotal.toString() : '0.00',
                 purchInvoicesNotPaidCount: allPblInvList ? allPblInvList[0].invoiceCount.toString(): '0',
