@@ -152,12 +152,14 @@ along with this software (see the LICENSE.md file). If not, see
             <else>
                 <set field="customerPartyId" from="ownerPartyId"/></else></if>
 
+            <set field="current" value="0" type="Integer"/>
             <if condition="docType == 'order'">
                 <if condition="customerCompanyPartyId">
                     <entity-find list="items" offset="start" limit="limit"
                             entity-name="growerp.order.OrderHeaderPartItemPartiesAndReservation">
                         <econdition field-name="customerPartyId" from="customerCompanyPartyId"/>
                         <order-by field-name="orderItemSeqId"/>
+                        <use-iterator/>
                     </entity-find>
                 <else><if condition="id"><!-- single document -->
                     <entity-find list="items"
@@ -175,7 +177,7 @@ along with this software (see the LICENSE.md file). If not, see
                     <if condition="open == true">
                         <set field="status" from="statusList"/>
                     </if>
-                    <entity-find offset="start" limit="limit"
+                    <entity-find offset="start"
                             entity-name="growerp.order.OrderHeaderPartItemPartiesAndReservation" list="items">
                         <econdition field-name="vendorPartyId" from="vendorPartyId" ignore-if-empty="true"/>
                         <econdition field-name="customerPartyId" from="customerPartyId" ignore-if-empty="true"/>
@@ -188,6 +190,7 @@ along with this software (see the LICENSE.md file). If not, see
                         <order-by field-name="rentalFromDate"/>
                         <order-by field-name="orderId"/>
                         <order-by field-name="orderItemSeqId"/>
+                        <use-iterator/>
                     </entity-find>
                     </else></if></else>
                 </if>
@@ -196,6 +199,7 @@ along with this software (see the LICENSE.md file). If not, see
                     <if condition="lastItem &amp;&amp; lastItem.orderId != item.orderId">
                         <set field="finDocOut.items" from="finDocItems"/> 
                         <script>finDocs.add(finDocOut)</script>
+                        <if condition="current++ == limit"><break/></if>
                     </if>   
                     <if condition="!lastItem || lastItem.orderId != item.orderId">
                         <if condition="item.customerPartyId == ownerPartyId">
