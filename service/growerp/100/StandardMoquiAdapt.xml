@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+This software is in the public domain under CC0 1.0 Universal plus a 
+Grant of Patent License.
+
+To the extent possible under law, the author(s) have dedicated all
+copyright and related and neighboring rights to this software to the
+public domain worldwide. This software is distributed without any
+warranty.
+
+You should have received a copy of the CC0 Public Domaicrn Dedication
+along with this software (see the LICENSE.md file). If not, see
+<http://creativecommons.org/publicdomain/zero/1.0/>.
+-->
+<services xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/service-definition-2.1.xsd">
+
+    <service verb="adapt" noun="User">
+        <description>
+            add the GrowERP security groups to existing users according
+            their role and or/existing security group.
+            This service can be rerun regularly
+        </description>
+        <actions>
+            <set field="companyPartyId" value="ORG_ACCUGEO"/>
+            <set field="userGroups"
+                from="['GROWERP_M_ADMIN', 'GROWERP_M_EMPLOYEE', 'GROWERP_M_CUSTOMER', 'GROWERP_M_LEAD', 'GROWERP_M_SUPPLIER']"/>
+
+            <entity-find entity-name="CompanyPersonAndLoginGroup" list="users">
+                <econditions combine="or">
+                    <econdition field-name="companyOwnerPartyId" operator="is-null"/>
+                    <econdition field-name="ownerPartyId" operator="is-null"/>
+                    <econdition field-name="companyOwnerPartyId" value="_NA_"/>
+                    <econdition field-name="ownerPartyId" value="_NA_"/>
+                    <econdition field-name="orgRoleTypeId" operator="is-null"/>
+                    <econdition field-name="userRoleTypeId" operator="is-null"/>
+                    <econdition field-name="userGroupId" operator="is-null"/>
+                    <econdition field-name="fromDate" operator="is-null"/>
+                </econditions>
+                <!--use-iterator/-->
+            </entity-find>
+            <log message="=====records found ${users.size()}"/>
+            <iterate list="users" entry="user">
+                <log message="======== processing: company ${user.companyName}"/>
+                <!-- ownerfield on company or user party-->
+                <if condition="user.companyOwnerPartyId == null|| user.companyOwnerPartyId == 'NA'">
+                    <entity-find-one entity-name="mantle.party.Party" value-field="party"
+                            for-update="true">
+                        <field-map field-name="partyId" from="user.companyPartyId"/>
+                    </entity-find-one>
+                    <set field="party.companyOwnerPartyId" from="companyPartyId"/>
+                    <entity-update value-field="party"/>
+                </if>
+                <!-- get company role when not internal-->
+                <entity-find entity-name="mantle.party.PartyRole" list="compRoles">
+                    <econdition field-name="partyId" from="user.companyPartyId"/>
+                </entity-find>
+                <log message="=========compRoles: $compRoles"/>
+                <set field="userGroupId" value="GROWERP_M_SUPPLIER"/>
+                <if condition="compRoles &amp;&amp; compRoles[0].roleTypeId == 'Customer'">
+                    <set field="userGroupId" value="GROWERP_M_CUSTOMER"/></if>
+                <if condition="user.orgRoleTypeId == 'OrgInternal'">
+                    <!-- company admins and employees -->
+                    <entity-find entity-name="moqui.security.UserGroupMemberUser" list="access">
+                        <econdition field-name="partyId" from="userPartyId"/>
+                        <econdition field-name="userGroupId" value="ADMIN"/>
+                    </entity-find>
+                    <set field="userGroupId" value="GROWERP_M_EMPLOYEE"/>
+                    <if condition="access">
+                        <set field="userGroupId" value="GROWERP_M_ADMIN"/>
+                    </if>
+                </if>
+                <log message="===========userGroupId: $userGroupId"/>
+                <!-- if company not has a contact person -->
+                <if condition="user.userPartyId == null">
+                    <service-call name="mantle.party.PartyServices.create#Person"
+                        out-map="context"
+                        in-map="[firstName: 'Contact of', lastName: user.companyName,
+                                ownerPartyId: companyPartyId,
+                                roleTypeId: compRoles? compRoles[0].roleTypeId : null]"
+                    />
+                    <set field="userPartyId" from="partyId"/>
+                    <entity-make-value entity-name="mantle.party.PartyRelationship" value-field="partyRelationship"/>
+                    <entity-sequenced-id-primary value-field="partyRelationship"/>
+                    <set field="partyRelationship.toPartyId" from="user.companyPartyId"/>
+                    <set field="partyRelationship.toRoleTypeId" value="OrgEmployer"/>
+                    <set field="partyRelationship.fromPartyId" from="userPartyId"/>
+                    <set field="partyRelationship.fromRoleTypeId" from="Employee"/>
+                    <set field="partyRelationship.fromDate" from="ec.user.nowTimestamp"/>
+                    <entity-create value-field="partyRelationship"/>
+                    <else>
+                        <!-- has a contact person -->
+                        <set field="userPartyId" from="user.userPartyId"/>
+                        <!-- check if have primary email address, use that for user account -->
+                        <entity-find entity-name="mantle.party.contact.PartyContactMechInfo"
+                                    list="emails" limit="1">
+                            <econdition field-name="partyId" from="userPartyId"/>
+                            <econdition field-name="contactMechPurposeId" value="EmailPrimary"/>
+                            <date-filter/></entity-find>
+                       </else>
+                </if>
+                <!-- if no login Id, create disabled one to be able have a connection to security user groups-->
+                <if condition="user.userId == null">
+                    <service-call name="mantle.party.PartyServices.create#PartyUserAccount"
+                        out-map="context"
+                        in-map="[partyId: userPartyId, 
+                                emailAddress: emails ? emails[0].infoString : userPartyId + '@example.com',
+                                username: userPartyId, disabled: 'Y']"/>
+                    <set field="user.userId" from="userId"/>
+                </if>
+                <!-- check if userlog has growerp access -->
+                <entity-find entity-name="moqui.security.UserGroupMemberUser" list="access">
+                    <econdition field-name="partyId" from="userPartyId"/>
+                    <econdition field-name="userGroupId" operator="like" value="GROWERP_M_%"/>
+                </entity-find>
+                <if condition="!access">
+                    <entity-make-value entity-name="moqui.security.UserGroupMember" value-field="um"/>
+                    <set field="um.userId" from="user.userId"/>
+                    <set field="um.userGroupId" from="userGroupId"/>
+                    <set field="um.fromDate" from="ec.user.nowTimestamp"/>
+                    <entity-create value-field="um"/>
+                </if>
+                <!-- to(company) roleTypeId not filled -->
+                <entity-find entity-name="mantle.party.PartyRelationship" list="rels">
+                    <econdition field-name="toPartyId" from="user.companyPartyId"/>
+                    <econdition field-name="toRoleTypeId" operator="is-null"/>
+                </entity-find>
+                <if condition="rels">
+                    <iterate list="rels" entry="rel">
+                        <if condition="rel.toRoleTypeId == null">
+                            <if condition="rel.companyPartyId == companyPartyId">
+                                <set field="rel.toRoleTypeId" value="OrgInternal"/>
+                                <else>
+                                    <set field="rel.toRoleTypeId" value="OrgEmployer"/>
+                                </else>
+                            </if>
+                            <entity-update value-field="rel"/>
+                        </if>
+                    </iterate>
+                </if>
+                <!-- if company ownder not filled -->
+                <if condition="user.companyOwnerPartyId == null || user.companyOwnerPartyId == '_NA_'">
+                    <entity-find-one entity-name="mantle.party.Party" value-field="party"
+                            for-update="true">
+                        <field-map field-name="partyId" from="user.companyOwnerPartyId"/>
+                    </entity-find-one>
+                    <if condition="party &amp;&amp; party.ownerPartyId != companyPartyId">
+                        <set field="party.ownerPartyId" from="companyPartyId"/>
+                        <entity-update value-field="party"/>
+                    </if>
+                </if>
+                <!-- if user owner not filled -->
+                <if condition="user.ownerPartyId == null || user.ownerPartyId == '_NA_'">
+                    <entity-find-one entity-name="mantle.party.Party" value-field="party"
+                            for-update="true">
+                        <field-map field-name="partyId" from="user.userPartyId"/>
+                    </entity-find-one>
+                    <if condition="party &amp;&amp; party.ownerPartyId != companyPartyId">
+                        <set field="party.ownerPartyId" from="companyPartyId"/>
+                        <entity-update value-field="party"/>
+                    </if>
+                </if>
+                <!-- from (user) roleTypeId not filled -->
+                <entity-find entity-name="mantle.party.PartyRelationship" list="rels">
+                    <econdition field-name="fromPartyId" from="user.userPartyId"/>
+                    <econdition field-name="fromRoleTypeId" operator="is-null"/>
+                </entity-find>
+                <if condition="rels">
+                    <iterate list="rels" entry="rel">
+                        <if condition="rel.fromRoleTypeId == null">
+                            <set field="rel.fromRoleTypeId" value="Employee"/>
+                            <entity-update value-field="rel"/>
+                        </if>
+                    </iterate>
+                </if>
+            </iterate>
+            <!-- fromDate is null -->
+            <entity-find entity-name="mantle.party.PartyRelationship" list="rels">
+                <econdition field-name="toPartyId" from="user.companyPartyId"/>
+                <econdition field-name="fromDate" operator="is-null"/>
+            </entity-find>
+            <if condition="rels">
+                <iterate list="rels" entry="rel">
+                    <set field="rel.fromDate" from="ec.user.nowTimestamp"/>
+                    <entity-update value-field="rel"/>
+                </iterate>
+            </if>
+        </actions>
+    </service>
+</services>

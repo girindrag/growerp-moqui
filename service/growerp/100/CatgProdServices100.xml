@@ -97,7 +97,7 @@ along with this software (see the LICENSE.md file). If not, see
                         products.add([
                             productId: product.productId,
                             productName: product.productName,
-                            price: product.price
+                            price: product.price.toString()
                                 ])
                     </script>
                     <continue/>
@@ -116,9 +116,9 @@ along with this software (see the LICENSE.md file). If not, see
                         in-map="[contentLocation: contents[0].contentLocation]" out-map="context"/></if>
                 <set field="productOut" from="[
                     productId: product.productId,
-                    productName: product.productName?:'?',
-                    description: product.description,
-                    price: product.price.toString(),
+                    productName: product.productName ?: '',
+                    description: product.description?:'',
+                    price: product.price ? product.price.toString() : '0.00',
                     categoryId: product.categoryId,
                     categoryName: product.categoryName,
                     assetCount: assetCount.toString(),
@@ -126,6 +126,7 @@ along with this software (see the LICENSE.md file). If not, see
                 <if condition="productId">
                     <set field="product" from="productOut"/>
                     <else>
+                        <set field="product" from="null"/>
                         <script>products.add(productOut)</script>
                     </else>
                 </if>

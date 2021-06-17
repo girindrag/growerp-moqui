@@ -151,10 +151,9 @@ along with this software (see the LICENSE.md file). If not, see
                 <set field="vendorPartyId" from="ownerPartyId"/>
             <else>
                 <set field="customerPartyId" from="ownerPartyId"/></else></if>
-
             <set field="current" value="0" type="Integer"/>
             <if condition="docType == 'order'">
-                <if condition="customerCompanyPartyId">
+                <if condition="customerCompanyPartyId"><!-- by customer for ecommerce -->
                     <entity-find list="items" offset="start" limit="limit"
                             entity-name="growerp.order.OrderHeaderPartItemPartiesAndReservation">
                         <econdition field-name="customerPartyId" from="customerCompanyPartyId"/>
@@ -186,6 +185,14 @@ along with this software (see the LICENSE.md file). If not, see
                         <econditions combine="or">
                             <econdition field-name="orderId"
                                 operator="like" from="search" ignore-if-empty="true"/>
+                            <econdition field-name="vendorCompanyName"
+                                operator="like" from="search" ignore-if-empty="true"/>
+                            <econdition field-name="vendorLastName"
+                                operator="like" from="search" ignore-if-empty="true"/>
+                            <econdition field-name="customerCompanyName"
+                                operator="like" from="search" ignore-if-empty="true"/>
+                            <econdition field-name="customerLastName"
+                                operator="like" from="search" ignore-if-empty="true"/>
                         </econditions>
                         <order-by field-name="rentalFromDate"/>
                         <order-by field-name="orderId"/>
@@ -204,25 +211,30 @@ along with this software (see the LICENSE.md file). If not, see
                     <if condition="!lastItem || lastItem.orderId != item.orderId">
                         <if condition="item.customerPartyId == ownerPartyId">
                             <set field="sales" value="false" type="Boolean"/>
-                            <set field="otherCompanyPartyId" from="item.vendorPartyId"/>
+                            <set field="userOut" from="[
+                                            companyPartyId: item.vendorPartyId,
+                                            companyName: item.vendorCompanyName,
+                                            partyId: item.vendorUserPartyId,
+                                            firstName: item.vendorFirstName,
+                                            lastName: item.vendorLastName,
+                                            email: item.vendorEmail
+                                        ]"/>
                             <else>
                                 <set field="sales" value="true" type="Boolean"/>
-                                <set field="otherCompanyPartyId" from="item.customerPartyId"/>
+                                <set field="userOut" from="[
+                                            companyPartyId: item.customerPartyId,
+                                            companyName: item.customerCompanyName,
+                                            partyId: item.customerUserPartyId,
+                                            firstName: item.customerFirstName,
+                                            lastName: item.customerLastName,
+                                            email: item.customerEmail
+                                        ]"/>
                             </else>
                         </if>
-                        <entity-find list="others" 
-                                entity-name="growerp.mobile.CompanyPersonAndLoginGroup">
-                            <econdition field-name="companyPartyId" from="otherCompanyPartyId"/>
-                            <date-filter/><select-field field-name="userPartyId"/></entity-find>
-                        <if condition="!others">
-                            <return error="true" message="Could not find company $otherCompanyPartyId from order ${item.orderId} in view CompanyPersonAndLoginGroup"/></if>
-                        <service-call name="growerp.100.PartyServices100.get#User"
-                            in-map="[userPartyId: others[0].userPartyId]" out-map="userOut"/>
                         <service-call name="growerp.100.OrderServices100.convert#StatusId"
                             in-map="[sales: sales, docType: docType, statusId: item.statusId]" out-map="context"/>
                         <set field="finDocOut" from="[
                             orderId: item.orderId,
-                            invoiceId: item.invoiceId,
                             paymentId: item.paymentId,
                             description: item.orderName,
                             statusId: convertedStatusId,
@@ -231,7 +243,7 @@ along with this software (see the LICENSE.md file). If not, see
                             sales: sales.toString(),
                             docType: docType,
                             sales: sales.toString(),
-                            otherUser: userOut.user,
+                            otherUser: userOut,
                             grandTotal: item.grandTotal.toString(),
                             ]"/>
                         <set field="finDocItems" from="[]"/>
@@ -240,6 +252,7 @@ along with this software (see the LICENSE.md file). If not, see
                         itemSeqId: item.orderItemSeqId,
                         productId: item.productId,
                         itemTypeId: item.itemTypeEnumId,
+                        itemTypeName: item.itemTypeName,
                         description: item.itemDescription,
                         quantity: item.quantity.toString(),
                         price: item.unitAmount.toString(),
@@ -544,6 +557,12 @@ along with this software (see the LICENSE.md file). If not, see
                 in-map="context + [
                     orderName: order.description,
                 ]" out-map="context"/>
+            <!-- add vendor/customer contact person as an extra party at orderPartParty -->
+            <entity-make-value entity-name="mantle.order.OrderPartParty" value-field="orderPartParty"/>
+            <set field="orderPartParty.roleTypeId" value="ContactPerson"/>
+            <set field="orderPartParty.partyId" from="order.otherUser.userPartyId"/>
+            <entity-create value-field="orderPartParty"/>
+            <!-- create items -->
             <iterate  list="order.items" entry="item">
                 <if condition="item.itemTypeId == 'ItemProduct'">
                     <service-call

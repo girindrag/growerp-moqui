@@ -194,9 +194,9 @@ along with this software (see the LICENSE.md file). If not, see
                 categories: categories.toString(),
                 products: products.toString(),
                 assets: assets.toString(),
-                salesInvoicesNotPaidCount: allRecInvList ? allRecInvList[0].invoiceCount.toString() : '0',
+                salesInvoicesNotPaidCount:  allRecInvList ? allRecInvList[0].invoiceCount.toString() : '0',
                 salesInvoicesNotPaidAmount: allRecInvList ? allRecInvList[0].unpaidTotal.toString() : '0.00',
-                purchInvoicesNotPaidCount: allPblInvList ? allPblInvList[0].invoiceCount.toString(): '0',
+                purchInvoicesNotPaidCount:  allPblInvList ? allPblInvList[0].invoiceCount.toString() : '0',
                 purchInvoicesNotPaidAmount: allPblInvList ? allPblInvList[0].unpaidTotal.toString() : '0.00',
             ]"/>
         </actions>
@@ -257,7 +257,6 @@ along with this software (see the LICENSE.md file). If not, see
             <parameter name="company" type="Map"/>
             <parameter name="passwordChange" default="false"/>
             <parameter name="stats"/>
-            <parameter name="itemTypes"/>
         </out-parameters>
         <actions>
             <entity-find-one entity-name="moqui.security.UserAccount" 
@@ -295,17 +294,17 @@ along with this software (see the LICENSE.md file). If not, see
             </if>
 
             <if condition="!passwordChange">
+                <!-- login first to get data -->
                 <script>ec.user.loginUser(username, password)</script>
-            <!-- check product store if exists when not create-->
+                <!-- user info -->
                 <service-call name="growerp.100.PartyServices100.get#User"
                     in-map="[userPartyId: userAccount.partyId]" out-map="context"/>
                 <service-call name="growerp.100.PartyServices100.get#Company" out-map="context"/>
                 <service-call  name="growerp.100.PartyServices100.verifyAndGet#ProductStore"
-                in-map="[companyPartyId: company.partyId, classificationId: classificationId]"/>
+                    in-map="[companyPartyId: company.partyId, classificationId: classificationId]"/>
                 <set field="apiKey" from="ec.user.getLoginKey()"/>
                 <set field="moquiSessionToken" from="ec.web.sessionToken"/>
                 <service-call name="growerp.100.GeneralServices100.get#Stats" out-map="context"/>
-                <service-call name="growerp.100.GeneralServices100.get#ItemTypes" out-map="context"/>
             </if>
         </actions>
     </service>
@@ -351,25 +350,24 @@ along with this software (see the LICENSE.md file). If not, see
     </service>
 
     <service verb="get" noun="ItemTypes">
-        <description>itemtypes for orderItem and invoiceItem</description>
+        <description>itemtypes for orderItem and invoiceItem either sales ord purchase</description>
+        <in-parameters>
+            <parameter name="sales" type="Boolean" default="true"/>
+        </in-parameters>
         <out-parameters>
-            <parameter name="itemTypes" type="Map"/>
+            <parameter name="itemTypes" type="List"/>
         </out-parameters>
         <actions>
-            <set field="itemTypes" from="[:]"/>
-            <set field="itemTypes['sales']" from="[]"/>
-            <entity-find entity-name="moqui.basic.EnumAndGroup" list="salesItemTypes">
-                <econdition field-name="enumGroupEnumId" value="EngItemsSales"/>
+            <set field="itemTypes" from="[]"/>
+            <set field="enumGroups" from="['EngItemsSales']" type="List"/>
+            <if condition="sales == false">
+                <set field="enumGroups" from="['EngItemsPurchase','EngItemsProduct']" type="List"/></if>
+            <entity-find entity-name="moqui.basic.EnumAndGroup" list="itemTypeList">
+                <econdition field-name="enumGroupEnumId" operator="in" from="enumGroups"/>
                 <order-by field-name="description"/></entity-find>
-            <iterate list="salesItemTypes" entry="itemType">
-                <script>itemTypes['sales'].add([itemTypeId: itemType.enumId, description: itemType.description])</script>
-            </iterate>
-            <set field="itemTypes['purchase']" from="[]"/>
-            <entity-find entity-name="moqui.basic.EnumAndGroup" list="purchaseItemTypes">
-                <econdition field-name="enumGroupEnumId" operator="in" value="EngItemsPurchase,EngItemsProduct"/>
-                <order-by field-name="description"/></entity-find>
-            <iterate list="purchaseItemTypes" entry="itemType">
-                <script>itemTypes['purchase'].add([itemTypeId: itemType.enumId, description: itemType.description])</script>
+            <iterate list="itemTypeList" entry="itemType">
+                <set field="itemTypeOut" from="[itemTypeId: itemType.enumId, itemTypeName: itemType.description]"/>
+                <script>itemTypes.add(itemTypeOut)</script>
             </iterate>
         </actions>
     </service>

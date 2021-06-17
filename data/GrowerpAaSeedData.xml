@@ -57,6 +57,10 @@ along with this software (see the LICENSE.md file). If not, see
     <mantle.party.RoleType description="Served part of the order" roleTypeId="OrderServe"/>
     <!-- Cashier used for billing -->
 
+    <!-- order to facilitate a contact person for the 'other' company -->
+    <mantle.party.RoleType description="Vendor Contact Person" roleTypeId="VendorContactPerson"/>
+    <mantle.party.RoleType description="Customer Contact Person" roleTypeId="CustomerContactPerson"/>
+
     <!-- email templates -->
     <!-- EmailTemplate for general notifications -->
     <moqui.basic.email.EmailTemplate emailTemplateId="NOTIFICATION" description="Default Notification" emailServerId="SYSTEM"
