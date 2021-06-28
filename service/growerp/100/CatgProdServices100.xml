@@ -458,7 +458,7 @@ along with this software (see the LICENSE.md file). If not, see
             <parameter name="limit" default-value="20" type="Integer"/>
             <parameter name="filter"/>
             <parameter name="search"/>
-            <parameter name="classificationId"/>
+            <parameter name="classificationId" required="true"/>
         </in-parameters>
         <out-parameters>
             <parameter name="category" type="Map"/>
@@ -475,7 +475,7 @@ along with this software (see the LICENSE.md file). If not, see
                     <order-by field-name="partyId"/></entity-find>
                 <set field="companyPartyId" from="parties[0].partyId"/>
             <log message="Using first allocated companyPartyId"/></if>
-            <!-- get root category from productStore -->
+            <!-- get root category from productStore can be different per app classification-->
             <service-call  name="growerp.100.PartyServices100.verifyAndGet#ProductStore"
                 in-map="[companyPartyId: companyPartyId, classificationId: classificationId]"
                 out-map="context"/>
@@ -557,6 +557,7 @@ along with this software (see the LICENSE.md file). If not, see
                                             salads, deserts etc</description>
         <in-parameters>
             <parameter name="category" required="true"/>
+            <parameter name="classificationId" required="true"/>
         </in-parameters>
         <out-parameters>
             <parameter name="category"/>
@@ -564,11 +565,14 @@ along with this software (see the LICENSE.md file). If not, see
         <actions>
             <script> // convert JSON data
                 Object categoryIn = new groovy.json.JsonSlurper().parseText(category).category</script>
-            <service-call out-map="context"
-                name="growerp.100.GeneralServices100.get#RelatedCompanyPartyId"/>
-            <entity-find
-                entity-name="mantle.product.category.ProductCategory" list="rootList">
-                <econdition field-name="ownerPartyId"/></entity-find>
+            <service-call  out-map="context"
+                name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner"/>
+            <service-call  name="growerp.100.PartyServices100.verifyAndGet#ProductStore"
+                in-map="[companyPartyId: companyPartyId, classificationId: classificationId]"
+                out-map="context"/>
+            <entity-find entity-name="mantle.product.store.ProductStoreCategory" list="rootList">
+                <econdition field-name="productStoreId" from="productStore.productStoreId"/>
+            </entity-find>
             <if condition="rootList">
                 <set field="rootProductCategoryId" from="rootList[0].productCategoryId"/>
                 <else>
@@ -590,7 +594,7 @@ along with this software (see the LICENSE.md file). If not, see
                         id: productCategoryId, base64: categoryIn.image]"/>
             </if>
             <service-call name="growerp.100.CatgProdServices100.get#ProductCategories"
-                in-map="[categoryId: productCategoryId]" out-map="context"/>
+                in-map="[categoryId: productCategoryId, classificationId: classificationId ]" out-map="context"/>
             </actions>
     </service>
 
