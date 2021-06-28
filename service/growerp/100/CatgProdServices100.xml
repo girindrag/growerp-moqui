@@ -602,12 +602,14 @@ along with this software (see the LICENSE.md file). If not, see
         <description> Update a category to group products by drinks , salads, deserts etc</description>
         <in-parameters>
             <parameter name="category" required="true"/>
+            <parameter name="classificationId" required="true"/>
         </in-parameters>
         <out-parameters><parameter name="category"/></out-parameters>
         <actions>
             <script> // convert JSON data
                 Object categoryIn = new groovy.json.JsonSlurper().parseText(category).category</script>
-            <service-call name="growerp.100.GeneralServices100.get#RelatedCompanyPartyId" out-map="context"/>
+            <service-call  out-map="context"
+                name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner"/>
             <entity-find-one for-update="true"
                 value-field="productCategory" entity-name="mantle.product.category.ProductCategory">
                 <field-map field-name="productCategoryId" from="categoryIn.categoryId"/>
@@ -624,8 +626,10 @@ along with this software (see the LICENSE.md file). If not, see
                 <service-call name="growerp.100.ImageServices100.upload#Image"
                     in-map="[type: 'category', id: categoryIn.categoryId, base64: categoryIn.image]"/>
             </if>
+            <!-- return category information -->
             <service-call name="growerp.100.CatgProdServices100.get#ProductCategories"
-                in-map="[categoryId: categoryIn.categoryId]" out-map="context"/>
+                in-map="[categoryId: categoryIn.categoryId,
+                        classificationId: classificationId ]" out-map="context"/>
         </actions>
     </service>
 
