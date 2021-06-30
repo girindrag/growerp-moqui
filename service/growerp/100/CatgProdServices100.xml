@@ -167,6 +167,7 @@ along with this software (see the LICENSE.md file). If not, see
             <service-call name="create#mantle.product.ProductPrice" 
                 in-map="[productId: productId, priceTypeEnumId: 'PptList',
                 priceUomId: pref.baseCurrencyUomId, price: productIn.price,
+                quantityUomId: 'OTH_ea',
                 fromDate: ec.user.nowTimestamp,
                 pricePurposeEnumId: 'PppPurchase']"/>
             <!-- if category missing (AppHotel) use the first one of this company -->
@@ -224,34 +225,33 @@ along with this software (see the LICENSE.md file). If not, see
                 <set field="product.productName" from="productIn.productName"/>
                 <set field="product.description" from="productIn.description"/>
                 <entity-update value-field="product"/></if>
-           <entity-find entity-name="ProductAndPriceAndProductCategory" list="products">
+           <entity-find entity-name="growerp.mobile.product.ProductAndPriceAndProductCategory" list="products">
                 <econdition field-name="productId" from="productIn.productId"/>
                 <econdition field-name="ownerPartyId"/></entity-find>
-            <if condition="price &amp;&amp; products[0].price != price">
+            <if condition="products[0].price != productIn.price">
                 <entity-find-one value-field="productPrice" entity-name="mantle.product.ProductPrice" for-update="true">
                     <field-map field-name="productPriceId" from="products[0].productPriceId"/></entity-find-one>
                 <set field="productPrice.thruDate" from="ec.user.nowTimestamp"/>
                 <entity-update value-field="productPrice"/>
                 <service-call name="create#mantle.product.ProductPrice"
                     in-map="[   productId: productIn.productId,
-                                priceTypeEnumId: 'PptCurrent',
-                                price: price,
-                                currencyUomId: company.currency,
+                                priceTypeEnumId: 'PptList',
+                                price: productIn.price,
                                 quantityUomId: 'OTH_ea',
-                                priceUomId: 'OTH_ea']"/>
+                                pricePurposeEnumId: 'PppPurchase',
+                                priceUomId: products[0].priceUomId]"/>
             </if>
-            <if condition="productCategoryId &amp;&amp; 
-                    products[0].productCategoryId != productCategoryId">
+            <if condition="products[0].categoryId != productIn.categoryId">
                 <entity-find-one value-field="member" 
                         entity-name="mantle.product.category.ProductCategoryMember" for-update="true">
                     <field-map field-name="productId" from="productIn.productId"/>
-                    <field-map field-name="productCategoryId" from="products[0].productCategoryId"/>
+                    <field-map field-name="productCategoryId" from="products[0].categoryId"/>
                     <field-map field-name="fromDate" from="products[0].fromDate"/></entity-find-one>
                 <set field="member.thruDate" from="ec.user.nowTimestamp"/>
                 <entity-update value-field="member"/>
                 <service-call name="create#mantle.product.category.ProductCategoryMember"
                     in-map="[   productId: productIn.productId,
-                                productCategoryId: productCategoryId,
+                                productCategoryId: productIn.categoryId,
                                 fromDate: ec.user.nowTimestamp]"/>
             </if>
             <!-- update image -->
@@ -351,6 +351,8 @@ along with this software (see the LICENSE.md file). If not, see
                     assetName: asset.assetName,
                     quantityOnHand: asset.quantityOnHandTotal? asset.quantityOnHandTotal.toString() : '0',
                     availableToPromise: asset.availableToPromiseTotal? asset.availableToPromiseTotal.toString() : '0',
+                    receivedDate: asset.receivedDate ? asset.receivedDate.toString().substring(0,19) + 'Z' : null,
+                    expectedEndOfLife: asset.expectedEndOfLife ? asset.expectedEndOfLife.toString().substring(0,19) + 'Z' : null,
                     productId: asset.productId,
                     productName: asset.productName
                     ]"/>
