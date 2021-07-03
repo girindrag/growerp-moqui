@@ -103,9 +103,10 @@ along with this software (see the LICENSE.md file). If not, see
                     <continue/>
                 </if>
                 <entity-find-count entity-name="mantle.product.asset.Asset" count-field="assetCount">
+                    <econdition field-name="productId" from="product.productId"/>
                     <econdition field-name="statusId" operator="not-equals" value="AstDeactivated"/>
-                    <econdition field-name="classEnumId" from="product.assetClassEnumId"/>
-                    <econdition field-name="assetTypeEnumId" from="product.assetTypeEnumId"/>
+                    <econdition field-name="classEnumId" from="product.assetClassEnumId" ignore-if-empty="true"/>
+                    <econdition field-name="assetTypeEnumId" from="product.assetTypeEnumId" ignore-if-empty="true"/>
                 </entity-find-count>
                 <entity-find entity-name="mantle.product.ProductContent" list="contents">
                     <econdition field-name="productId" from="product.productId"/>
@@ -295,7 +296,7 @@ along with this software (see the LICENSE.md file). If not, see
             <parameter name="search"/>
         </in-parameters>
         <out-parameters>
-            <parameter name="asset" type="Map"/>
+            <parameter name="asset" type="Map" default="[]"/>
             <parameter name="assets" type="List"/>
         </out-parameters>
         <actions>
@@ -305,30 +306,34 @@ along with this software (see the LICENSE.md file). If not, see
                <set field="filter" value="%${filter}%"/></if>
             <if condition="search">
                 <set field="search" value="%${search}%"/></if>
+            <if condition="!assetId"><!--single asset always show, list only active assets-->
+                <set field="activated" value="AstDeactivated"/></if>
             <service-call name="growerp.100.OrderServices100.convert#StatusId"
                 in-map="[docType: 'asset', statusId: assetClassId]" out-map="assetClass"/>
             <entity-find offset="start" limit="limit" list="assetList"
                 entity-name="mantle.product.asset.AssetAndProduct">
+                <econdition field-name="assetId" ignore-if-empty="true"/>
+                <econdition field-name="statusId"
+                    operator="not-equals" from="activated" ignore-if-empty="true"/>
                 <econdition field-name="classEnumId"
                     from="assetClass.convertedStatusId" ignore-if-empty="true"/>
-                <econdition field-name="ownerPartyId" from="companyPartyId"/>
+                <econdition field-name="ownerPartyId" from="ownerPartyId"/>
                 <econdition field-name="productId" ignore-if-empty="true"/>
                 <econdition field-name="assetName" operator="like"
                     from="filter" ignore-if-empty="true"/>
                 <econditions combine="or">
                     <econdition field-name="assetId"
                         operator="like" from="search" ignore-if-empty="true"/>
-                            <econdition field-name="assetName"
+                    <econdition field-name="assetName"
                         operator="like" from="search" ignore-if-empty="true"/>
-                            <econdition field-name="productName"
+                    <econdition field-name="productName"
                         operator="like" from="search" ignore-if-empty="true"/>
                 </econditions>
                 <order-by field-name="assetName"/>
             </entity-find>
             <if condition="!assetId">
-                <set field="assets" from="[]"/>
-            </if>
-            <iterate entry="asset" list="assetList">
+                <set field="assets" from="[]"/></if>
+            <if condition="assetList"><iterate entry="asset" list="assetList">
                 <if condition="filter">
                     <script>
                         assets.add([
@@ -362,7 +367,7 @@ along with this software (see the LICENSE.md file). If not, see
                         <script>assets.add(assetOut)</script>
                     </else>
                 </if>
-            </iterate>
+            </iterate></if>
         </actions>
     </service>
 
@@ -390,6 +395,7 @@ along with this software (see the LICENSE.md file). If not, see
                     productId: assetIn.productId,
                     ownerPartyId: ownerPartyId,
                     statusId: status.convertedStatusId,
+                    quantityOnHandTotal: assetIn.quantityOnHand,
                     assetTypeEnumId: 'AstTpFixed']"
                 out-map="context" />
             <service-call name="growerp.100.CatgProdServices100.get#Assets"
@@ -411,8 +417,8 @@ along with this software (see the LICENSE.md file). If not, see
             <if condition="!assetIn.assetId"><return error="true" message="AssetId required"/></if>
             <service-call out-map="context"
                 name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner"/>
-            <entity-find-one value-field="asset"
-                entity-name="mantle.product.asset.Asset" for-update="true">
+            <entity-find-one value-field="assetOld"
+                    entity-name="mantle.product.asset.Asset" for-update="true">
                 <field-map field-name="assetId" from="assetIn.assetId"/>
                 <field-map field-name="ownerPartyId"/></entity-find-one>
             <if condition="!asset"><return error="true" message="asset ${assetIn.assetId} not found!}"/></if>
@@ -420,15 +426,17 @@ along with this software (see the LICENSE.md file). If not, see
                 in-map="[docType: 'asset', statusId: assetIn.statusId]" out-map="status"/>
             <service-call name="growerp.100.OrderServices100.convert#StatusId"
                 in-map="[docType: 'asset', statusId: assetIn.assetClassId]" out-map="assetClass"/>
-            <if condition=" asset.assetName != assetIn.assetName || 
-                            asset.statusId != status.convertedStatusId ||
-                            asset.classEnumId != assetClass.convertedStatusId ||
-                            asset.productId != assetIn.productId">
-                <set field="asset.assetName" from="assetIn.assetName"/>
-                <set field="asset.statusId" from="status.convertedStatusId"/>
-                <set field="asset.classEnumId" from="assetClass.convertedStatusId"/>
-                <set field="asset.productId" from="assetIn.productId"/>
-                <entity-update value-field="asset"/></if>
+            <if condition=" assetOld.assetName != assetIn.assetName || 
+                            assetOld.quantityOnHandTotal != assetIn.quantityOnHand ||
+                            assetOld.statusId != status.convertedStatusId ||
+                            assetOld.classEnumId != assetClass.convertedStatusId ||
+                            assetOld.productId != assetIn.productId">
+                <set field="assetOld.assetName" from="assetIn.assetName"/>
+                <set field="assetOld.quantityOnHandTotal" from="assetIn.quantityOnHand"/>
+                <set field="assetOld.statusId" from="status.convertedStatusId"/>
+                <set field="assetOld.classEnumId" from="assetClass.convertedStatusId"/>
+                <set field="assetOld.productId" from="assetIn.productId"/>
+                <entity-update value-field="assetOld"/></if>
             <service-call name="growerp.100.CatgProdServices100.get#Assets"
                 in-map="[assetId: assetIn.assetId]" out-map="context"/>
             </actions>
@@ -443,9 +451,12 @@ along with this software (see the LICENSE.md file). If not, see
             <parameter name="assetId"/>
         </out-parameters>
         <actions>
-            <service-call name="growerp.mobile.MobilePartyServices.get#RelatedCompanyPartyId" out-map="context"/>
-            <entity-find-one value-field="asset" entity-name="mantle.product.asset.Asset" for-update="true">
-                <field-map field-name="assetId"/><field-map field-name="ownerPartyId"/> </entity-find-one>
+            <service-call  out-map="context"
+                name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner"/>
+            <entity-find-one value-field="asset"
+                    entity-name="mantle.product.asset.Asset" for-update="true">
+                <field-map field-name="assetId"/>
+                <field-map field-name="ownerPartyId"/></entity-find-one>
             <set field="asset.statusId" value="AstDeactivated"/>
             <entity-update value-field="asset"/>
         </actions>
