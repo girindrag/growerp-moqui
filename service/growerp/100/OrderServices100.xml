@@ -538,9 +538,11 @@ along with this software (see the LICENSE.md file). If not, see
             <if condition="order.sales == 'true'"><!-- inside order object this field is a string -->
                 <set field="vendorPartyId" from="ownerCompanyId"/>
                 <set field="customerPartyId" from="order.otherUser.companyPartyId"/>
+                <set field="contactRole" value="CustomerContactPerson"/>
                 <else>
                     <set field="customerPartyId" from="ownerCompanyId"/>
                     <set field="vendorPartyId" from="order.otherUser.companyPartyId"/>
+                    <set field="contactRole" value="VendorContactPerson"/>
                 </else>
             </if>
             <entity-find entity-name="mantle.product.store.ProductStore" list="stores">
@@ -558,10 +560,9 @@ along with this software (see the LICENSE.md file). If not, see
                     orderName: order.description,
                 ]" out-map="context"/>
             <!-- add vendor/customer contact person as an extra party at orderPartParty -->
-            <entity-make-value entity-name="mantle.order.OrderPartParty" value-field="orderPartParty"/>
-            <set field="orderPartParty.roleTypeId" value="ContactPerson"/>
-            <set field="orderPartParty.partyId" from="order.otherUser.userPartyId"/>
-            <entity-create value-field="orderPartParty"/>
+            <service-call name="create#mantle.order.OrderPartParty"
+                in-map="[orderId:orderId, orderPartSeqId:orderPartSeqId,
+                        partyId:order.otherUser.partyId, roleTypeId: contactRole]"/>
             <!-- create items -->
             <iterate  list="order.items" entry="item">
                 <if condition="item.itemTypeId == 'ItemProduct'">
