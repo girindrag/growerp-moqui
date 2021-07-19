@@ -1115,7 +1115,6 @@ along with this software (see the LICENSE.md file). If not, see
                     </iterate>
 
                     <!-- assets -->
-                    <log message="========create assets"/>
                     <entity-find entity-name="mantle.product.store.ProductStore" list="stores">
                         <econdition field-name="organizationPartyId" from="companyPartyId"/>
                         <econdition field-name="storeName" from="classificationId"/>
@@ -1270,6 +1269,8 @@ along with this software (see the LICENSE.md file). If not, see
                         <else>
                             <service-call name="mantle.order.OrderServices.create#Order"
                             in-map="[
+                                sales: 'true',
+                                docType: 'order',
                                 statusId: 'OrderOpen',
                                 currencyUomId: aPref.baseCurrencyUomId,
                                 productStoreId: stores[0].productStoreId,
@@ -1277,6 +1278,7 @@ along with this software (see the LICENSE.md file). If not, see
                                 customerPartyId: customers[index%2].companyPartyId,
                                 vendorPartyId: companyPartyId,
                             ]" out-map="context"/>
+                            <log message="=====order created: $orderId "/>
                         </else>
                     </if>
                     <entity-find entity-name="growerp.mobile.product.ProductAndPriceAndProductCategory" list="products">

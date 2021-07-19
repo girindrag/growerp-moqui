@@ -59,13 +59,16 @@ along with this software (see the LICENSE.md file). If not, see
             <!-- convert AssetClassId -->
             <service-call name="growerp.100.OrderServices100.convert#StatusId"
                 in-map="[docType: 'asset', statusId: assetClassId]" out-map="assetClass"/>
+            <!-- convert ProductTypeId -->
+            <service-call name="growerp.100.OrderServices100.convert#StatusId"
+                in-map="[docType: 'product', statusId: productTypeId]" out-map="productType"/>
             <!-- get products -->
             <entity-find offset="start" limit="limit"
                     entity-name="growerp.mobile.product.ProductAndPriceAndProductCategory"
                         list="productList">
                         <econdition field-name="ownerPartyId" from="companyPartyId"/>
                         <econdition field-name="productTypeEnumId"
-                            from="productTypeId" ignore-if-empty="true"/>
+                            from="productType.convertedStatusId" ignore-if-empty="true"/>
                         <econdition field-name="assetClassEnumId"
                             from="assetClass.convertedStatusId" ignore-if-empty="true"/>
                         <econdition field-name="categoryId" ignore-if-empty="true"/>
@@ -115,15 +118,19 @@ along with this software (see the LICENSE.md file). If not, see
                 <if condition="contents">
                     <service-call name="growerp.100.ImageServices100.download#Image"
                         in-map="[contentLocation: contents[0].contentLocation]" out-map="context"/></if>
-                <set field="productOut" from="[
-                    productId: product.productId,
-                    productName: product.productName ?: '',
-                    description: product.description?:'',
-                    price: product.price ? product.price.toString() : '0.00',
-                    categoryId: product.categoryId,
-                    categoryName: product.categoryName,
-                    assetCount: assetCount.toString(),
-                    image: imageFile? imageFile : null]"/>
+                    <service-call name="growerp.100.OrderServices100.convert#StatusId"
+                        in-map="[docType: 'product', statusId: product.productTypeEnumId]" out-map="prodConvert"/>
+                    <set field="productOut" from="[
+                        productId: product.productId,
+                        productName: product.productName ?: '',
+                        productTypeId: prodConvert.convertedStatusId,
+                        assetClassId: product.assetClassEnumId,
+                        description: product.description?:'',
+                        price: product.price ? product.price.toString() : '0.00',
+                        categoryId: product.categoryId,
+                        categoryName: product.categoryName,
+                        assetCount: assetCount.toString(),
+                        image: imageFile? imageFile : null]"/>
                 <if condition="productId">
                     <set field="product" from="productOut"/>
                     <else>
@@ -148,15 +155,17 @@ along with this software (see the LICENSE.md file). If not, see
                 Object productIn = new groovy.json.JsonSlurper().parseText(product).product</script>
             <service-call name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner" out-map="context"/>
             <set field="quantityUomId" value="OTH_ea"/>
-            <!-- convert AssetClassId -->
+            <!-- convert AssetClassId and product type-->
             <service-call name="growerp.100.OrderServices100.convert#StatusId"
                 in-map="[docType: 'asset', statusId: productIn.assetClassId]" out-map="context"/>
+            <service-call name="growerp.100.OrderServices100.convert#StatusId"
+                in-map="[docType: 'product', statusId: productIn.productTypeId]" out-map="prodConvert"/>
             <!-- product -->
             <service-call name="create#mantle.product.Product" in-map="[
                 productName: productIn.productName,
                 description: productIn.description,
                 ownerPartyId: ownerPartyId,
-                productTypeEnumId: 'PtAsset',
+                productTypeEnumId: prodConvert.convertedStatusId,
                 assetTypeEnumId: 'AstTpInventory',
                 assetClassEnumId: convertedStatusId ? 
                     convertedStatusId : 'AsClsInventoryFin']" out-map="context"/>
@@ -221,10 +230,14 @@ along with this software (see the LICENSE.md file). If not, see
                 <field-map field-name="productId" from="productIn.productId"/>
                 <field-map field-name="ownerPartyId"/></entity-find-one>
             <if condition="!product"><return error="true" message="product ${productIn.productId} not found!}"/></if>
+            <service-call name="growerp.100.OrderServices100.convert#StatusId"
+                in-map="[docType: 'product', statusId: productIn.productTypeId]" out-map="prodConvert"/>
             <if condition="(productIn.productName &amp;&amp; product.productName != productIn.productName)
-                    || (productIn.description &amp;&amp; product.description != productIn.description)">
+                || (productIn.description &amp;&amp; product.description != productIn.description)
+                || (prodConvert.convertedStatusId &amp;&amp; product.productTypeEnumId != prodConvert.convertedStatusId)">
                 <set field="product.productName" from="productIn.productName"/>
                 <set field="product.description" from="productIn.description"/>
+                <set field="product.productTypeEnumId" from="prodConvert.convertedStatusId"/>
                 <entity-update value-field="product"/></if>
            <entity-find entity-name="growerp.mobile.product.ProductAndPriceAndProductCategory" list="products">
                 <econdition field-name="productId" from="productIn.productId"/>
