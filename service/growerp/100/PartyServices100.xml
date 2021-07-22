@@ -969,7 +969,6 @@ along with this software (see the LICENSE.md file). If not, see
         </in-parameters>
         <actions>
             <script>sleep(3000)</script><!-- wait for registration above to commit -->
-            <log message="=====start creating demo data"/>
             <entity-find entity-name="mantle.product.category.ProductCategory" list="rootList">
                 <econdition field-name="productCategoryTypeEnumId" value="PctRoot"/>
                 <econdition field-name="ownerPartyId" from="companyPartyId"/></entity-find>
@@ -1165,6 +1164,8 @@ along with this software (see the LICENSE.md file). If not, see
                         <service-call name="create#mantle.product.asset.Asset" in-map="
                             productId: product.productId,
                             classEnumId: product.assetClassEnumId,
+                            hasQuantity: 'N',
+                            quantityOnHandTotal; 1,
                             assetTypeEnumId: product.assetTypeEnumId,
                             assetName: asset.assetName,
                             ownerPartyId: companyPartyId,
@@ -1278,7 +1279,6 @@ along with this software (see the LICENSE.md file). If not, see
                                 customerPartyId: customers[index%2].companyPartyId,
                                 vendorPartyId: companyPartyId,
                             ]" out-map="context"/>
-                            <log message="=====order created: $orderId "/>
                         </else>
                     </if>
                     <entity-find entity-name="growerp.mobile.product.ProductAndPriceAndProductCategory" list="products">

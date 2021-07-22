@@ -78,6 +78,9 @@ along with this software (see the LICENSE.md file). If not, see
             <method type="get"><service name="growerp.100.OrderServices100.get#FinDoc"/></method>
             <method type="post"><service name="growerp.100.OrderServices100.create#FinDoc"/></method>
             <method type="patch"><service name="growerp.100.OrderServices100.update#FinDoc"/></method></resource>
+        <!-- rental -->
+        <resource name="RentalOccupancy">
+                <method type="get"><service name="growerp.100.OrderServices100.get#RentalOccupancy"/></method></resource>
         <!-- itemTypes -->
         <resource name="ItemTypes">
             <method type="get"><service name="growerp.100.GeneralServices100.get#ItemTypes"/></method></resource>
