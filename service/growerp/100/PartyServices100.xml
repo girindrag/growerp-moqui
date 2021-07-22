@@ -548,16 +548,21 @@ along with this software (see the LICENSE.md file). If not, see
             <!-- no need to create company for employee and admin -->
             <if condition="userIn.userGroupId != 'GROWERP_M_ADMIN' &amp;&amp; 
                             userIn.userGroupId != 'GROWERP_M_EMPLOYEE'">
-                <if condition="!userIn.companyName">
+                <if condition="!userIn.companyName &amp;&amp; !userIn.companyPartyId">
                     <return error="true"
-                        message="Company name required for new lead, customer or supplier"/>
+                        message="Existing or new company name required for new lead, customer or supplier"/>
                 </if>
-                <service-call out-map="comp"
-                    name="mantle.party.PartyServices.create#Organization"
-                    in-map="[organizationName: userIn.companyName,
-                            ownerPartyId: relComp.ownerPartyId, roleTypeId: roleTypeId,
-                            disabled: 'N']"/>
-                <set field="companyPartyId" from="comp.partyId"/>
+                <if condition="!userIn.companyPartyId &amp;&amp; userIn.companyName">
+                    <service-call out-map="comp"
+                        name="mantle.party.PartyServices.create#Organization"
+                        in-map="[organizationName: userIn.companyName,
+                                ownerPartyId: relComp.ownerPartyId, roleTypeId: roleTypeId,
+                                disabled: 'N']"/>
+                                <set field="companyPartyId" from="comp.partyId"/>
+                    <else>
+                        <set field="companyPartyId" from="userIn.companyPartyId"/>
+                    </else>
+                </if>
                 <else>
                     <set field="companyPartyId" from="relComp.ownerPartyId"/>
                 </else>
