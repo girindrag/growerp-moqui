@@ -158,18 +158,18 @@ along with this software (see the LICENSE.md file). If not, see
         <actions>
             <service-call  out-map="context"
                 name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner"/>
-            <if condition="search">
+            <if condition="search != null">
                 <set field="search" value="%${search}%"/></if>
             <entity-find  offset="start" limit="limit" list="entries"
                 entity-name="mantle.ledger.transaction.AcctgTransAndEntry">
                 <econdition field-name="organizationPartyId" from="ownerPartyId"/>
                 <econdition field-name="isPosted" value="Y"/>
                 <econditions combine="or">
-                    <econdition field-name="txDescription"
+                    <econdition field-name="txDescription" ignore-case="true"
                         operator="like" from="search" ignore-if-empty="true"/>
-                    <econdition field-name="acctgTransId"
+                    <econdition field-name="acctgTransId" ignore-case="true"
                         operator="like" from="search" ignore-if-empty="true"/>
-                    <econdition field-name="otherPartyId"
+                    <econdition field-name="otherPartyId" ignore-case="true"
                         operator="like" from="search" ignore-if-empty="true"/>
                 </econditions>
                 <order-by field-name="-transactionDate"/>

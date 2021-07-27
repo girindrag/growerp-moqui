@@ -138,7 +138,7 @@ along with this software (see the LICENSE.md file). If not, see
             <parameter name="startDate"><description>Format should be YYYY-MM-DD</description></parameter>
             <parameter name="start" default-value="0" type="Integer"/>
             <parameter name="limit" default-value="10" type="Integer"/>
-            <parameter name="search"/>
+            <parameter name="search" default="null"/>
             <parameter name="customerCompanyPartyId"/>
         </in-parameters>
         <out-parameters>
@@ -152,7 +152,7 @@ along with this software (see the LICENSE.md file). If not, see
                     from="ec.l10n.parseTimestamp(ec.l10n.format(startDate, 'yyyy-MM-dd')
                         + ' 23:59:59.999', 'yyyy-MM-dd HH:mm:ss.SSS')"/>
             </if>
-            <if condition="search">
+            <if condition="search != null">
                 <set field="search" value="%${search}%"/></if>
 
             <set field="finDocs" from="[]"/>
@@ -194,15 +194,15 @@ along with this software (see the LICENSE.md file). If not, see
                         <econdition field-name="statusId" operator="in" from="status" ignore-if-empty="true"/>
                         <econdition field-name="placedDate" operator="less-equals" from="tsDate" ignore-if-empty="true"/>
                         <econditions combine="or">
-                            <econdition field-name="orderId"
+                            <econdition field-name="orderId" ignore-case="true"
                                 operator="like" from="search" ignore-if-empty="true"/>
-                            <econdition field-name="vendorCompanyName"
+                            <econdition field-name="vendorCompanyName" ignore-case="true"
                                 operator="like" from="search" ignore-if-empty="true"/>
-                            <econdition field-name="vendorLastName"
+                            <econdition field-name="vendorLastName" ignore-case="true"
                                 operator="like" from="search" ignore-if-empty="true"/>
-                            <econdition field-name="customerCompanyName"
+                            <econdition field-name="customerCompanyName" ignore-case="true"
                                 operator="like" from="search" ignore-if-empty="true"/>
-                            <econdition field-name="customerLastName"
+                            <econdition field-name="customerLastName" ignore-case="true"
                                 operator="like" from="search" ignore-if-empty="true"/>
                         </econditions>
                         <order-by field-name="rentalFromDate"/>
@@ -301,7 +301,7 @@ along with this software (see the LICENSE.md file). If not, see
                             <econdition field-name="statusId" operator="in" from="statusList" ignore-if-empty="true"/>
                             <econdition field-name="invoiceDate" operator="less-equals" from="tsDate" ignore-if-empty="true"/>
                             <econditions combine="or">
-                                <econdition field-name="invoiceId"
+                                <econdition field-name="invoiceId" ignore-case="true"
                                     operator="like" from="search" ignore-if-empty="true"/>
                             </econditions>
                             <order-by field-name="invoiceId"/>
@@ -386,7 +386,7 @@ along with this software (see the LICENSE.md file). If not, see
                             <econdition field-name="statusId" operator="in" from="status" ignore-if-empty="true"/>
                             <econdition field-name="paymentDate" operator="less-equals" from="tsDate" ignore-if-empty="true"/>
                             <econditions combine="or">
-                                <econdition field-name="paymentId"
+                                <econdition field-name="paymentId" ignore-case="true"
                                     operator="like" from="search" ignore-if-empty="true"/>
                             </econditions>
                             <order-by field-name="paymentId"/>
@@ -440,11 +440,11 @@ along with this software (see the LICENSE.md file). If not, see
                             <econdition field-name="organizationPartyId" from="ownerPartyId"/>
                             <econdition field-name="isPosted" value="Y"/>
                             <econditions combine="or">
-                                <econdition field-name="txDescription"
+                                <econdition field-name="txDescription" ignore-case="true"
                                     operator="like" from="search" ignore-if-empty="true"/>
-                                <econdition field-name="acctgTransId"
+                                <econdition field-name="acctgTransId" ignore-case="true"
                                     operator="like" from="search" ignore-if-empty="true"/>
-                                <econdition field-name="otherPartyId"
+                                <econdition field-name="otherPartyId" ignore-case="true"
                                     operator="like" from="search" ignore-if-empty="true"/>
                             </econditions>
                             <order-by field-name="-transactionDate"/>

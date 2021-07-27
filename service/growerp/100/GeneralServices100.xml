@@ -257,6 +257,7 @@ along with this software (see the LICENSE.md file). If not, see
             <parameter name="company" type="Map"/>
             <parameter name="passwordChange" default="false"/>
             <parameter name="stats"/>
+            <parameter name="classification"/>
         </out-parameters>
         <actions>
             <entity-find-one entity-name="moqui.security.UserAccount" 
@@ -301,7 +302,10 @@ along with this software (see the LICENSE.md file). If not, see
                     in-map="[userPartyId: userAccount.partyId]" out-map="context"/>
                 <service-call name="growerp.100.PartyServices100.get#Company" out-map="context"/>
                 <service-call  name="growerp.100.PartyServices100.verifyAndGet#ProductStore"
-                    in-map="[companyPartyId: company.partyId, classificationId: classificationId]"/>
+                    in-map="[companyPartyId: company.partyId, classificationId: classificationId]"
+                    out-map="context"/>
+                <set field="classification" from="[id: partyClassification.partyClassificationId,
+                                         name: partyClassification.description]"/>
                 <set field="apiKey" from="ec.user.getLoginKey()"/>
                 <set field="moquiSessionToken" from="ec.web.sessionToken"/>
                 <service-call name="growerp.100.GeneralServices100.get#Stats" out-map="context"/>

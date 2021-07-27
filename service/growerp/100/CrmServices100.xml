@@ -20,7 +20,7 @@ along with this software (see the LICENSE.md file). If not, see
             <parameter name="start" type="Integer" default-value="0"/>
             <parameter name="limit" type="Integer" default-value="20"/>
             <parameter name="all" default-value="true"/>
-            <parameter name="search"/>
+            <parameter name="search" default="null"/>
         </in-parameters>
         <out-parameters>
             <parameter name="opportunities" type="List"/>
@@ -31,7 +31,7 @@ along with this software (see the LICENSE.md file). If not, see
                 name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner"/>
             <if condition="all == 'false'">
                 <set field="accountPartyId" from="ec.user.userAccount.partyId"/></if>
-            <if condition="search">
+            <if condition="search != null">
                 <set field="search" value="%${search}%"/></if>
             <entity-find list="opps" offset="start" limit="limit"
                     entity-name="growerp.mobile.crm.OpportunityAndStageAndParties">
@@ -40,11 +40,11 @@ along with this software (see the LICENSE.md file). If not, see
                 <econdition field-name="accountPartyId" ignore-if-empty="true"/>
                 <econdition field-name="stageId" operator="not-equals" value="Deleted"/>
                 <econditions combine="or">
-                    <econdition field-name="opportunityId"
+                    <econdition field-name="opportunityId" ignore-case="true"
                         operator="like" from="search" ignore-if-empty="true"/>
-                    <econdition field-name="opportunityName"
+                    <econdition field-name="opportunityName" ignore-case="true"
                         operator="like" from="search" ignore-if-empty="true"/>
-                    <econdition field-name="description"
+                    <econdition field-name="description" ignore-case="true"
                         operator="like" from="search" ignore-if-empty="true"/>
                 </econditions>
         <order-by field-name="lastUpdatedStamp"/>
