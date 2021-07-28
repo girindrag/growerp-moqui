@@ -98,7 +98,7 @@ along with this software (see the LICENSE.md file). If not, see
                     from="ec.user.userAccount.partyId"/>
             </entity-find-count>
 
-
+            <if condition="st">
             <set field="stats" from="[
                 admins: st.admins.toString(),
                 employees: st.employees.toString(),
@@ -117,6 +117,27 @@ along with this software (see the LICENSE.md file). If not, see
                 purchInvoicesNotPaidCount:  st.purchInvoicesNotPaidCount.toString(),
                 purchInvoicesNotPaidAmount: st.purchInvoicesNotPaidAmount.toString()
                 ]"/>
+                <else>
+                    <set field="stats" from="[
+                    admins: '0',
+                    employees: '0',
+                    suppliers: '0',
+                    leads: '0',
+                    customers: '0',
+                    openSlsOrders: '0',
+                    openPurOrders: '0',
+                    opportunities: '0',
+                    myOpportunities: '0',
+                    categories: '0',
+                    products: '0',
+                    assets: '0',
+                    salesInvoicesNotPaidCount: '0',
+                    salesInvoicesNotPaidAmount: '0',
+                    purchInvoicesNotPaidCount: '0',
+                    purchInvoicesNotPaidAmount: '0'
+                    ]"/>
+                </else>
+            </if>
         </actions>
     </service>
 

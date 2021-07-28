@@ -32,7 +32,7 @@ along with this software (see the LICENSE.md file). If not, see
 
     <service verb="get" noun="Companies">
         <in-parameters>
-            <parameter name="partyClassificationId"/>
+            <parameter name="mainCompanies" type="Boolean" default="true"/>
             <parameter name="start" type="Integer" default-value="0"/>
             <parameter name="limit" type="Integer" default-value="20"/>
             <parameter name="filter" default="null"/>
@@ -41,29 +41,21 @@ along with this software (see the LICENSE.md file). If not, see
             <parameter name="companies"/>
         </out-parameters>
         <actions>
-            <!-- if filter for dropdown only want companies of particular owner
-                else want just owner companies with role OrgInternal -->
+            <if condition="mainCompanies">
+            <set field="roleTypeId" value="OrgInternal"/></if>
             <if condition="filter != null"><!-- only used when logged in -->
                 <set field="filter" value="%${filter}%"/>
-                <service-call out-map="getOwner"
+                <service-call out-map="context"
                     name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner"/>
-                <set field="ownerPartyId" from="getOwner.ownerPartyId"/>
-                <set field="notRoleTypeId" value="OrgInternal"/>
-                <else>
-                    <set field="roleTypeId" value="OrgInternal"/>
-                </else>
             </if>
             <entity-find  list="parties" offset="start" limit="limit"
-                entity-name="growerp.mobile.party.CompanyPreferenceAndClassification">
-                <econdition field-name="partyClassificationId" ignore-if-empty="true"/>
+                entity-name="growerp.party.CompanyPreferenceAndRole">
                 <econdition field-name="ownerPartyId" from="ownerPartyId"
                         ignore-if-empty="true"/>
                 <econdition field-name="organizationName" operator="like"
                         from="filter" ignore-if-empty="true" ignore-case="true"/>
                 <econdition field-name="roleTypeId" from="roleTypeId"
                         ignore-if-empty="true"/>
-                <econdition field-name="roleTypeId" operator="not-equals"
-                        from="notRoleTypeId" ignore-if-empty="true"/>
                 <order-by field-name="organizationName"/>
             </entity-find>
             <set field="companies" from="[]" />
@@ -89,7 +81,7 @@ along with this software (see the LICENSE.md file). If not, see
                 <service-call name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner" out-map="context"/>
             </if>
             <if condition="!companyPartyId"><return/></if><!-- return null if no company found -->
-            <entity-find-one entity-name="growerp.mobile.party.CompanyPreferenceAndClassification" value-field="org">
+            <entity-find-one entity-name="growerp.party.CompanyPreferenceAndRole" value-field="org">
                 <field-map field-name="partyId" from="companyPartyId"/></entity-find-one>
             <if condition="!org"><return error="true" message="Company ${companyPartyId} not found!"/></if>
             <!-- get primary email address -->
@@ -134,8 +126,6 @@ along with this software (see the LICENSE.md file). If not, see
             <set field="company" from="[
                 partyId: companyPartyId,
                 name: org.organizationName,
-                classificationId: org.partyClassificationId,
-                classificationDescr: org.description,
                 email: emails[0].infoString,
                 currencyId: org.baseCurrencyUomId,
                 image: imageFile,
