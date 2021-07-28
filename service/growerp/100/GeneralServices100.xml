@@ -89,6 +89,16 @@ along with this software (see the LICENSE.md file). If not, see
                 out-map="context"/>
             <entity-find-one entity-name="growerp.general.Statistics" value-field="st">
                 <field-map field-name="ownerPartyId"/></entity-find-one>
+            <entity-find-count count-field="myOpportunities"
+                entity-name="mantle.sales.opportunity.SalesOpportunity">
+                <econdition field-name="ownerPartyId"/>
+                <econdition field-name="opportunityStageId"
+                    operator="not-equals" value="Deleted"/>
+                <econdition field-name="accountPartyId"
+                    from="ec.user.userAccount.partyId"/>
+            </entity-find-count>
+
+
             <set field="stats" from="[
                 admins: st.admins.toString(),
                 employees: st.employees.toString(),
@@ -98,7 +108,7 @@ along with this software (see the LICENSE.md file). If not, see
                 openSlsOrders: st.openSlsOrders.toString(),
                 openPurOrders: st.openPurOrders.toString(),
                 opportunities: st.opportunities.toString(),
-                myOpportunities: st.myOpportunities.toString(),
+                myOpportunities: myOpportunities.toString(),
                 categories: st.categories.toString(),
                 products: st.products.toString(),
                 assets: st.assets.toString(),
@@ -111,7 +121,8 @@ along with this software (see the LICENSE.md file). If not, see
     </service>
 
 
-    <service verb="get" noun="Statistics">
+    <service verb="get" noun="Statistics" authenticate="false">
+        <description>Job run by the job sheduler do not make pubic.</description>
         <actions>
             <entity-find entity-name="mantle.party.PartyDetailAndRole" list="parties">
                     <econdition field-name="roleTypeId" value="OrgInternal"/>
@@ -187,15 +198,6 @@ along with this software (see the LICENSE.md file). If not, see
                         operator="not-equals" value="Deleted"/>
                     <econdition field-name="ownerPartyId"/>
                 </entity-find-count>
-                <entity-find-count count-field="myOpportunities"
-                    entity-name="mantle.sales.opportunity.SalesOpportunity">
-                    <econdition field-name="ownerPartyId"/>
-                    <econdition field-name="opportunityStageId"
-                        operator="not-equals" value="Deleted"/>
-                    <econdition field-name="accountPartyId"
-                        from="ec.user.userAccount.partyId"/>
-                </entity-find-count>
-
                 <entity-find-count entity-name="mantle.order.OrderPart"
                     count-field="openSlsOrders">
                     <econdition field-name="vendorPartyId" from="ownerPartyId"/>
@@ -227,7 +229,6 @@ along with this software (see the LICENSE.md file). If not, see
                     openSlsOrders: openSlsOrders,
                     openPurOrders: openPurOrders,
                     opportunities: opportunities,
-                    myOpportunities: myOpportunities,
                     categories: categories,
                     products: products,
                     assets: assets,
