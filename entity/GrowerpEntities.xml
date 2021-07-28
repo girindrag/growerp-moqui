@@ -46,5 +46,24 @@ along with this software (see the LICENSE.md file). If not, see
         <relationship type="one" related="mantle.order.OrderItem" short-alias="orderItem"/>
     </entity>
 
+    <entity entity-name="Statistics" package="growerp.general">
+        <field name="ownerPartyId" type="id" is-pk="true"/>
+        <field name="admins" type="number-integer"/>
+        <field name="employees" type="number-integer"/>
+        <field name="suppliers" type="number-integer"/>
+        <field name="leads" type="number-integer"/>
+        <field name="customers" type="number-integer"/>
+        <field name="openSlsOrders" type="number-integer"/>
+        <field name="openPurOrders" type="number-integer"/>
+        <field name="opportunities" type="number-integer"/>
+        <field name="myOpportunities" type="number-integer"/>
+        <field name="categories" type="number-integer"/>
+        <field name="products" type="number-integer"/>
+        <field name="assets" type="number-integer"/>
+        <field name="salesInvoicesNotPaidCount" type="number-integer"/>
+        <field name="salesInvoicesNotPaidAmount" type="number-float"/>
+        <field name="purchInvoicesNotPaidCount" type="number-integer"/>
+        <field name="purchInvoicesNotPaidAmount" type="number-float"/>
+    </entity>
 
 </entities>
