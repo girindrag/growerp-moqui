@@ -42,7 +42,11 @@ along with this software (see the LICENSE.md file). If not, see
         </out-parameters>
         <actions>
             <if condition="mainCompanies">
-            <set field="roleTypeId" value="OrgInternal"/></if>
+                <set field="roleTypeId" value="OrgInternal"/>
+                <else>
+                    <set field="notRoleTypeId" value="OrgInternal"/>
+                </else>
+            </if>
             <if condition="filter != null"><!-- only used when logged in -->
                 <set field="filter" value="%${filter}%"/>
                 <service-call out-map="context"
@@ -56,6 +60,8 @@ along with this software (see the LICENSE.md file). If not, see
                         from="filter" ignore-if-empty="true" ignore-case="true"/>
                 <econdition field-name="roleTypeId" from="roleTypeId"
                         ignore-if-empty="true"/>
+                <econdition field-name="roleTypeId" from="notRoleTypeId"
+                       operator="not-equals" ignore-if-empty="true"/>
                 <order-by field-name="organizationName"/>
             </entity-find>
             <set field="companies" from="[]" />
@@ -656,14 +662,51 @@ along with this software (see the LICENSE.md file). If not, see
                     in-map="[type: 'user', id: userIn.partyId,
                         base64: userIn.image]"/>
             </if>
-            <!-- update company name for customer, lead supplier -->
-            <if condition="userIn.companyName != oldValue.companyName">
-                <entity-find-one value-field="companyParty" entity-name="mantle.party.Organization"
-                        for-update="true">
-                    <field-map field-name="partyId" from="userIn.companyPartyId"/>
-                </entity-find-one>
-                <set field="companyParty.organizationName" from="userIn.companyName"/>
-                <entity-update value-field="companyParty"/>
+            <!-- create roleTypeId -->
+            <if condition="userIn.userGroupId == 'GROWERP_M_EMPLOYEE' ||
+                    userIn.userGroupId == 'GROWERP_M_ADMIN'">
+                <set field="roleTypeId" value="Employee"/></if>
+            <if condition="userIn.userGroupId == 'GROWERP_M_LEAD' ||
+                    userIn.userGroupId == 'GROWERP_M_CUSTOMER'">
+                <set field="roleTypeId" value="Customer"/></if>
+            <if condition="userIn.userGroupId == 'GROWERP_M_SUPPLIER'">
+                <set field="roleTypeId" value="Supplier"/></if>
+
+            <!-- company partyId is empty, name provided: means new company-->
+            <if condition="!userIn.companyPartyId &amp;&amp; userIn.companyName">
+                <service-call out-map="comp"
+                    name="mantle.party.PartyServices.create#Organization"
+                    in-map="[organizationName: userIn.companyName,
+                            ownerPartyId: ownerPartyId, roleTypeId: roleTypeId,
+                            disabled: 'N']"/>
+                <set field="companyPartyId" from="comp.partyId"/>
+                <!-- create new relationship -->
+                <service-call name="create#mantle.party.PartyRelationship"
+                    in-map="[fromPartyId: userIn.partyId, fromRoleTypeId: 'Employee',
+                        relationshipTypeEnumId: 'PrtEmployee', fromDate: ec.user.nowTimestamp,
+                        toPartyId: comp.partyId, toRoleTypeId: roleTypeId]" />
+            </if>
+            <!-- company partyId changed, change to existing company -->
+            <if condition="userIn.companyPartyId != oldValue.user.companyPartyId">
+                <!-- disable current relationship -->
+                <entity-find entity-name="mantle.party.PartyRelationship" 
+                        list="oldRel" limit="1">
+                    <econdition field-name="fromPartyId" from="userIn.partyId"/>
+                    <econdition field-name="fromRoleTypeId" value="Employee"/>
+                    <econdition field-name="toPartyId" from="oldValue.user.companyPartyId"/>
+                </entity-find>
+                <if condition="oldRel">
+                    <set field="oldRel[0].thruDate" from="ec.user.nowTimestamp"/>
+                    <entity-update value-field="oldRel[0]"/>
+                    <else>
+                        <return error="true" message="Could not find relationship of employee ${userIn.partyId} and company: ${oldValue.user.companyPartyId}"/>
+                    </else>
+                </if>
+                <!-- create new relationship -->
+                <service-call name="create#mantle.party.PartyRelationship"
+                    in-map="[fromPartyId: userIn.partyId, fromRoleTypeId: 'Employee',
+                        relationshipTypeEnumId: 'PrtEmployee', fromDate: ec.user.nowTimestamp,
+                        toPartyId: userIn.companyPartyId, toRoleTypeId: roleTypeId]" />
             </if>
             <!-- update postal address -->
             <if condition="userIn.address">

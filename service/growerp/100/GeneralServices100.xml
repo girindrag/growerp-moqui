@@ -119,23 +119,23 @@ along with this software (see the LICENSE.md file). If not, see
                 ]"/>
                 <else>
                     <set field="stats" from="[
-                    admins: '0',
-                    employees: '0',
-                    suppliers: '0',
-                    leads: '0',
-                    customers: '0',
-                    openSlsOrders: '0',
-                    openPurOrders: '0',
-                    opportunities: '0',
-                    myOpportunities: '0',
-                    categories: '0',
-                    products: '0',
-                    assets: '0',
-                    salesInvoicesNotPaidCount: '0',
-                    salesInvoicesNotPaidAmount: '0',
-                    purchInvoicesNotPaidCount: '0',
-                    purchInvoicesNotPaidAmount: '0'
-                    ]"/>
+                        admins: '0',
+                        employees: '0',
+                        suppliers: '0',
+                        leads: '0',
+                        customers: '0',
+                        openSlsOrders: '0',
+                        openPurOrders: '0',
+                        opportunities: '0',
+                        myOpportunities: '0',
+                        categories: '0',
+                        products: '0',
+                        assets: '0',
+                        salesInvoicesNotPaidCount: '0',
+                        salesInvoicesNotPaidAmount: '0',
+                        purchInvoicesNotPaidCount: '0',
+                        purchInvoicesNotPaidAmount: '0'
+                        ]"/>
                 </else>
             </if>
         </actions>
@@ -364,8 +364,6 @@ along with this software (see the LICENSE.md file). If not, see
                 <service-call  name="growerp.100.PartyServices100.verifyAndGet#ProductStore"
                     in-map="[companyPartyId: company.partyId, classificationId: classificationId]"
                     out-map="context"/>
-                <set field="classification" from="[id: partyClassification.partyClassificationId,
-                                         name: partyClassification.description]"/>
                 <set field="apiKey" from="ec.user.getLoginKey()"/>
                 <set field="moquiSessionToken" from="ec.web.sessionToken"/>
                 <service-call name="growerp.100.GeneralServices100.get#Stats" out-map="context"/>
