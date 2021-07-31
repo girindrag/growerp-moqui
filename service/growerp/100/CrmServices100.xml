@@ -34,7 +34,7 @@ along with this software (see the LICENSE.md file). If not, see
             <if condition="search != null">
                 <set field="search" value="%${search}%"/></if>
             <entity-find list="opps" offset="start" limit="limit"
-                    entity-name="growerp.mobile.crm.OpportunityAndStageAndParties">
+                    entity-name="growerp.crm.OpportunityAndParties">
                 <econdition field-name="ownerPartyId"/>
                 <econdition field-name="opportunityId" ignore-if-empty="true"/>
                 <econdition field-name="accountPartyId" ignore-if-empty="true"/>
@@ -46,12 +46,16 @@ along with this software (see the LICENSE.md file). If not, see
                         operator="like" from="search" ignore-if-empty="true"/>
                     <econdition field-name="description" ignore-case="true"
                         operator="like" from="search" ignore-if-empty="true"/>
-                </econditions>
-        <order-by field-name="lastUpdatedStamp"/>
+                    </econditions>
+                    <order-by field-name="lastUpdatedStamp"/>
             </entity-find>
             <if condition="!opportunityId">
                 <set field="opportunities" from="[]"/></if>
             <iterate list="opps" entry="opp">
+                <service-call name="growerp.100.PartyServices100.get#User"
+                    in-map="[userPartyId: opp.accountPartyId]" out-map="employee"/>
+                <service-call name="growerp.100.PartyServices100.get#User"
+                    in-map="[userPartyId: opp.leadPartyId]" out-map="lead"/>
                 <set field="opOut" from="[
                     opportunityId: opp.opportunityId,
                     lastUpdated: opp.lastUpdatedStamp.toString() + 'z',
@@ -61,14 +65,8 @@ along with this software (see the LICENSE.md file). If not, see
                     nextStep: opp.nextStep,
                     estAmount: opp.estAmount?.toString(),
                     estProbability: opp.estProbability?.toString(),
-                    accountPartyId: opp.accountPartyId,
-                    accountFirstName: opp.accountFirstName,
-                    accountLastName: opp.accountLastName,
-                    accountEmail: opp.accountEmail,
-                    leadPartyId: opp.leadPartyId,
-                    leadFirstName: opp.leadFirstName,
-                    leadLastName: opp.leadLastName,
-                    leadEmail: opp.leadEmail]"/>
+                    employeeUser: employee.user,
+                    leadUser: lead.user]"/>
                 <if condition="!opportunityId">
                     <script>opportunities.add(opOut)</script>
                     <else>
@@ -95,9 +93,6 @@ along with this software (see the LICENSE.md file). If not, see
                     <order-by field-name="sequenceNum"/></entity-find>
                 <set field="opportunity.stageId" from="stages[0].opportunityStageId"/>
             </if>
-            <if condition="!opportunity.accountPartyId">
-                <set field="opportunity.accountPartyId"
-                    from="ec.user.userAccount.partyId"/></if>
             <service-call out-map="context"
                 name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner"/>
             <service-call name="create#mantle.sales.opportunity.SalesOpportunity"
@@ -108,13 +103,15 @@ along with this software (see the LICENSE.md file). If not, see
                         ownerPartyId: ownerPartyId,
                         nextStep: opportunity.nextStep,
                         opportunityStageId: opportunity.stageId,
-                        accountPartyId: opportunity.accountPartyId,
+                        accountPartyId: opportunity.employeeUser
+                            ? opportunity.employeeUser.partyId
+                            : ec.user.userAccount.partyId,
                         ]" out-map="context"/>
-            <if condition="opportunity.leadPartyId">
+            <if condition="opportunity.leadUser">
                 <service-call 
                     name="create#mantle.sales.opportunity.SalesOpportunityParty"
                     in-map="[salesOpportunityId: salesOpportunityId,
-                        partyId: opportunity.leadPartyId,
+                        partyId: opportunity.leadUser.partyId,
                         roleTypeId: 'Customer',
                         fromDate: ec.user.nowTimestamp]" out-map="context"/></if>
             <service-call name="growerp.100.CrmServices100.get#Opportunity"
@@ -133,15 +130,16 @@ along with this software (see the LICENSE.md file). If not, see
         <actions>
             <script> // convert JSON data
                 Object opportunity = new groovy.json.JsonSlurper().parseText(opportunity).opportunity</script>
+            <log message="=======incoming opportunity: $opportunity"/>
             <service-call
                 name="growerp.100.GeneralServices100.get#RelatedCompanyPartyId"
                 out-map="context"/>
-            <entity-find-one value-field="oldValue"
-                    entity-name="mantle.sales.opportunity.SalesOpportunity"
-                    for-update="true">
+            <entity-find-one value-field="oldValue" for-update="true"
+                    entity-name="mantle.sales.opportunity.SalesOpportunity">
                 <field-map field-name="salesOpportunityId" from="opportunity.opportunityId"/>
                 <field-map field-name="ownerPartyId"/></entity-find-one>
-            <if condition="!oldValue"><return error="true" message="opportunity ${opportunity.opportunityId} not found!}"/></if>
+            <if condition="!oldValue"><return error="true"
+                    message="opportunity ${opportunity.opportunityId} not found!}"/></if>
             <set field="update" value="false"/>
             <if condition="oldValue.opportunityName != opportunity.opportunityName">
                 <set field="oldValue.opportunityName" from="opportunity.opportunityName"/>
@@ -152,8 +150,8 @@ along with this software (see the LICENSE.md file). If not, see
             <if condition="oldValue.estimatedProbability != opportunity.estProbability">
                 <set field="oldValue.estimatedProbability" from="opportunity.estProbability"/>
                 <set field="update" value="true"/></if>
-            <if condition="oldValue.accountPartyId != opportunity.accountPartyId">
-                <set field="oldValue.accountPartyId" from="opportunity.accountPartyId"/>
+            <if condition="oldValue.accountPartyId != opportunity.employeeUser?.partyId">
+                <set field="oldValue.accountPartyId" from="opportunity.employeeUser?.partyId"/>
                 <set field="update" value="true"/></if>
             <if condition="oldValue.description != opportunity.description">
                 <set field="oldValue.description" from="opportunity.description"/>
@@ -167,26 +165,36 @@ along with this software (see the LICENSE.md file). If not, see
             <if condition="update == 'true'">                        
                 <entity-update value-field="oldValue"/></if>
             <entity-find list="oldValues"
-                entity-name="mantle.sales.opportunity.SalesOpportunityParty"
-                for-update="true">
+                entity-name="mantle.sales.opportunity.SalesOpportunityParty" for-update="true">
                 <econdition field-name="salesOpportunityId" from="opportunity.opportunityId"/>
                 <econdition field-name="roleTypeId" value="Customer"/>
                 <date-filter/></entity-find>
-            <if condition="oldValues &amp;&amp; opportunity.leadPartyId &amp;&amp; oldValues[0].partyId != opportunity.leadPartyId">
-                <set field="oldValues[0].thruDate" from="ec.user.nowTimestamp"/>
-                <entity-update value-field="oldValues[0]"/>
+            <if condition="!oldValues &amp;&amp; opportunity.leadUser">
                 <service-call name="create#mantle.sales.opportunity.SalesOpportunityParty"
-                    in-map="[salesOpportunityId: opportunity.opportunityId,
-                        partyId: opportunity.leadPartyId,
-                        roleTypeId: 'Customer',
-                        fromDate: ec.user.nowTimestamp]"/>
-                <else><if condition="!oldValues &amp;&amp; opportunity.leadPartyId">
+                in-map="[salesOpportunityId: opportunity.opportunityId,
+                    partyId: opportunity.leadUser?.partyId,
+                    roleTypeId: 'Customer',
+                    fromDate: ec.user.nowTimestamp]" out-map="context"/>
+            </if>
+            <if condition="oldValues">
+                <if condition="oldValues[0].partyId != opportunity.leadUser?.partyId">
+                    <set field="oldValues[0].thruDate" from="ec.user.nowTimestamp"/>
+                    <entity-update value-field="oldValues[0]"/>
                     <service-call name="create#mantle.sales.opportunity.SalesOpportunityParty"
-                    in-map="[salesOpportunityId: opportunity.opportunityId,
-                        partyId: opportunity.leadPartyId,
-                        roleTypeId: 'Customer',
-                        fromDate: ec.user.nowTimestamp]" out-map="context"/>
-                </if></else>
+                        in-map="[salesOpportunityId: opportunity.opportunityId,
+                            partyId: opportunity.leadUser?.partyId,
+                            roleTypeId: 'Customer',
+                            fromDate: ec.user.nowTimestamp]"/>
+                </if>
+                <else>
+                    <if condition="opportunity.leadUser">
+                        <service-call name="create#mantle.sales.opportunity.SalesOpportunityParty"
+                            in-map="[salesOpportunityId: opportunity.opportunityId,
+                                partyId: opportunity.leadUser.partyId,
+                                roleTypeId: 'Customer',
+                                fromDate: ec.user.nowTimestamp]" out-map="context"/>
+                    </if>
+                </else>
             </if>
             <service-call name="growerp.100.CrmServices100.get#Opportunity"
                 in-map="[opportunityId: opportunity.opportunityId]" out-map="context"/>
