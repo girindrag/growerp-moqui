@@ -164,11 +164,30 @@ along with this software (see the LICENSE.md file). If not, see
                 <set field="customerPartyId" from="ownerPartyId"/></else></if>
             <set field="current" value="0" type="Integer"/>
             <if condition="docType == 'order'">
-                <if condition="customerCompanyPartyId"><!-- by customer for ecommerce -->
+                <if condition="search">
+                    <entity-find list="items" offset="start" limit="limit"
+                            entity-name="growerp.order.OrderHeaderPartItemPartiesAndReservation">
+                            <econdition field-name="vendorPartyId" from="vendorPartyId" ignore-if-empty="true"/>
+                            <econdition field-name="customerPartyId" from="customerPartyId" ignore-if-empty="true"/>
+                            <econditions combine="or">
+                                <econdition field-name="orderId" ignore-case="true"
+                                    operator="like" from="search"/>
+                                <econdition field-name="vendorCompanyName" ignore-case="true"
+                                    operator="like" from="search"/>
+                                <econdition field-name="vendorLastName" ignore-case="true"
+                                    operator="like" from="search"/>
+                                <econdition field-name="customerCompanyName" ignore-case="true"
+                                    operator="like" from="search"/>
+                                <econdition field-name="customerLastName" ignore-case="true"
+                                    operator="like" from="search"/>
+                            </econditions>
+                            <order-by field-name="orderPlacedDate"/>
+                        <!--use-iterator/-->
+                    </entity-find>
+                <else><if condition="customerCompanyPartyId"><!-- by customer for ecommerce -->
                     <entity-find list="items" offset="start" limit="limit"
                             entity-name="growerp.order.OrderHeaderPartItemPartiesAndReservation">
                         <econdition field-name="customerPartyId" from="customerCompanyPartyId"/>
-                        <order-by field-name="orderItemSeqId"/>
                         <use-iterator/>
                     </entity-find>
                 <else><if condition="id"><!-- single document -->
@@ -193,24 +212,12 @@ along with this software (see the LICENSE.md file). If not, see
                         <econdition field-name="customerPartyId" from="customerPartyId" ignore-if-empty="true"/>
                         <econdition field-name="statusId" operator="in" from="status" ignore-if-empty="true"/>
                         <econdition field-name="placedDate" operator="less-equals" from="tsDate" ignore-if-empty="true"/>
-                        <econditions combine="or">
-                            <econdition field-name="orderId" ignore-case="true"
-                                operator="like" from="search" ignore-if-empty="true"/>
-                            <econdition field-name="vendorCompanyName" ignore-case="true"
-                                operator="like" from="search" ignore-if-empty="true"/>
-                            <econdition field-name="vendorLastName" ignore-case="true"
-                                operator="like" from="search" ignore-if-empty="true"/>
-                            <econdition field-name="customerCompanyName" ignore-case="true"
-                                operator="like" from="search" ignore-if-empty="true"/>
-                            <econdition field-name="customerLastName" ignore-case="true"
-                                operator="like" from="search" ignore-if-empty="true"/>
-                        </econditions>
                         <order-by field-name="rentalFromDate"/>
                         <order-by field-name="orderId"/>
                         <order-by field-name="orderItemSeqId"/>
-                        <use-iterator/>
+                        <!--use-iterator/-->
                     </entity-find>
-                    </else></if></else>
+                    </else></if></else></if></else>
                 </if>
                 <set field="lastItem" from="null"/>
                 <iterate entry="item" list="items">
@@ -614,16 +621,15 @@ along with this software (see the LICENSE.md file). If not, see
                                             quantity: item.quantity,
                                             unitAmount: item.price]"
                         out-map="context"/>
-                    <set field="count" from="item.quantity" type="Integer"/>
-                    <while condition="count-- &gt; 0">
-                        <service-call name="create#growerp.product.AssetRental"
-                            in-map="[   productId: item.productId,
-                                        orderId: orderId,
-                                        orderItemSeqId: orderItemSeqId,
-                                        rentalFromDate: item.rentalFromDate.substring(0,18),
-                                        rentalThruDate: item.rentalThruDate.substring(0,18)
-                                    ]"/>
-                    </while></else-if>
+                    <service-call name="create#growerp.product.AssetRental"
+                        in-map="[   productId: item.productId,
+                                    assetId: item.assetId,
+                                    orderId: orderId,
+                                    orderItemSeqId: item.itemSeqId,
+                                    rentalFromDate: item.rentalFromDate.substring(0,18),
+                                    rentalThruDate: item.rentalThruDate.substring(0,18)
+                                ]"/>
+                </else-if>
                 <else>
                     <service-call name="mantle.order.OrderServices.create#OrderItem"
                         in-map="context + [itemTypeId: item.itemTypeId,
@@ -659,7 +665,7 @@ along with this software (see the LICENSE.md file). If not, see
             <parameter name="finDoc"/>
         </in-parameters>
         <out-parameters>
-            <parameter name="finDocs" type="Map"></parameter>
+            <parameter name="finDocs" type="List"/><!-- single item in list -->
         </out-parameters>
         <actions>
             <script>Object finDocIn = new groovy.json.JsonSlurper().parseText(finDoc).finDoc</script>
@@ -843,23 +849,25 @@ along with this software (see the LICENSE.md file). If not, see
                     </else>
                 </if>
                 <entity-update value-field="parts[0]"/>
-                <!-- contact person -->
+                <!-- contact person (add if missing)-->
                 <entity-find entity-name="mantle.order.OrderPartParty" list="parties" for-update="true">
                     <econdition field-name="orderId"/>
                     <econdition field-name="orderPartSeqId" from="parts[0].orderPartSeqId"/>
                     <econdition field-name="roleTypeId" from="contactRole"/>
                 </entity-find>
-                <if condition="parties[0].partyId != order.otherUser.partyId">
-                    <entity-delete value-field="parties[0]"/>
+                <if condition="!parties">
                     <service-call name="create#mantle.order.OrderPartParty"
-                        in-map="[orderId:orderId, orderPartSeqId:orderPartSeqId,
-                                partyId:order.otherUser.partyId, roleTypeId: contactRole]"/>
+                    in-map="[orderId:orderId, orderPartSeqId:orderPartSeqId,
+                            partyId:order.otherUser.partyId, roleTypeId: contactRole]"/>
+                    <else>
+                        <if condition="parties[0].partyId != order.otherUser.partyId">
+                            <entity-delete value-field="parties[0]"/>
+                            <service-call name="create#mantle.order.OrderPartParty"
+                                in-map="[orderId:orderId, orderPartSeqId:orderPartSeqId,
+                                    partyId:order.otherUser.partyId, roleTypeId: contactRole]"/>
+                        </if>
+                    </else>
                 </if>
-            </if>
-            <!-- delete and recreate all orderitems -->
-            <if condition="order.items &amp;&amp; order.items.size() &gt; 0">
-                <service-call name="growerp.100.OrderServices100.replace#OrderItems"
-                        in-map="[orderId: orderId, orderItems: order.items]"/>
             </if>
             <!-- handle status changes -->
             <if condition="order.statusId &amp;&amp; order.statusId != items[0].statusId">
@@ -928,6 +936,13 @@ along with this software (see the LICENSE.md file). If not, see
                     <service-call name="mantle.order.OrderServices.cancel#Order"
                         in-map="context"/>
                 </if>
+                <else><!-- only update items when no status changes -->
+                    <!-- delete and recreate all orderitems -->
+                    <if condition="order.items &amp;&amp; order.items.size() &gt; 0">
+                        <service-call name="growerp.100.OrderServices100.replace#OrderItems"
+                                in-map="[orderId: orderId, orderItems: order.items]"/>
+                    </if>
+                </else>
             </if>
         </actions>
     </service>

@@ -38,9 +38,7 @@ along with this software (see the LICENSE.md file). If not, see
                 </econditions>
                 <!--use-iterator/-->
             </entity-find>
-            <log message="=====records found ${users.size()}"/>
             <iterate list="users" entry="user">
-                <log message="======== processing: company ${user.companyName}"/>
                 <!-- ownerfield on company or user party-->
                 <if condition="user.companyOwnerPartyId == null|| user.companyOwnerPartyId == 'NA'">
                     <entity-find-one entity-name="mantle.party.Party" value-field="party"
@@ -54,7 +52,6 @@ along with this software (see the LICENSE.md file). If not, see
                 <entity-find entity-name="mantle.party.PartyRole" list="compRoles">
                     <econdition field-name="partyId" from="user.companyPartyId"/>
                 </entity-find>
-                <log message="=========compRoles: $compRoles"/>
                 <set field="userGroupId" value="GROWERP_M_SUPPLIER"/>
                 <if condition="compRoles &amp;&amp; compRoles[0].roleTypeId == 'Customer'">
                     <set field="userGroupId" value="GROWERP_M_CUSTOMER"/></if>
@@ -69,7 +66,6 @@ along with this software (see the LICENSE.md file). If not, see
                         <set field="userGroupId" value="GROWERP_M_ADMIN"/>
                     </if>
                 </if>
-                <log message="===========userGroupId: $userGroupId"/>
                 <!-- if company not has a contact person -->
                 <if condition="user.userPartyId == null">
                     <service-call name="mantle.party.PartyServices.create#Person"
