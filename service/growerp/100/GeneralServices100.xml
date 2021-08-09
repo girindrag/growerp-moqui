@@ -360,7 +360,10 @@ along with this software (see the LICENSE.md file). If not, see
                 <!-- user info -->
                 <service-call name="growerp.100.PartyServices100.get#User"
                     in-map="[userPartyId: userAccount.partyId]" out-map="context"/>
-                <service-call name="growerp.100.PartyServices100.get#Company" out-map="context"/>
+                <log message="=========user: $user"/>
+                <service-call name="growerp.100.PartyServices100.get#Company" 
+                    in-map="companyPartyId: user.companyPartyId" out-map="context"/>
+                <log message="=========company: $company"/>
                 <service-call  name="growerp.100.PartyServices100.verifyAndGet#ProductStore"
                     in-map="[companyPartyId: company.partyId, classificationId: classificationId]"
                     out-map="context"/>

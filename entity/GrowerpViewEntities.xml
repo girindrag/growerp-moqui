@@ -46,7 +46,7 @@ along with this software (see the LICENSE.md file). If not, see
             join-from-alias="OPRT" join-optional="true">
             <key-map field-name="orderId"/><key-map field-name="orderPartSeqId"/>
             <entity-condition>
-                <econdition field-name="roleTypeId" value="VendorContactPerson"/>
+                <econdition field-name="vendorRoleTypeId" value="VendorContactPerson"/>
             </entity-condition></member-entity>
         <member-entity entity-alias="VPERSON" entity-name="mantle.party.Person"
             join-from-alias="VOPP" join-optional="true">
@@ -62,7 +62,7 @@ along with this software (see the LICENSE.md file). If not, see
             join-from-alias="OPRT" join-optional="true">
             <key-map field-name="orderId"/><key-map field-name="orderPartSeqId"/>
             <entity-condition>
-                <econdition field-name="roleTypeId" value="CustomerContactPerson"/>
+                <econdition field-name="customerRoleTypeId" value="CustomerContactPerson"/>
             </entity-condition></member-entity>
         <member-entity entity-alias="CPERSON" entity-name="mantle.party.Person"
             join-from-alias="COPP" join-optional="true">
@@ -80,6 +80,7 @@ along with this software (see the LICENSE.md file). If not, see
         
         <alias name="vendorPartyId" entity-alias="OPRT"/>
         <alias name="vendorCompanyName" field="organizationName" entity-alias="VORG"/>
+        <alias name="vendorRoleTypeId" field="roleTypeId" entity-alias="VOPP"/>
         <alias name="vendorUserPartyId" field="partyId" entity-alias="VPERSON"/>
         <alias name="vendorFirstName" field="firstName" entity-alias="VPERSON"/>
         <alias name="vendorLastName" field="lastName" entity-alias="VPERSON"/>
@@ -87,6 +88,7 @@ along with this software (see the LICENSE.md file). If not, see
 
         <alias name="customerPartyId" entity-alias="OPRT"/>
         <alias name="customerCompanyName" field="organizationName" entity-alias="CORG"/>
+        <alias name="customerRoleTypeId" field="roleTypeId" entity-alias="COPP"/>
         <alias name="customerUserPartyId" field="partyId" entity-alias="CPERSON"/>
         <alias name="customerFirstName" field="firstName" entity-alias="CPERSON"/>
         <alias name="customerLastName" field="lastName" entity-alias="CPERSON"/>
@@ -237,6 +239,7 @@ along with this software (see the LICENSE.md file). If not, see
         <alias name="postalCode" entity-alias="PA"/>
         <alias name="countryId" field="countryGeoId" entity-alias="PA"/>
         <alias name="country" field="geoName" entity-alias="COUNTRY"/>
+        <alias name="geoTypeEnumId" entity-alias="COUNTRY"/>
     </view-entity>
 
     <!-- depreciated!!!! -->

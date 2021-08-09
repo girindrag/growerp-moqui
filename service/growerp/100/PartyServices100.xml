@@ -304,7 +304,7 @@ along with this software (see the LICENSE.md file). If not, see
             <if condition="!ownerPartyId">
                 <service-call out-map="relatedLogin"
                     name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner"/>
-                    <set field="ownerPartyId" from="relatedLogin.ownerPartyId"/></if>
+                <set field="ownerPartyId" from="relatedLogin.ownerPartyId"/></if>
             <entity-find offset="start" limit="limit" list="userInfos"
                 entity-name="growerp.mobile.CompanyPersonAndLoginGroup">
                 <econdition field-name="ownerPartyId" from="ownerPartyId"/>
