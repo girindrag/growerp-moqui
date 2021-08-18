@@ -818,6 +818,10 @@ along with this software (see the LICENSE.md file). If not, see
             <parameter name="company" />
         </out-parameters>
         <actions>
+            <if condition="username == 'test@example.org'"><!-- for online integration test -->
+                <set field="newPassword" value="qqqqqq9!"/>
+                <set field="newPasswordVerify" from="newPassword"/>
+            </if>
             <service-call name="mantle.party.PartyServices.create#Account" 
                 in-map="context + [roleTypeId: 'Employee',
                         loginAfterCreate: false, disabled: 'N']"
