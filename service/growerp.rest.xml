@@ -18,6 +18,8 @@ along with this software (see the LICENSE.md file). If not, see
     <!-- flutter versioned REST interface synced with the model directory within the application -->
     <resource name="100">
         <!-- general -->
+        <resource name="Ping">
+            <method type="get"><service name="growerp.100.GeneralServices100.check#Ping"/></method></resource>
         <resource name="CheckApiKey">
             <method type="get"><service name="growerp.100.GeneralServices100.check#ApiKey"/></method></resource>
         <resource name="Currencies" require-authentication="anonymous-all">

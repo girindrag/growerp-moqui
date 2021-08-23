@@ -262,6 +262,11 @@ along with this software (see the LICENSE.md file). If not, see
         </actions>
     </service>
 
+    <service verb="check" noun="Ping" authenticate="anonymous-all">
+        <out-parameters><parameter name="ok"/></out-parameters>
+        <actions><set field="ok" value="ok"/></actions>
+    </service>
+
     <service verb="check" noun="ApiKey">
         <out-parameters><parameter name="ok"/></out-parameters>
         <actions><set field="ok" value="ok"/></actions>
