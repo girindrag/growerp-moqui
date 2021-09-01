@@ -12,11 +12,12 @@ You should have received a copy of the CC0 Public Domain Dedication
 along with this software (see the LICENSE.md file). If not, see
 <http://creativecommons.org/publicdomain/zero/1.0/>.
 -->
-<entities xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/entity-definition-2.1.xsd">
+<entities xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/entity-definition-2.1.xsd">
 
     <extend-entity entity-name="UserAccount" package="moqui.security">
         <field name="telephoneNumber" type="text-medium">
-            <description>The telephone number to use for forgot password emails and other system messages.</description></field>
+            <description>The telephone number to use for forgot password chats and other system messages.</description></field>
     </extend-entity>
     <extend-entity entity-name="SalesOpportunity" package="mantle.sales.opportunity">
         <field name="ownerPartyId" type="id">
@@ -32,7 +33,7 @@ along with this software (see the LICENSE.md file). If not, see
         <field name="stateProvince" type="text-medium"></field>
     </extend-entity>
 
-    <entity entity-name="AssetRental" package="growerp.product" cache="never">
+    <entity entity-name="AssetRental" package="growerp.product">
         <field name="assetRentalId" type="id" is-pk="true"/>
         <field name="assetId" type="id"/>
         <field name="productId" type="id"/>
@@ -64,6 +65,46 @@ along with this software (see the LICENSE.md file). If not, see
         <field name="salesInvoicesNotPaidAmount" type="number-float"/>
         <field name="purchInvoicesNotPaidCount" type="number-integer"/>
         <field name="purchInvoicesNotPaidAmount" type="number-float"/>
+
+        <relationship type="one" title="Owner" related="mantle.party.Party" short-alias="owner">
+            <key-map field-name="ownerPartyId"/></relationship>
     </entity>
 
+    <entity entity-name="ChatMessage" package="growerp.general">
+        <field name="chatMessageId" type="id" is-pk="true"/>
+        <field name="isRead" type="text-indicator"/>
+        <field name="content" type="text-medium"/>
+        <field name="chatRoomId" type="id"/>
+        <field name="fromUserId" type="id"/>
+        <field name="toUserId" type="id"/>
+
+        <relationship type="one" title="From" related="moqui.security.UserAccount">
+            <key-map field-name="fromUserId"/></relationship>
+        <relationship type="one" title="To" related="moqui.security.UserAccount">
+            <key-map field-name="toUserId"/></relationship>
+        <relationship type="one" related="growerp.general.ChatRoom">
+            <key-map field-name="chatRoomId"/></relationship>
+    </entity>
+
+    <entity entity-name="ChatRoom" package="growerp.general">
+        <field name="chatRoomId" type="id" is-pk="true"/>
+        <field name="chatRoomName" type="text-medium"/>
+        <field name="isPrivate" type="text-indicator"/>
+        <field name="ownerPartyId" type="id"/>
+
+        <relationship type="one" title="Owner" related="mantle.party.Party">
+            <key-map field-name="ownerPartyId"/></relationship>
+    </entity>
+
+    <entity entity-name="ChatRoomMember" package="growerp.general">
+        <field name="chatRoomId" type="id" is-pk="true"/>
+        <field name="userId" type="id" is-pk="true"/>
+        <field name="isActive" type="text-indicator"/>
+        <field name="hasRead" type="text-indicator"/>
+
+        <relationship type="one" title="User" related="moqui.security.UserAccount">
+            <key-map field-name="userId"/></relationship>
+        <relationship type="one" title="Room" related="growerp.general.ChatRoom">
+            <key-map field-name="chatRoomId"/></relationship>
+    </entity>
 </entities>

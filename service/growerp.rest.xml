@@ -99,8 +99,17 @@ along with this software (see the LICENSE.md file). If not, see
             <method type="get"><service name="growerp.100.AccountingServices100.get#BalanceSheet"/></method></resource>
         <resource name="Ledger">
             <method type="get"><service name="growerp.100.AccountingServices100.get#Ledger"/></method></resource>
+        <!-- chat server -->
+        <resource name="ChatMessage">
+            <method type="get"><service name="growerp.100.ChatServices100.get#ChatMessage"/></method>
+            <method type="put"><service name="growerp.100.ChatServices100.create#ChatMessage"/></method></resource>
+        <resource name="ChatRoom">
+            <method type="get"><service name="growerp.100.ChatServices100.get#ChatRoom"/></method>
+            <method type="put"><service name="growerp.100.ChatServices100.create#ChatRoom"/></method>
+            <method type="patch"><service name="growerp.100.ChatServices100.update#ChatRoom"/></method>
+            <method type="delete"><service name="growerp.100.ChatServices100.delete#ChatRoom"/></method></resource>
     </resource>
-    
+
     <!-- nativescript REST interface -->
     <!-- Login and Register, security -->
     <resource name="Ping"  require-authentication="anonymous-all">
