@@ -17,56 +17,98 @@ along with this software (see the LICENSE.md file). If not, see
     <service verb="get" noun="ChatRoom">
         <description>when roomId is null get a list of rooms, otherise a single room with members and messages</description>
         <in-parameters>
-            <parameter name="chatRoomId"/>
+            <parameter name="chatRoomId" default="null"/>
+            <parameter name="chatRoomName" default="null"/>
+            <parameter name="userId" default="null"/>
             <parameter name="start" type="Integer" default-value="0"/>
             <parameter name="limit" type="Integer" default-value="20"/>
             <parameter name="search" default="null"/>
+            <parameter name="filter" default="null"/>
+            <parameter name="isPrivate" default="null"/>
         </in-parameters>
         <out-parameters>
             <parameter name="chatRooms" type="List"/>
+            <parameter name="chatRoom" type="Map"/>
         </out-parameters>
         <actions>
             <service-call out-map="context"
                 name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner"/>
-            <entity-find entity-name="growerp.general.ActiveChatRoomsAndMembers"
-                     list="rooms" offset="start" limit="limit">
-                <econdition field-name="chatRoomId" from="chatRoomId"
-                    ignore-if-empty="true"/>
-                <econdition field-name="ownerPartyId"/>
-                <order-by field-name="chatRoomId"/>
-            </entity-find>
-            <set field="chatRooms" from="[]"/>
-            <set field="members" from="[]"/>
-            <set field="lastItem" from="null"/>
-            <iterate list="rooms" entry="room">
-                <if condition="lastItem &amp;&amp; lastItem.chatRoomId != room.chatRoomId">
-                    <set field="roomOut.members" from="members"/>
-                    <script>chatRooms.add(roomOut)</script>
-                    <set field="members" from="[]"/>
-                </if>
-                <set field="roomOut" from="[
-                    chatRoomId: room.chatRoomId,
-                    chatRoomName: room.chatRoomName,
-                    isPrivat: room.isPrivate ? room.isPrivate.toString() : 'true']"/>
-                <if condition="room.userId != ec.user.userAccount.userId">
-                    <service-call name="growerp.100.PartyServices100.get#User"
-                        in-map="[userPartyId: room.partyId]" out-map="context"/>
-                    <else>
-                        <set field="user" from="[partyId: room.partyId]"/>
-                    </else>
-                </if>
-                <set field="chatRoomMember" from="[
-                        member: user, 
-                        hasRead: room.hasRead ? room.hasRead.toString() : 'false',
-                        isActive: room.isActive ? room.isActive.toString() : 'true']"/>
-                <script>members.add(chatRoomMember)</script>
-                <set field="lastItem" from="room"/>
-            </iterate>
-            <if condition="lastItem">
-                <set field="roomOut.members" from="members"/>
-                <script>chatRooms.add(roomOut)</script>
+            <if condition="filter">
+                <set field="filter" value="%$filter%"/>
             </if>
-            <log message="=====chatrooms: ${chatRooms}"/>
+            <if condition="isPrivate"><set field="isPriv" value="N"/></if>
+            <if condition="chatRoomId || isPrivate"><!-- single chatroom or drop down with filter-->
+                <entity-find entity-name="growerp.general.ChatRoom" list="rooms">
+                    <econdition field-name="ownerPartyId"/>
+                    <econdition field-name="chatRoomId" from="chatRoomId" ignore-if-empty="true"/>
+                    <econdition field-name="chatRoomName" from="filter" ignore-if-empty="true"/>
+                    <econdition field-name="isPrivate" from="isPriv" ignore-if-empty="true"/>
+                </entity-find>
+            <else-if condition="chatRoomName == ' ' &amp;&amp; userId"><!-- check existence of private chatroom -->
+                    <entity-find entity-name="growerp.general.ChatRoomsAndFromToMembers"
+                                list="rooms" limit="1">
+                        <econdition field-name="ownerPartyId"/>
+                        <econdition field-name="chatRoomName" operator="is-null"/>
+                        <econdition field-name="userId1" from="userId"/>
+                        <econdition field-name="userId2" from="ec.user.userAccount.userId"/>
+                    </entity-find>
+                </else-if>
+            <else>
+                <entity-find entity-name="growerp.general.ChatRoomsAndMembers"
+                        list="rooms" offset="start" limit="limit"><!-- lists for a user-->
+                    <econdition field-name="ownerPartyId"/>
+                    <econdition field-name="isActive" value="Y"/>
+                    <econditions combine="or">
+                        <econdition field-name="userId" from="ec.user.userAccount.userId"/>
+                    </econditions>
+                    <econdition field-name="chatRoomName" from="filter" ignore-if-empty="true"/>
+                    <order-by field-name="chatRoomId"/>
+                </entity-find>
+                </else>
+            </if>
+            <set field="chatRooms" from="[]"/>
+            <if condition="isPrivate">
+                <iterate list="rooms" entry="room">
+                    <set field="roomOut" from="[
+                        chatRoomId: room.chatRoomId,
+                        chatRoomName: room.chatRoomName,
+                        isPrivate: room.isPrivate == 'Y' ? 'true' : 'false']"/>
+                    <script>chatRooms.add(roomOut)</script>
+                </iterate>
+                <else>
+                    <iterate list="rooms" entry="room">
+                        <entity-find entity-name="growerp.general.ChatRoomsAndMembers" list="chatRoomMembers">
+                            <econdition field-name="chatRoomId" from="room.chatRoomId"/>
+                        </entity-find>
+                        <set field="members" from="[]"/>
+                        <iterate list="chatRoomMembers" entry="chatRoomMember">
+                            <if condition="chatRoomMember.userId != ec.user.userAccount.userId">
+                                <service-call name="growerp.100.PartyServices100.get#User"
+                                    in-map="[userPartyId: chatRoomMember.partyId]" out-map="context"/>
+                                <else>
+                                    <set field="user" from="[partyId: chatRoomMember.partyId,
+                                                            userId: chatRoomMember.userId]"/>
+                                </else>
+                            </if>
+                            <set field="member" from="[
+                                    member: user, 
+                                    hasRead: chatRoomMember.hasRead == 'Y' ? 'true' : 'false',
+                                    isActive: chatRoomMember.isActive == 'Y' ? 'true' : 'false`']"/>
+                            <script>members.add(member)</script>
+                        </iterate>
+                        <set field="roomOut" from="[
+                                chatRoomId: room.chatRoomId,
+                                chatRoomName: room.chatRoomName,
+                                isPrivate: room.isPrivate == 'Y' ? 'true' : 'false',
+                                members: members]"/>
+                        <if condition="chatRoomId"><set field="chatRoom" from="roomOut"/>
+                            <else>
+                                <script>chatRooms.add(roomOut)</script>
+                            </else>
+                        </if>
+                    </iterate>
+                </else>
+            </if>
         </actions>
     </service>
 
@@ -82,17 +124,20 @@ along with this software (see the LICENSE.md file). If not, see
                 Object chatRoomIn = new groovy.json.JsonSlurper().parseText(chatRoom).chatRoom</script>
             <service-call out-map="context"
                  name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner"/>
+            <!-- add chat room -->
             <service-call name="create#growerp.general.ChatRoom" out-map="context"
                  in-map="[chatRoomName: chatRoomIn.chatRoomName,
                             ownerPartyId: ownerPartyId,
                     isPrivate: chatRoomIn.isPrivate == 'true' ? 'Y' : 'N']"/>
             <!-- add members -->
             <iterate list="chatRoomIn.members" entry="memberIn">
-                <service-call name="create#growerp.general.ChatRoomMember"
-                    in-map="[chatRoomId: chatRoomId,
-                            isActive: memberIn.isActive == 'true' ? 'Y' : 'N',
-                            hasRead: memberIn.hasRead == 'true' ? 'Y' : 'N',
-                            userId: memberIn.member.userId]"/>
+                <if condition="memberIn.member.userId != ec.user.userAccount.userId">
+                    <service-call name="create#growerp.general.ChatRoomMember"
+                        in-map="[chatRoomId: chatRoomId,
+                                isActive: memberIn.member.isActive = 'true' ? 'Y' : 'N',
+                                hasRead: memberIn.member.hasRead = 'true' ? 'Y' : 'N',
+                                userId: memberIn.member.userId]"/>
+                </if>
             </iterate>
             <!-- add the initiator -->
             <service-call name="create#growerp.general.ChatRoomMember"
@@ -103,20 +148,46 @@ along with this software (see the LICENSE.md file). If not, see
             <!-- read everything for verification -->
             <service-call name="growerp.100.ChatServices100.get#ChatRoom"
                 in-map="[chatRoomId: chatRoomId]" out-map="context"/>
-            <set field="chatRoom" from="chatRooms[0]"/>
         </actions>
     </service>
 
     <service verb="update" noun="ChatRoom">
         <in-parameters>
-            <parameter name="chatRoomId" required="true"/>
-            <parameter name="chatRoomName" required="true"/>
-            <parameter name="userId" required="true"/>
+            <parameter name="chatRoom"/>
         </in-parameters>
         <out-parameters>
             <parameter name="chatRoom"/>
         </out-parameters>
         <actions>
+            <script> // convert JSON data
+                Object chatRoomIn = new groovy.json.JsonSlurper().parseText(chatRoom).chatRoom</script>
+            <service-call out-map="context"
+                 name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner"/>
+            <service-call name="growerp.100.ChatServices100.get#ChatRoom"
+                 in-map="[chatRoomId: chatRoomIn.chatRoomId]" out-map="context"/>
+            <set field="oldChatRoom" from="chatRoom"/>
+            <if condition="oldChatRoom.chatRoomName != chatRoomIn.chatRoomName || 
+                                    oldChatRoom.isPrivate != chatRoomIn.isPrivate">
+                <service-call name="update#growerp.general.ChatRoom"
+                    in-map="[chatRoomId: chatRoomIn.chatRoomId,
+                            chatRoomName: chatRoomIn.chatRoomName,
+                            isPrivate: chatRoomIn.isPrivate == 'true' ? 'Y' : 'N']"/>
+            </if>
+            <!-- replace all members by chatRoom in members -->
+            <!-- delete existing -->
+            <entity-delete-by-condition entity-name="growerp.general.ChatRoomMember">
+                <econdition field-name="chatRoomId" from="chatRoomIn.chatRoomId"/>
+            </entity-delete-by-condition>
+            <!-- add new -->
+            <iterate list="chatRoomIn.members" entry="member">
+                <service-call name="create#growerp.general.ChatRoomMember"
+                    in-map="[chatRoomId: chatRoomIn.chatRoomId,
+                            isActive: member.isActive == 'true' ? 'Y' : 'N',
+                            hasRead: member.hasRead == 'true' ? 'Y' : 'N',
+                            userId: member.member.userId]"/>
+            </iterate>
+            <service-call name="growerp.100.ChatServices100.get#ChatRoom"
+                in-map="[chatRoomId: chatRoomIn.chatRoomId]" out-map="context"/>
         </actions>
     </service>
 
@@ -145,27 +216,26 @@ along with this software (see the LICENSE.md file). If not, see
         <actions>
             <service-call out-map="context"
                 name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner"/>
-                <log message="===start $chatRoomId  $chatMessageId $ownerPartyId"/>
                 <entity-find entity-name="growerp.general.ChatRoomAndMessages"
                      list="messages" offset="start" limit="limit">
                 <econdition field-name="chatRoomId" from="chatRoomId"
                     ignore-if-empty="true"/>
                 <econdition field-name="chatMessageId" from="chatMessageId"
                     ignore-if-empty="true"/>
-                  <econdition field-name="ownerPartyId"/>
+                <econdition field-name="ownerPartyId"/>
+                <order-by field-name="-lastUpdatedStamp"/>
             </entity-find>
             <set field="chatMessages"  from="[]"/>
             <iterate list="messages" entry="message">
                 <set field="chatMessage" from="[
                     chatMessageId : message.chatMessageId,
                     fromUserId: message.fromUserId,
-                    isRead: message.isRead == 'Y'? 'true' : 'false',
+                    isRead: message.isRead == 'Y' ? 'true' : 'false',
                     content: message.content,
                     creationDate: message.lastUpdatedStamp.toString().substring(0,19) + 'Z',
                     ]"/>
                 <script>chatMessages.add(chatMessage)</script>
             </iterate>
-            <log message="=====chatmessages ${chatMessages.size()}"/>
         </actions>
     </service>
 

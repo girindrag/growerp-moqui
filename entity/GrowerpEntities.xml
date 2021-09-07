@@ -76,12 +76,9 @@ along with this software (see the LICENSE.md file). If not, see
         <field name="content" type="text-medium"/>
         <field name="chatRoomId" type="id"/>
         <field name="fromUserId" type="id"/>
-        <field name="toUserId" type="id"/>
 
         <relationship type="one" title="From" related="moqui.security.UserAccount">
             <key-map field-name="fromUserId"/></relationship>
-        <relationship type="one" title="To" related="moqui.security.UserAccount">
-            <key-map field-name="toUserId"/></relationship>
         <relationship type="one" related="growerp.general.ChatRoom">
             <key-map field-name="chatRoomId"/></relationship>
     </entity>

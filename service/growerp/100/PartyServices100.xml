@@ -389,15 +389,6 @@ along with this software (see the LICENSE.md file). If not, see
                     </else>
                 </if>
             </iterate>
-            <!--if condition="users &amp;&amp; !userPartyId">
-                <log message="====getusers=result: ${users.size()}"/>
-                <log message="====first party: ${users[0]}"/>
-                <script>users.sort{a, b -> 
-                    a.lastName.compareToIgnoreCase(b.lastName) } </script>
-                </if>
-            <if condition="userPartyId">
-                <log message="====single party: $user"/>
-            </if-->
         </actions>
     </service>
 

@@ -151,7 +151,6 @@ along with this software (see the LICENSE.md file). If not, see
             </entity-find>
             <iterate list="parties" entry="party">
                 <set field="ownerPartyId" from="party.partyId"/>
-                <log message="============processing: $ownerPartyId ==== $party.organizationName"/>
                 <entity-find-count count-field="admins"
                     entity-name="growerp.mobile.CompanyPersonAndLoginGroup">
                     <econdition field-name="ownerPartyId"/>

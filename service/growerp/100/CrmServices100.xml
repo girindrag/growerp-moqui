@@ -130,7 +130,6 @@ along with this software (see the LICENSE.md file). If not, see
         <actions>
             <script> // convert JSON data
                 Object opportunity = new groovy.json.JsonSlurper().parseText(opportunity).opportunity</script>
-            <log message="=======incoming opportunity: $opportunity"/>
             <service-call
                 name="growerp.100.GeneralServices100.get#RelatedCompanyPartyId"
                 out-map="context"/>
