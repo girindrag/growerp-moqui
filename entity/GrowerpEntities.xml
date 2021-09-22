@@ -72,7 +72,6 @@ along with this software (see the LICENSE.md file). If not, see
 
     <entity entity-name="ChatMessage" package="growerp.general">
         <field name="chatMessageId" type="id" is-pk="true"/>
-        <field name="isRead" type="text-indicator"/>
         <field name="content" type="text-medium"/>
         <field name="chatRoomId" type="id"/>
         <field name="fromUserId" type="id"/>
