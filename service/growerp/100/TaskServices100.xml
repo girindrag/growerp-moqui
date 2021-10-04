@@ -1,0 +1,346 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+This software is in the public domain under CC0 1.0 Universal plus a 
+Grant of Patent License.
+
+To the extent possible under law, the author(s) have dedicated all
+copyright and related and neighboring rights to this software to the
+public domain worldwide. This software is distributed without any
+warranty.
+
+You should have received a copy of the CC0 Public Domaicrn Dedication
+along with this software (see the LICENSE.md file). If not, see
+<http://creativecommons.org/publicdomain/zero/1.0/>.
+-->
+<services xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/service-definition-2.1.xsd">
+
+    <service verb="get" noun="ProjectTree">
+        <out-parameters>
+            <parameter name="workEffortList"/>
+        </out-parameters>
+        <actions>
+            <service-call out-map="context" 
+                name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner"/>
+                <entity-find  offset="start" limit="limit" list="entries"
+                    entity-name="mantle.work.time.TimeEntryAndWorkEffort">
+                    <econdition field-name="workTypeEnumId" value="WetTask"/>
+                    <econdition field-name="ownerPartyId" from="ownerPartyId"/>
+                    <econdition field-name="statusId" operator="in" from="['WeApproved','WePlanning','WeInProgress']"/>
+                </entity-find>
+                <set field="taskList" from="[]"/>
+            <script>
+                def getTaskTree(workEffort, dept) {
+                    def workEffort = [:];
+                    workEffort.l = dept;
+                    workEffort.id = workEffort.workEffortId;
+                    workEffort.name = workEffortId.workEffortName;
+                    workEffort.rollUp = new BigDecimal(workEffortId.actualWorkTime?:"0");
+                    def dependents = workEffortIds.findAll { 
+                        workEffort.workEffortId == it.parentworkEffortId
+                    }
+                    workEffort.children = [];
+                    dependents.each {
+                        def workEffortSave = getTaskTree(it, dept + 1)
+                        workEffort.rollUp = workEffort.rollUp.add(workEffortSave.rollUp); 
+                        workEffort.children.add(workEffortSave)
+                    }
+                    return workEffort;
+                }
+
+                def projects = workEffortIds.findAll {
+                    it.parentWorkEffortId == null }
+                projects.each {
+                    workEffortList.add(getTaskTree(it, 1));
+                }
+            </script>
+        </actions>
+    </service>
+    <service verb="get" noun="Task">
+        <description> get a single or multiple tasks</description>
+        <in-parameters>
+            <parameter name="taskId"/>
+            <parameter name="start" default-value="0" type="Integer"/>
+            <parameter name="limit" default-value="20" type="Integer"/>
+            <parameter name="search" default="null"/>
+        </in-parameters>
+        <out-parameters>
+            <parameter name="task" type="Map"/>
+            <parameter name="taskList" type="List"/>
+        </out-parameters>
+        <actions>
+            <service-call  out-map="context"
+                name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner"/>
+            <if condition="search != null">
+                <set field="search" value="%${search}%"/></if>
+            <entity-find  offset="start" limit="limit" list="entries"
+                entity-name="growerp.task.TaskAndParties">
+                <econdition field-name="workTypeEnumId" value="WetTask"/>
+                <econdition field-name="ownerPartyId" from="ownerPartyId"/>
+                <econdition field-name="statusId" operator="in"
+                        from="['WeApproved','WeInPlanning','WeInProgress']"/>
+                <econditions combine="or">
+                    <econdition field-name="workEffortName" ignore-case="true"
+                        operator="like" from="search" ignore-if-empty="true"/>
+                    <econdition field-name="description" ignore-case="true"
+                        operator="like" from="search" ignore-if-empty="true"/>
+                </econditions>
+            </entity-find>
+            <if condition="!taskId">
+                <set field="taskList" from="[]"/></if>
+            <set field="lastEntry" from="null"/>
+            <iterate entry="entry" list="entries">
+                <if condition="lastEntry &amp;&amp; lastEntry.workEffortId != entry.workEffortId">
+                    <script>workEffortList.add(workEffortOut)</script>
+                </if>   
+                <if condition="!lastEntry || lastEntry.workEffortId != entry.workEffortId">
+                    <service-call name="growerp.100.OrderServices100.convert#StatusId"
+                    in-map="[docType: 'task', statusId: entry.statusId]" out-map="context"/>
+                    <set field="workEffortOut" from="[
+                        taskId: entry.workEffortId,
+                        parentTaskId: entry.parentWorkEffortId,
+                        name: entry.workEffortName,
+                        status: convertedStatusId,
+                        description: entry.description,
+                        startDate: entry.actualStartDate?.substring(0,18),
+                        endDate: entry.actualCompletionDate?.substring(0,18),
+                        entries: [],
+                    ]"/>
+                </if>
+                <set field="itemOut" from="[
+                    ]"/>
+                <script>workEffortOut.entries.add(itemOut)</script>
+                <if condition="taskId">
+                    <set field="task" from="workEffortOut"/>
+                    <else>
+                        <script>taskList.add(workEffortOut)</script>
+                    </else>
+                </if>
+            </iterate>
+        </actions>
+    </service>
+
+    <service verb="create" noun="Task">
+        <description> Create a task within a project</description>
+        <in-parameters>
+            <parameter name="task" required="true"/>
+        </in-parameters>
+        <out-parameters>
+            <parameter name="task"/>
+        </out-parameters>
+        <actions>
+            <script> // convert JSON data
+                Object task = new groovy.json.JsonSlurper()
+                    .parseText(task).task</script>
+            <service-call  out-map="context"
+                    name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner"/>
+            <!-- create task -->
+            <if condition="!task.status">
+                <set field="task.status" value="In Planning"/>
+            </if>
+            <service-call name="growerp.100.OrderServices100.convert#StatusId"
+                in-map="[docType: 'task', statusId: task.status]" out-map="context"/>
+            <service-call name="create#mantle.work.effort.WorkEffort" in-map="[
+                parentWorkEffortId: task.parentTaskId,
+                workTypeEnumId: 'WetTask',
+                workEffortName: task.name,
+                statusId: convertedStatusId,
+                description: task.description,
+                ownerPartyId: companyPartyId,
+                actualStartDate: task.startDate?.substring(0,18),
+                actualCompletionDate: task.endDate?.substring(0,18)
+                ]" out-map="context"/>
+            <!-- employee owner -->
+            <service-call name="create#mantle.work.effort.WorkEffortParty" in-map="[
+                    workEffortId: workEffortId,
+                    partyId: ec.user.userAccount.partyId,
+                    roleTypeId: 'Owner',
+                    statusId: 'WeptAssigned'
+                ]"/>
+            <if condition="task.customerUser">
+                <set field="userRoleTypeid" value="CustomerContactPerson"/>
+                <set field="companyRoleTypeid" value="Customer"/>
+                <set field="companyPartyid" from="task.customerUser.companyPartyId"/>
+                <set field="userPartyId" from="task.customerUser.partyId"/>
+            </if>
+            <if condition="task.vendorUser">
+                <set field="userRoleTypeid" value="VendorContactPerson"/>
+                <set field="companyRoleTypeid" value="Vendor"/>
+                <set field="companyPartyid" from="task.vendorUser.companyPartyId"/>
+                <set field="userPartyId" from="task.vendorUser.partyId"/>
+            </if>
+            <!-- create cust/suppl company -->
+            <if condition="task.customerUser || task.vendorUser">
+                <service-call name="create#mantle.work.effort.WorkEffortParty" in-map="[
+                    workEffortId: workEffortId,
+                    partyId: companyPartyid,
+                    roleTypeId: companyRoletypeId,
+                    statusId: 'WeptAssigned'
+                ]"/>
+                <!-- create customer/suppl person-->
+                <service-call name="create#mantle.work.effort.WorkEffortParty" in-map="[
+                    workEffortId: workEffortId,
+                    partyId: userPartyId,
+                    roleTypeId: userRoleTypeId,
+                    statusId: 'WeptAssigned'
+                ]"/>
+            </if>
+        </actions>
+    </service>
+    <service verb="update" noun="Task">
+        <description> Update a task within a project</description>
+        <in-parameters>
+            <parameter name="task" required="true"/>
+        </in-parameters>
+        <out-parameters>
+            <parameter name="task"/>
+        </out-parameters>
+        <actions>
+            <script> // convert JSON data
+                Object task = new groovy.json.JsonSlurper()
+                    .parseText(task).task</script>
+            <service-call name="growerp.100.TaskServices100.get#Tasks"
+                in-map="[taskId: task.taskId]" out-map="oldTask"/>
+            <if condition="!oldTask"><return error="true" message="Task ${task.taskId} not found"/></if>
+            <service-call name="growerp.100.OrderServices100.convert#StatusId"
+                in-map="[docType: 'task', statusId: task.status]" out-map="context"/>
+            <if condition="
+                oldTask.name != task.Name ||
+                oldTask.description != task.description ||
+                oldTask.status != task.status ||
+                oldTask.parentTaskId != task.parentTaskId ||
+                oldTask.startDate != task.startDate ||
+                oldTask.endDate != task.endDate">
+                <service-call name="update#mantle.work.effort.WorkEffort" in-map="[
+                    workEffortId: task.taskId,
+                    parentWorkEffortId: task.parentTask,
+                    workEffortName: task.name,
+                    statusId: convertedStatusId,
+                    description: task.description,
+                    actualStartDate: task.startDate?.substring(0,18),
+                    actualCompletionDate: task.endDate?.substring(0,18)]"/>
+            </if>
+
+            <if condition="task.customerUser &amp;&amp; oldTask.customerUser.companyPartyId != task.customerUser.companyPartyId">
+                <entity-find entity-name="mantle.work.effort.WorkEffortParty" limit="customers">
+                    <econdition field-name="workEffortId" from="task.taskId"/>
+                    <econdition field-name="roleTypeId" value="Company"/>
+                </entity-find>
+                <if condition="customers">
+                    <set field="customers[0].thruDate" from="ec.user.nowTimestamp"/>
+                    <entity-update value-field="customers[0]"/>
+                </if>
+                <service-call name="create#mantle.work.effort.WorkEffortParty" in-map="[
+                        workEffortId: task.taskId,
+                        partyId: task.customerUser.companyPartyId,
+                        roleTypeId: 'Customer',
+                        statusId: 'WeptAssigned'
+                    ]"/>
+            </if>
+            <if condition="task.customerUser &amp;&amp; oldTask.customerUser.partyId !=task.customerUser.partyId">
+                <entity-find entity-name="mantle.work.effort.WorkEffortParty" limit="customers">
+                    <econdition field-name="workEffortId" from="task.taskId"/>
+                    <econdition field-name="roleTypeId" value="Company"/>
+                </entity-find>
+                <if condition="customers">
+                    <set field="customers[0].thruDate" from="ec.user.nowTimestamp"/>
+                    <entity-update value-field="customers[0]"/>
+                </if>
+                <service-call name="create#mantle.work.effort.WorkEffortParty" in-map="[
+                    workEffortId: task.taskId,
+                    partyId: task.customerUser.partyId,
+                    roleTypeId: 'CustomerContactPerson',
+                    statusId: 'WeptAssigned'
+            ]"/>
+            </if>
+            <if condition="task.vendorUser &amp;&amp; oldTask.vendorUser.companyPartyId !=task.vendorUser.companyPartyId">
+                <entity-find entity-name="mantle.work.effort.WorkEffortParty" limit="vendors">
+                    <econdition field-name="workEffortId" from="task.taskId"/>
+                    <econdition field-name="roleTypeId" value="Company"/>
+                </entity-find>
+                <if condition="vendors">
+                    <set field="vendors[0].thruDate" from="ec.user.nowTimestamp"/>
+                    <entity-update value-field="vendors[0]"/>
+                </if>
+                <service-call name="create#mantle.work.effort.WorkEffortParty" in-map="[
+                        workEffortId: task.taskId,
+                        partyId: task.vendorUser.companyPartyId,
+                        roleTypeId: 'Vendor',
+                        statusId: 'WeptAssigned'
+                    ]"/>
+            </if>
+            <if condition="task.vendorUser &amp;&amp; oldTask.vendorUser.partyId !=task.vendorUser.partyId">
+                <entity-find entity-name="mantle.work.effort.WorkEffortParty" limit="vendors">
+                    <econdition field-name="workEffortId" from="task.taskId"/>
+                    <econdition field-name="roleTypeId" value="Company"/>
+                </entity-find>
+                <if condition="vendors">
+                    <set field="vendors[0].thruDate" from="ec.user.nowTimestamp"/>
+                    <entity-update value-field="vendors[0]"/>
+                </if>
+                <service-call name="create#mantle.work.effort.WorkEffortParty" in-map="[
+                        workEffortId: task.taskId,
+                        partyId: task.vendorUser.partyId,
+                        roleTypeId: 'VendorContactPerson',
+                        statusId: 'WeptAssigned'
+                    ]"/>
+            </if>
+        </actions>
+    </service>
+
+    <service verb="create" noun="TimeEntry">
+        <description>enter hours worked</description>
+        <in-parameters>
+            <parameter name="timeEntry" required="true"/>
+        </in-parameters>
+        <out-parameters>
+            <parameter name="timeEntry"/>
+        </out-parameters>
+        <actions>
+            <script> // convert JSON data
+                Object timeEntry = new groovy.json.JsonSlurper()
+                    .parseText(timeEntry).timeEntry</script>
+            <service-call  out-map="context"
+                    name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner"/>
+            <entity-find-one entity-name="mantle.work.effort.WorkEffort" value-field="workEffort">
+                <field-map field-name="workEffortId" from="timeEntry.taskId"/>
+                <field-map field-name="ownerPartyId"/>
+            </entity-find-one>
+            <if condition="!workEffort"><return error="true" message="Task not found: ${timeEntry.taskId}"/></if>
+            <service-call name="create#mantle.work.time.TimeEntry" in-map="[
+                partyId: ec.user.userAccount.partyId,
+                hours: timeEntry.hours,
+                workEffortId: timeEntry.taskId,
+                comments: timeEntry.comments,
+                date: timeEntry.date ? timeEntry.date?.substring(0,18) : ec.user.nowTimestamp
+            ]"/>
+        </actions>
+    </service>
+    <service verb="delete" noun="TimeEntry">
+        <description>remove not yet billed hours</description>
+        <in-parameters>
+            <parameter name="timeEntry" required="true"/>
+        </in-parameters>
+        <out-parameters>
+            <parameter name="timeEntry"/>
+        </out-parameters>
+        <actions>
+            <script> // convert JSON data
+                Object task = new groovy.json.JsonSlurper()
+                    .parseText(timeEntry).timeEntry</script>
+            <service-call  out-map="context"
+                    name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner"/>
+            <entity-find-one entity-name="mantle.work.effort.WorkEffort" value-field="workEffort">
+                <field-map field-name="workEffortId" from="timeEntry.taskId"/>
+                <field-map field-name="ownerPartyId"/>
+            </entity-find-one>
+            <if condition="!workEffort"><return error="true" message="Task not found: ${timeEntry.taskId}"/></if>
+            <entity-find-one entity-name="mantle.work.time.TimeEntry" value-field="teOld">
+                <field-map field-name="timeEntryId" from="timeEntry.timeEntryId"/>
+            </entity-find-one>
+            <if condition="teOld &amp;&amp; teOld.invoiceId">
+                <return error="true" message="Cannot delete time entry: already invoiced"/>
+            </if>
+            <entity-delete value-field="teOld"/>
+        </actions>
+    </service>
+</services>

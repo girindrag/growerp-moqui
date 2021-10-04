@@ -1069,6 +1069,14 @@ along with this software (see the LICENSE.md file). If not, see
                     opportunityStageId: 'Proposal']
             ]"/>
 
+            <set field="tasks" from="[
+                [ name: 'The first task' ],
+                [ name: 'The second task' ],
+                [ name: 'The third task' ],
+                [ name: 'The fourth task' ],
+                [ name: 'The fifth task' ]
+            ]"/>
+
             <set field="nowDate" from="ec.user.nowTimestamp"/>
             <set field="counter" value="0" type="Integer"/>
             <while condition="counter++ &lt; counterMax">
@@ -1252,6 +1260,17 @@ along with this software (see the LICENSE.md file). If not, see
                     ]])"/>
                     <service-call name="growerp.100.CrmServices100.create#Opportunity"
                                     in-map="[opportunity: oppIn]" out-map="context"/>
+                    <set field="index" from="index + 1"/>
+                </iterate>
+
+                <!-- tasks -->
+                <set field="index" value="0" type="Integer"/>
+                <iterate list="tasks" entry="task">
+                    <set field="taskIn" from="groovy.json.JsonOutput.toJson([task:[
+                        name: task.name
+                    ]])"/>
+                    <service-call name="growerp.100.TaskServices100.create#Task"
+                                    in-map="[task: taskIn]" out-map="context"/>
                     <set field="index" from="index + 1"/>
                 </iterate>
 

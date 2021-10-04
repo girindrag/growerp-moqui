@@ -24,6 +24,26 @@ along with this software (see the LICENSE.md file). If not, see
             <parameter name="convertedStatusId"/>
         </out-parameters>
         <actions>
+            <!-- task status -->
+            <if condition="docType == 'task'">
+                <set field="taskStatusValues" from="[
+                'WeApproved': 'Approved',
+                'WeCancelled': 'Cancelled',
+                'WeClosed': 'Closed',
+                'WeComplete': 'Complete',
+                'WeInPlanning': 'In Planning',
+                'WeInProgress': 'In progress',
+                'WeOnHold': 'On Hold',
+                'Approved': 'WeApproved',
+                'Cancelled': 'WeCancelled',
+                'Closed': 'WeClosed',
+                'Complete': 'WeComplete',
+                'In Planning': 'WeInPlanning',
+                'In progress': 'WeInProgress',
+                'On Hold': 'WeOnHold'
+                ]"/>
+                <set field="convertedStatusId" from="taskStatusValues[statusId]"/>
+            </if>
             <!-- Asset status and classEnumId translation -->
             <if condition="docType == 'product'">
                 <set field="productTypeValues" from="[
@@ -836,7 +856,7 @@ along with this software (see the LICENSE.md file). If not, see
                 <entity-update value-field="orderHeader"/>
             </if>
             <if condition="order.otherUser">
-                <!-- update either supplier or customer -->
+                <!-- update either vendor or customer -->
                 <entity-find entity-name="mantle.order.OrderPart" list="parts" for-update="true">
                     <econdition field-name="orderId"/>
                 </entity-find>
