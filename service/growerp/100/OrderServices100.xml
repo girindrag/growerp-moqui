@@ -32,14 +32,14 @@ along with this software (see the LICENSE.md file). If not, see
                 'WeClosed': 'Closed',
                 'WeComplete': 'Complete',
                 'WeInPlanning': 'In Planning',
-                'WeInProgress': 'In progress',
+                'WeInProgress': 'In Progress',
                 'WeOnHold': 'On Hold',
                 'Approved': 'WeApproved',
                 'Cancelled': 'WeCancelled',
                 'Closed': 'WeClosed',
                 'Complete': 'WeComplete',
                 'In Planning': 'WeInPlanning',
-                'In progress': 'WeInProgress',
+                'In Progress': 'WeInProgress',
                 'On Hold': 'WeOnHold'
                 ]"/>
                 <set field="convertedStatusId" from="taskStatusValues[statusId]"/>

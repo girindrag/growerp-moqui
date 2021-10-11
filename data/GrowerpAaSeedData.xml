@@ -29,6 +29,7 @@ along with this software (see the LICENSE.md file). If not, see
     <mantle.party.PartyClassification partyClassificationId="AppService" classificationTypeEnumId="PcltMobileApp" description="App for Service company, freelancer, wfh"/>
     <mantle.party.PartyClassification partyClassificationId="AppHotel" classificationTypeEnumId="PcltMobileApp" description="App for Hotel, Bed &amp; Breakfeast"/>
     <mantle.party.PartyClassification partyClassificationId="AppRealtor" classificationTypeEnumId="PcltMobileApp" description="App for Realtor/property management"/>
+    <mantle.party.PartyClassification partyClassificationId="AppFreelance" classificationTypeEnumId="PcltMobileApp" description="App for a freelancer"/>
 
     <!-- sales opportunity stage -->
     <mantle.sales.opportunity.SalesOpportunityStage opportunityStageId="Prospecting" sequenceNum="1"/>
