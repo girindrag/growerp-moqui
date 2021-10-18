@@ -20,16 +20,16 @@ along with this software (see the LICENSE.md file). If not, see
             their role and or/existing security group.
             This service can be rerun regularly
         </description>
+        <in-parameters><parameter name="companyPartyId" default-value="ORG_ACCUGEO"/></in-parameters>
         <actions>
-            <set field="companyPartyId" value="ORG_ACCUGEO"/>
             <set field="userGroups"
                 from="['GROWERP_M_ADMIN', 'GROWERP_M_EMPLOYEE', 'GROWERP_M_CUSTOMER', 'GROWERP_M_LEAD', 'GROWERP_M_SUPPLIER']"/>
 
             <entity-find entity-name="CompanyPersonAndLoginGroup" list="users">
                 <econditions combine="or">
                     <econdition field-name="companyOwnerPartyId" operator="is-null"/>
-                    <econdition field-name="ownerPartyId" operator="is-null"/>
                     <econdition field-name="companyOwnerPartyId" value="_NA_"/>
+                    <econdition field-name="ownerPartyId" operator="is-null"/>
                     <econdition field-name="ownerPartyId" value="_NA_"/>
                     <econdition field-name="orgRoleTypeId" operator="is-null"/>
                     <econdition field-name="userRoleTypeId" operator="is-null"/>
@@ -52,19 +52,21 @@ along with this software (see the LICENSE.md file). If not, see
                 <entity-find entity-name="mantle.party.PartyRole" list="compRoles">
                     <econdition field-name="partyId" from="user.companyPartyId"/>
                 </entity-find>
-                <set field="userGroupId" value="GROWERP_M_SUPPLIER"/>
-                <if condition="compRoles &amp;&amp; compRoles[0].roleTypeId == 'Customer'">
-                    <set field="userGroupId" value="GROWERP_M_CUSTOMER"/></if>
+                <set field="userGroupId" value="GROWERP_M_CUSTOMER"/>
+                <if condition="compRoles &amp;&amp; compRoles[0].roleTypeId == 'Supplier'">
+                    <set field="userGroupId" value="GROWERP_M_SUPPLIER"/></if>
+                <!-- company admins and employees -->
                 <if condition="user.orgRoleTypeId == 'OrgInternal'">
-                    <!-- company admins and employees -->
-                    <entity-find entity-name="moqui.security.UserGroupMemberUser" list="access">
-                        <econdition field-name="partyId" from="userPartyId"/>
+                    <log message="====employee found: ${user.firstName} ${user.lastName} ${user.companyName} ${user.userId} "/>
+                    <entity-find entity-name="moqui.security.UserGroupMemberUser" list="adminAccess">
+                        <econdition field-name="partyId" from="user.userPartyId"/>
                         <econdition field-name="userGroupId" value="ADMIN"/>
                     </entity-find>
                     <set field="userGroupId" value="GROWERP_M_EMPLOYEE"/>
-                    <if condition="access">
+                    <if condition="adminAccess">
                         <set field="userGroupId" value="GROWERP_M_ADMIN"/>
                     </if>
+                    <log message="====employee userId: ${user.userId} found with userGroup: $userGroupId"/>
                 </if>
                 <!-- if company not has a contact person -->
                 <if condition="user.userPartyId == null">
@@ -102,13 +104,17 @@ along with this software (see the LICENSE.md file). If not, see
                                 emailAddress: emails ? emails[0].infoString : userPartyId + '@example.com',
                                 username: userPartyId, disabled: 'Y']"/>
                     <set field="user.userId" from="userId"/>
+                    <if condition="userGroupId == 'GROWERP_M_ADMIN'">
+                        <log message="====created ${user.firstName} ${user.lastName} userId: ${user.userId}"/> </if>
                 </if>
-                <!-- check if userlog has growerp access -->
+                <!-- check if user has growerp access -->
                 <entity-find entity-name="moqui.security.UserGroupMemberUser" list="access">
                     <econdition field-name="partyId" from="userPartyId"/>
-                    <econdition field-name="userGroupId" operator="like" value="GROWERP_M_%"/>
+                    <econdition field-name="userGroupId" operator="in" from="userGroups"/>
                 </entity-find>
                 <if condition="!access">
+                    <if condition="!userGroupId"><log message="====no usergroup??? for userId: ${user.userId}====="/></if>
+                    <if condition="userGroupId == 'GROWERP_M_ADMIN'"><log message="====adding growerpadmin security for ${user.firstName} ${user.lastName} userId: ${user.userId}"/> </if>
                     <entity-make-value entity-name="moqui.security.UserGroupMember" value-field="um"/>
                     <set field="um.userId" from="user.userId"/>
                     <set field="um.userGroupId" from="userGroupId"/>
@@ -133,7 +139,7 @@ along with this software (see the LICENSE.md file). If not, see
                         </if>
                     </iterate>
                 </if>
-                <!-- if company ownder not filled -->
+                <!-- if company owner not filled -->
                 <if condition="user.companyOwnerPartyId == null || user.companyOwnerPartyId == '_NA_'">
                     <entity-find-one entity-name="mantle.party.Party" value-field="party"
                             for-update="true">
