@@ -113,13 +113,19 @@ along with this software (see the LICENSE.md file). If not, see
                     <econdition field-name="userGroupId" operator="in" from="userGroups"/>
                 </entity-find>
                 <if condition="!access">
-                    <if condition="!userGroupId"><log message="====no usergroup??? for userId: ${user.userId}====="/></if>
-                    <if condition="userGroupId == 'GROWERP_M_ADMIN'"><log message="====adding growerpadmin security for ${user.firstName} ${user.lastName} userId: ${user.userId}"/> </if>
-                    <entity-make-value entity-name="moqui.security.UserGroupMember" value-field="um"/>
-                    <set field="um.userId" from="user.userId"/>
-                    <set field="um.userGroupId" from="userGroupId"/>
-                    <set field="um.fromDate" from="ec.user.nowTimestamp"/>
-                    <entity-create value-field="um"/>
+                    <if condition="!userGroupId">
+                        <log message="====no usergroup??? for userId: ${user.userId}====="/>
+                        <else>
+                            <if condition="userGroupId == 'GROWERP_M_ADMIN'">
+                                <log message="====adding growerpadmin security for ${user.firstName} ${user.lastName} userId: ${user.userId}"/> </if>
+                            <service-call name="create#moqui.security.UserGroupMember"
+                                in-map="[
+                                    userId: user.userId,
+                                    userGroupId: userGroupId,
+                                    fromDate: ec.user.nowTimestamp
+                                ]"/>
+                        </else>
+                    </if>
                 </if>
                 <!-- to(company) roleTypeId not filled -->
                 <entity-find entity-name="mantle.party.PartyRelationship" list="rels">
