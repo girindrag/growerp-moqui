@@ -115,7 +115,9 @@ along with this software (see the LICENSE.md file). If not, see
                 salesInvoicesNotPaidCount:  st.salesInvoicesNotPaidCount.toString(),
                 salesInvoicesNotPaidAmount: st.salesInvoicesNotPaidAmount.toString(),
                 purchInvoicesNotPaidCount:  st.purchInvoicesNotPaidCount.toString(),
-                purchInvoicesNotPaidAmount: st.purchInvoicesNotPaidAmount.toString()
+                purchInvoicesNotPaidAmount: st.purchInvoicesNotPaidAmount.toString(),
+                allTasks: st.allTasks.toString(),
+                notInvoicedHours: notInvoicedHours? notInvoicedHours.toString() : '0'
                 ]"/>
                 <else>
                     <set field="stats" from="[
@@ -134,7 +136,9 @@ along with this software (see the LICENSE.md file). If not, see
                         salesInvoicesNotPaidCount: '0',
                         salesInvoicesNotPaidAmount: '0',
                         purchInvoicesNotPaidCount: '0',
-                        purchInvoicesNotPaidAmount: '0'
+                        purchInvoicesNotPaidAmount: '0',
+                        allTasks: '0',
+                        notInvoicedHours: '0'
                         ]"/>
                 </else>
             </if>
@@ -236,27 +240,47 @@ along with this software (see the LICENSE.md file). If not, see
                     <econdition field-name="statusId" operator="in" value="InvoiceReceived,InvoiceApproved"/>
                     <select-field field-name="toPartyId,invoiceCount,unpaidTotal,currencyUomId"/>
                 </entity-find>
+                <entity-find-count entity-name="growerp.task.TaskAndParties" count-field="allTasks">
+                    <econdition field-name="ownerPartyId" from="ownerPartyId"/>
+                    <econdition field-name="statusId" operator="in"
+                        from="['WeApproved','WeInPlanning','WeInProgress']"/>
+                </entity-find-count>
+                <entity-find entity-name="mantle.work.time.TimeEntryAndWorkEffort" list="hours">
+                    <econdition field-name="ownerPartyId"/>
+                    <econdition field-name="invoiceId" operator="is-null"/>
+                    <select-field field-name="hours"/>
+                </entity-find>
+                <set field="notInvoicedHours" type="Integer" value="0"/>
+                <iterate list="hours" entry="hour">
+                    <set field="notInvoicedHours" from="notInvoicedHours + hour.hours"/>
+                </iterate>
                 <service-call name="delete#growerp.general.Statistics">
                     <field-map field-name="ownerPartyId"/></service-call>  
                 <service-call name="create#growerp.general.Statistics"
                     in-map="[
-                    ownerPartyId: ownerPartyId,
-                    admins: admins,
-                    employees: employees,
-                    suppliers: suppliers,
-                    leads: leads,
-                    customers: customers,
-                    openSlsOrders: openSlsOrders,
-                    openPurOrders: openPurOrders,
-                    opportunities: opportunities,
-                    categories: categories,
-                    products: products,
-                    assets: assets,
-                    salesInvoicesNotPaidCount:  allRecInvList ? allRecInvList[0].invoiceCount : '0',
-                    salesInvoicesNotPaidAmount: allRecInvList ? allRecInvList[0].unpaidTotal : '0.00',
-                    purchInvoicesNotPaidCount:  allPblInvList ? allPblInvList[0].invoiceCount : '0',
-                    purchInvoicesNotPaidAmount: allPblInvList ? allPblInvList[0].unpaidTotal : '0.00',
-                ]"/>
+                        ownerPartyId: ownerPartyId,
+                        admins: admins,
+                        employees: employees,
+                        suppliers: suppliers,
+                        leads: leads,
+                        customers: customers,
+                        openSlsOrders: openSlsOrders,
+                        openPurOrders: openPurOrders,
+                        opportunities: opportunities,
+                        categories: categories,
+                        products: products,
+                        assets: assets,
+                        salesInvoicesNotPaidCount:  allRecInvList
+                            ? allRecInvList[0].invoiceCount : '0',
+                        salesInvoicesNotPaidAmount: allRecInvList
+                            ? allRecInvList[0].unpaidTotal : '0.00',
+                        purchInvoicesNotPaidCount:  allPblInvList
+                            ? allPblInvList[0].invoiceCount : '0',
+                        purchInvoicesNotPaidAmount: allPblInvList
+                            ? allPblInvList[0].unpaidTotal : '0.00',
+                        allTasks: allTasks,
+                        notInvoicedHours: notInvoicedHours
+                    ]"/>
             </iterate>
         </actions>
     </service>

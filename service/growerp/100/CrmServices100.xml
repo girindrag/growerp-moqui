@@ -86,7 +86,7 @@ along with this software (see the LICENSE.md file). If not, see
         <actions>
             <script> // convert JSON data
                 Object opportunity = new groovy.json.JsonSlurper()
-                    .parseText(opportunity).opportunity</script>
+                    .parseText(opportunity)</script>
             <if condition="!opportunity.stageId">
                 <entity-find list="stages"
                     entity-name="mantle.sales.opportunity.SalesOpportunityStage">
@@ -129,7 +129,7 @@ along with this software (see the LICENSE.md file). If not, see
         </out-parameters>
         <actions>
             <script> // convert JSON data
-                Object opportunity = new groovy.json.JsonSlurper().parseText(opportunity).opportunity</script>
+                Object opportunity = new groovy.json.JsonSlurper().parseText(opportunity)</script>
             <service-call
                 name="growerp.100.GeneralServices100.get#RelatedCompanyPartyId"
                 out-map="context"/>
@@ -203,22 +203,26 @@ along with this software (see the LICENSE.md file). If not, see
     <service verb="delete" noun="Opportunity">
         <description> Delete a Opportunity </description>
         <in-parameters>
-            <parameter name="opportunityId" required="true"/>
+            <parameter name="opportunity" required="true"/>
         </in-parameters>
         <out-parameters>
-            <parameter name="opportunityId" required="true"/>
+            <parameter name="opportunity"/>
         </out-parameters>
         <actions>
+            <script> // convert JSON data
+                Object opportunityIn = new groovy.json.JsonSlurper().parseText(opportunity)</script>
             <service-call
                 name="growerp.100.GeneralServices100.get#RelatedCompanyPartyId"
                 out-map="context"/>
             <entity-find-one value-field="oldValue"
                     entity-name="mantle.sales.opportunity.SalesOpportunity"
                     for-update="true">
-                <field-map field-name="salesOpportunityId" from="opportunityId"/>
+                <field-map field-name="salesOpportunityId" from="opportunityIn.opportunityId"/>
                 <field-map field-name="ownerPartyId"/></entity-find-one>
             <set field="oldValue.opportunityStageId" value="Deleted"/>
             <entity-update value-field="oldValue"/>
+            <service-call name="growerp.100.CrmServices100.get#Opportunity"
+                in-map="[opportunityId: opportunity.opportunityId]" out-map="context"/>
         </actions>
     </service>
 </services>
