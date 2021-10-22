@@ -41,6 +41,8 @@ along with this software (see the LICENSE.md file). If not, see
             <parameter name="companies"/>
         </out-parameters>
         <actions>
+            <service-call out-map="context"
+                name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner"/>
             <if condition="mainCompanies">
                 <set field="roleTypeId" value="OrgInternal"/>
                 <else>
@@ -49,13 +51,11 @@ along with this software (see the LICENSE.md file). If not, see
             </if>
             <if condition="filter != null"><!-- only used when logged in -->
                 <set field="filter" value="%${filter}%"/>
-                <service-call out-map="context"
-                    name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner"/>
+                <set field="ownerPartyId" from="null"/>
             </if>
             <entity-find  list="parties" offset="start" limit="limit"
                 entity-name="growerp.party.CompanyPreferenceAndRole">
-                <econdition field-name="ownerPartyId" from="ownerPartyId"
-                        ignore-if-empty="true"/>
+                <econdition field-name="ownerPartyId" ignore-if-empty="true"/>
                 <econdition field-name="organizationName" operator="like"
                         from="filter" ignore-if-empty="true" ignore-case="true"/>
                 <econdition field-name="roleTypeId" from="roleTypeId"
@@ -156,7 +156,6 @@ along with this software (see the LICENSE.md file). If not, see
             <script> // convert JSON data
                 Object compIn = new groovy.json.JsonSlurper().parseText(company).company
             </script>
-            <!-- check access user belongs to this company override companyPartyId-->
             <service-call out-map="context" 
                 name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner"/>
             <set field="compIn.partyId" from="ownerPartyId"/>
@@ -307,7 +306,7 @@ along with this software (see the LICENSE.md file). If not, see
                 <set field="ownerPartyId" from="relatedLogin.ownerPartyId"/></if>
             <entity-find offset="start" limit="limit" list="userInfos"
                 entity-name="growerp.mobile.CompanyPersonAndLoginGroup">
-                <econdition field-name="ownerPartyId" from="ownerPartyId"/>
+                <econdition field-name="ownerPartyId" ignore-if-empty="true"/>
                 <econdition field-name="userPartyId" ignore-if-empty="true"/>
                 <econditions combine="or">
                     <econdition field-name="userPartyId" operator="like"

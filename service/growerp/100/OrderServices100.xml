@@ -166,7 +166,7 @@ along with this software (see the LICENSE.md file). If not, see
         </out-parameters>
         <actions>
             <service-call out-map="context"
-                name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner"/>
+                name="growerp.100.GeneralServices100.get#RelatedCompanyAndcompany"/>
             <if condition="startDate">
                 <set field="tsDate"
                     from="ec.l10n.parseTimestamp(ec.l10n.format(startDate, 'yyyy-MM-dd')
@@ -179,9 +179,9 @@ along with this software (see the LICENSE.md file). If not, see
             <set field="finDocItems" from="[]"/>
 
             <if condition="sales == true">
-                <set field="vendorPartyId" from="ownerPartyId"/>
+                <set field="vendorPartyId" from="companyPartyId"/>
             <else>
-                <set field="customerPartyId" from="ownerPartyId"/></else></if>
+                <set field="customerPartyId" from="companyPartyId"/></else></if>
             <set field="current" value="0" type="Integer"/>
             <if condition="docType == 'order'">
                 <if condition="search">
@@ -215,8 +215,8 @@ along with this software (see the LICENSE.md file). If not, see
                             entity-name="growerp.order.OrderHeaderPartItemPartiesAndReservation">
                         <econdition field-name="orderId" from="id"/>
                         <econditions combine="or">
-                            <econdition field-name="vendorPartyId" from="ownerPartyId"/>
-                            <econdition field-name="customerPartyId" from="ownerPartyId"/>
+                            <econdition field-name="vendorPartyId" from="companyPartyId"/>
+                            <econdition field-name="customerPartyId" from="companyPartyId"/>
                         </econditions>
                         <order-by field-name="orderItemSeqId"/>
                     </entity-find>
@@ -247,7 +247,7 @@ along with this software (see the LICENSE.md file). If not, see
                         <if condition="current++ == limit"><break/></if>
                     </if>   
                     <if condition="!lastItem || lastItem.orderId != item.orderId">
-                        <if condition="item.customerPartyId == ownerPartyId">
+                        <if condition="item.customerPartyId == companyPartyId">
                             <set field="sales" value="false" type="Boolean"/>
                             <set field="userOut" from="[
                                             companyPartyId: item.vendorPartyId,
@@ -313,8 +313,8 @@ along with this software (see the LICENSE.md file). If not, see
                             entity-name="growerp.order.InvoiceAndItem" list="items">
                         <econdition field-name="invoiceId" from="id"/>
                         <econditions combine="or">
-                            <econdition field-name="fromPartyId" from="ownerPartyId"/>
-                            <econdition field-name="toPartyId" from="ownerPartyId"/>
+                            <econdition field-name="fromPartyId" from="companyPartyId"/>
+                            <econdition field-name="toPartyId" from="companyPartyId"/>
                         </econditions>
                         <order-by field-name="invoiceItemSeqId"/>
                     </entity-find>
@@ -345,7 +345,7 @@ along with this software (see the LICENSE.md file). If not, see
                         <if condition="current++ == limit"><break/></if>
                     </if>   
                     <if condition="!lastItem || lastItem.invoiceId != item.invoiceId">
-                        <if condition="item.fromPartyId == ownerPartyId">
+                        <if condition="item.fromPartyId == companyPartyId">
                             <set field="sales" value="true" type="Boolean"/>
                             <else>
                                 <set field="sales" value="false" type="Boolean"/>
@@ -399,8 +399,8 @@ along with this software (see the LICENSE.md file). If not, see
                             entity-name="growerp.order.PaymentAndInfo" list="items">
                         <econdition field-name="paymentId" from="id"/>
                         <econditions combine="or">
-                            <econdition field-name="fromPartyId" from="ownerPartyId"/>
-                            <econdition field-name="toPartyId" from="ownerPartyId"/>
+                            <econdition field-name="fromPartyId" from="companyPartyId"/>
+                            <econdition field-name="toPartyId" from="companyPartyId"/>
                         </econditions>
                     </entity-find>
                     <else>
@@ -421,7 +421,7 @@ along with this software (see the LICENSE.md file). If not, see
                     </else>
                 </if>
                 <iterate entry="item" list="items">
-                    <if condition="item.toPartyId == ownerPartyId">
+                    <if condition="item.toPartyId == companyPartyId">
                         <set field="sales" value="true" type="Boolean"/>
                         <else>
                             <set field="sales" value="false" type="Boolean"/>
@@ -455,7 +455,7 @@ along with this software (see the LICENSE.md file). If not, see
                 <if condition="id">
                     <entity-find  offset="start" list="entries"
                         entity-name="mantle.ledger.transaction.AcctgTransAndEntry">
-                        <econdition field-name="organizationPartyId" from="ownerPartyId"/>
+                        <econdition field-name="organizationPartyId" from="companyPartyId"/>
                         <econdition field-name="isPosted" value="Y"/>
                         <econdition field-name="acctgTransId" from="id"/>
                     </entity-find>
@@ -464,7 +464,7 @@ along with this software (see the LICENSE.md file). If not, see
                             <set field="status" from="openStatusList"/></if>
                         <entity-find  offset="start" limit="limit" list="items"
                                 entity-name="mantle.ledger.transaction.AcctgTransAndEntry">
-                            <econdition field-name="organizationPartyId" from="ownerPartyId"/>
+                            <econdition field-name="organizationPartyId" from="companyPartyId"/>
                             <econdition field-name="isPosted" value="Y"/>
                             <econditions combine="or">
                                 <econdition field-name="txDescription" ignore-case="true"
@@ -544,7 +544,7 @@ along with this software (see the LICENSE.md file). If not, see
         <actions>
             <script>Object finDocIn = new groovy.json.JsonSlurper().parseText(finDoc).finDoc</script>
             <service-call out-map="context"
-                name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner"/>
+                name="growerp.100.GeneralServices100.get#RelatedCompanyAndcompany"/>
             <if condition="!finDocIn.otherUser || !finDocIn.otherUser.companyPartyId">
                 <return error="true" message="Other user required with valid companyPartyId"/>
             </if>
@@ -572,25 +572,26 @@ along with this software (see the LICENSE.md file). If not, see
             <parameter name="orderId"/></out-parameters>
         <actions>
              <service-call out-map="context"
-                name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner"/>
+                name="growerp.100.GeneralServices100.get#RelatedCompanyAndcompany"/>
+            <if condition="singleCompany"><set field="companyCompany" from="singleCompany"/></if>
             <if condition="order.sales == 'true'"><!-- inside order object this field is a string -->
-                <set field="vendorPartyId" from="ownerCompanyId"/>
+                <set field="vendorPartyId" from="companyCompanyId"/>
                 <set field="customerPartyId" from="order.otherUser.companyPartyId"/>
                 <set field="contactRole" value="CustomerContactPerson"/>
                 <else>
-                    <set field="customerPartyId" from="ownerCompanyId"/>
+                    <set field="customerPartyId" from="companyCompanyId"/>
                     <set field="vendorPartyId" from="order.otherUser.companyPartyId"/>
                     <set field="contactRole" value="VendorContactPerson"/>
                 </else>
             </if>
             <entity-find entity-name="mantle.product.store.ProductStore" list="stores">
-                <econdition field-name="organizationPartyId" from="ownerPartyId"/>
+                <econdition field-name="organizationPartyId" from="companyPartyId"/>
                 <econdition field-name="storeName" from="order.classificationId"/>
             </entity-find>
             <set field="productStoreId" from="stores[0].productStoreId"/>
             <entity-find-one entity-name="mantle.ledger.config.PartyAcctgPreference"
                     value-field="aPref">
-                <field-map field-name="organizationPartyId" from="ownerPartyId"/>
+                <field-map field-name="organizationPartyId" from="companyPartyId"/>
             </entity-find-one>
             <set field="currencyUomId" from="aPref.baseCurrencyUomId"/>
             <service-call name="mantle.order.OrderServices.create#Order"
@@ -728,13 +729,12 @@ along with this software (see the LICENSE.md file). If not, see
         </out-parameters>
         <actions>
             <service-call out-map="context"
-                name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner"/>
-
+                name="growerp.100.GeneralServices100.get#RelatedCompanyAndcompany"/>
             <set field="nowBeginOfDay" from="java.time.ZonedDateTime.ofInstant(java.time.Instant.now(), java.time.ZoneId.systemDefault()).truncatedTo(java.time.temporal.ChronoUnit.DAYS)"/>
             <set field="nowBeginOfNextDay" from="java.sql.Timestamp.from(nowBeginOfDay.plusDays(1).toInstant())"/>
             <!-- get active rentals -->
             <entity-find entity-name="growerp.product.ProductAndAssetRental" list="rentals">
-                <econdition field-name="ownerPartyId" from="ownerPartyId"/>
+                <econdition field-name="companyPartyId" ignore-if-empty="true"/>
                 <econdition field-name="productId" from="productId"/>
                 <econdition field-name="rentalThruDate" operator="greater-equals" from="Timestamp.valueOf(nowBeginOfNextDay.toLocalDateTime())"/>
             </entity-find>
@@ -761,7 +761,7 @@ along with this software (see the LICENSE.md file). If not, see
             </iterate>
             <!-- get available number of assets for this product -->
             <entity-find-count entity-name="mantle.product.asset.Asset" count-field="nbrOfAssets">
-                <econdition field-name="ownerPartyId" from="ownerPartyId"/>
+                <econdition field-name="companyPartyId" ignore-if-empty="true"/>
                 <econdition field-name="productId" from="productId"/></entity-find-count>
                 <set field="rentalFullDates" from="[]"/>
             <!-- get the dates where the availabe assets are used -->
@@ -784,9 +784,9 @@ along with this software (see the LICENSE.md file). If not, see
         </out-parameters>
         <actions>
             <service-call out-map="context"
-                name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner"/>
+                name="growerp.100.GeneralServices100.get#RelatedCompanyAndcompany"/>
             <entity-find entity-name="mantle.product.asset.Asset" list="assets">
-                <econdition field-name="ownerPartyId" from="ownerPartyId"/>
+                <econdition field-name="companyPartyId" ignore-if-empty="true"/>
                 <econdition field-name="productId" from="productId"/>
             </entity-find>
             <set field="availableAssetIds" from="[]"/>
@@ -795,7 +795,7 @@ along with this software (see the LICENSE.md file). If not, see
                      count-field="nbrUsed" cache="false">
                     <econdition field-name="productId" from="productId"/>
                     <econdition field-name="assetId" from="asset.assetId"/>
-                    <econdition field-name="ownerPartyId" from="ownerPartyId"/>
+                    <econdition field-name="companyPartyId" ignore-if-empty="true"/>
                     <econditions combine="or">
                         <econditions combine="and"><!--order fromdate within -->
                             <econdition field-name="rentalFromDate"
@@ -833,13 +833,14 @@ along with this software (see the LICENSE.md file). If not, see
                 OrderOpen -> OrderPlaced -> orderApproved -> OrderCompleted
             -->
             <service-call out-map="context"
-                name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner"/>
+                name="growerp.100.GeneralServices100.get#RelatedCompanyAndcompany"/>
+            <if condition="singleCompany"><set field="companyCompany" from="singleCompany"/></if>
             <set field="orderId" from="order.orderId"/>
             <entity-find entity-name="OrderHeaderPartItemPartiesAndReservation" list="items">
                 <econdition field-name="orderId"/>
                 <econditions combine="or">
-                    <econdition field-name="vendorPartyId" from="ownerPartyId"/>
-                    <econdition field-name="customerPartyId" from="ownerPartyId"/>
+                    <econdition field-name="vendorPartyId" from="companyPartyId"/>
+                    <econdition field-name="customerPartyId" from="companyPartyId"/>
                 </econditions>
                 <order-by field-name="orderItemSeqId"/>
             </entity-find>

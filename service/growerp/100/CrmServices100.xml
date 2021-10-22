@@ -35,7 +35,7 @@ along with this software (see the LICENSE.md file). If not, see
                 <set field="search" value="%${search}%"/></if>
             <entity-find list="opps" offset="start" limit="limit"
                     entity-name="growerp.crm.OpportunityAndParties">
-                <econdition field-name="ownerPartyId"/>
+                <econdition field-name="ownerPartyId" ignore-if-empty="true"/>
                 <econdition field-name="opportunityId" ignore-if-empty="true"/>
                 <econdition field-name="accountPartyId" ignore-if-empty="true"/>
                 <econdition field-name="stageId" operator="not-equals" value="Deleted"/>
@@ -86,14 +86,14 @@ along with this software (see the LICENSE.md file). If not, see
         <actions>
             <script> // convert JSON data
                 Object opportunity = new groovy.json.JsonSlurper()
-                    .parseText(opportunity)</script>
+                    .parseText(opportunity).opportunity</script>
             <if condition="!opportunity.stageId">
                 <entity-find list="stages"
                     entity-name="mantle.sales.opportunity.SalesOpportunityStage">
                     <order-by field-name="sequenceNum"/></entity-find>
                 <set field="opportunity.stageId" from="stages[0].opportunityStageId"/>
             </if>
-            <service-call out-map="context"
+            <service-call out-map="context" in-map="[wantOwner: true]"
                 name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner"/>
             <service-call name="create#mantle.sales.opportunity.SalesOpportunity"
                 in-map="[estimatedAmount: opportunity.estAmount,
@@ -129,14 +129,14 @@ along with this software (see the LICENSE.md file). If not, see
         </out-parameters>
         <actions>
             <script> // convert JSON data
-                Object opportunity = new groovy.json.JsonSlurper().parseText(opportunity)</script>
-            <service-call
-                name="growerp.100.GeneralServices100.get#RelatedCompanyPartyId"
-                out-map="context"/>
-            <entity-find-one value-field="oldValue" for-update="true"
+                Object opportunity = new groovy.json.JsonSlurper().parseText(opportunity).opportunity</script>
+            <service-call out-map="context"
+                name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner"/>
+            <entity-find list="opps" for-update="true" limit="1"
                     entity-name="mantle.sales.opportunity.SalesOpportunity">
-                <field-map field-name="salesOpportunityId" from="opportunity.opportunityId"/>
-                <field-map field-name="ownerPartyId"/></entity-find-one>
+                <econdition field-name="salesOpportunityId" from="opportunity.opportunityId"/>
+                <econdition field-name="ownerPartyId" ignore-if-empty="true"/></entity-find>
+            <set field="oldValue" from="opps[0]"/>
             <if condition="!oldValue"><return error="true"
                     message="opportunity ${opportunity.opportunityId} not found!}"/></if>
             <set field="update" value="false"/>
@@ -210,17 +210,15 @@ along with this software (see the LICENSE.md file). If not, see
         </out-parameters>
         <actions>
             <script> // convert JSON data
-                Object opportunityIn = new groovy.json.JsonSlurper().parseText(opportunity)</script>
-            <service-call
-                name="growerp.100.GeneralServices100.get#RelatedCompanyPartyId"
-                out-map="context"/>
-            <entity-find-one value-field="oldValue"
-                    entity-name="mantle.sales.opportunity.SalesOpportunity"
-                    for-update="true">
-                <field-map field-name="salesOpportunityId" from="opportunityIn.opportunityId"/>
-                <field-map field-name="ownerPartyId"/></entity-find-one>
-            <set field="oldValue.opportunityStageId" value="Deleted"/>
-            <entity-update value-field="oldValue"/>
+                Object opportunityIn = new groovy.json.JsonSlurper().parseText(opportunity).opportunity</script>
+            <service-call out-map="context"
+                name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner"/>
+            <entity-find list="oldValues" limit="1" for-update="true"
+                    entity-name="mantle.sales.opportunity.SalesOpportunity">
+                <econdition field-name="salesOpportunityId" from="opportunityIn.opportunityId"/>
+                <econdition field-name="ownerPartyId" ignore-if-empty="true"/></entity-find>
+            <set field="oldValues[0].opportunityStageId" value="Deleted"/>
+            <entity-update value-field="oldValues[0]"/>
             <service-call name="growerp.100.CrmServices100.get#Opportunity"
                 in-map="[opportunityId: opportunity.opportunityId]" out-map="context"/>
         </actions>

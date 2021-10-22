@@ -21,13 +21,13 @@ along with this software (see the LICENSE.md file). If not, see
         <actions>
             <service-call out-map="context" 
                 name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner"/>
-                <entity-find  offset="start" limit="limit" list="entries"
-                    entity-name="mantle.work.time.TimeEntryAndWorkEffort">
-                    <econdition field-name="workTypeEnumId" value="WetTask"/>
-                    <econdition field-name="ownerPartyId" from="ownerPartyId"/>
-                    <econdition field-name="statusId" operator="in" from="['WeApproved','WePlanning','WeInProgress']"/>
-                </entity-find>
-                <set field="taskList" from="[]"/>
+            <entity-find  offset="start" limit="limit" list="entries"
+                entity-name="mantle.work.time.TimeEntryAndWorkEffort">
+                <econdition field-name="workTypeEnumId" value="WetTask"/>
+                <econdition field-name="ownerPartyId" ignore-if-empty="true"/>
+                <econdition field-name="statusId" operator="in" from="['WeApproved','WePlanning','WeInProgress']"/>
+            </entity-find>
+            <set field="taskList" from="[]"/>
             <script>
                 def getTaskTree(workEffort, dept) {
                     def workEffort = [:];
@@ -89,7 +89,7 @@ along with this software (see the LICENSE.md file). If not, see
                 <econdition field-name="workTypeEnumId" value="WetTask"/>
                 <econdition field-name="employeePartyId" from="employeePartyId"
                     ignore-if-empty="true"/>
-                <econdition field-name="ownerPartyId" from="ownerPartyId"/>
+                <econdition field-name="ownerPartyId" ignore-if-empty="true"/>
                 <econdition field-name="statusId" operator="in"
                         from="openStatusList" ignore-if-empty="true"/>
                 <econditions combine="or">
@@ -160,6 +160,7 @@ along with this software (see the LICENSE.md file). If not, see
                     .parseText(task).task</script>
             <service-call  out-map="context"
                     name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner"/>
+            <if condition="singleCompany"><set field="ownerCompany" from="singleCompany"/></if>
             <!-- create task -->
             <if condition="!taskIn.status">
                 <set field="taskIn.status" value="In Planning"/>
@@ -232,9 +233,8 @@ along with this software (see the LICENSE.md file). If not, see
             <script> // convert JSON data
                 Object taskIn = new groovy.json.JsonSlurper()
                     .parseText(task).task</script>
-            <log message="====input update task: $taskIn"/>
             <service-call name="growerp.100.TaskServices100.get#Task"
-                in-map="[taskId: taskIn.taskId]" out-map="oldTask"/>
+                in-map="[taskId: taskIn.taskId]" out-map="oldTask"/><!-- owner checked here -->
             <if condition="!oldTask"><return error="true" message="Task ${taskIn.taskId} not found"/></if>
             <service-call name="growerp.100.OrderServices100.convert#StatusId"
                 in-map="[docType: 'task', statusId: taskIn.status]" out-map="context"/>
@@ -326,7 +326,7 @@ along with this software (see the LICENSE.md file). If not, see
     </service>
 
     <service verb="get" noun="TimeEntry">
-        <description>get hours worked just used internally</description>
+        <description>get hours worked just used internally, no owner check here</description>
         <in-parameters>
             <parameter name="timeEntryId" required="true"/>
         </in-parameters>
@@ -360,10 +360,12 @@ along with this software (see the LICENSE.md file). If not, see
                     .parseText(timeEntry).timeEntry</script>
             <service-call  out-map="context"
                     name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner"/>
-            <entity-find-one entity-name="mantle.work.effort.WorkEffort" value-field="workEffort">
-                <field-map field-name="workEffortId" from="timeEntryIn.taskId"/>
-                <field-map field-name="ownerPartyId"/>
-            </entity-find-one>
+            <if condition="singleCompany"><set field="ownerCompany" from="singleCompany"/></if>
+            <entity-find entity-name="mantle.work.effort.WorkEffort" list="workEfforts" limit="1">
+                <econdition field-name="workEffortId" from="timeEntryIn.taskId"/>
+                <econdition field-name="ownerPartyId" ignore-if-empty="true" />
+            </entity-find>
+            <set field="workEffort" from="workEfforts[0]"/>
             <if condition="!workEffort"><return error="true" message="Task not found: ${timeEntryIn.taskId}"/></if>
             <service-call name="create#mantle.work.time.TimeEntry" in-map="[
                 timeEntryId: timeEntryIn.timeEntryId,
@@ -382,7 +384,6 @@ along with this software (see the LICENSE.md file). If not, see
             </if>
             <service-call name="growerp.100.TaskServices100.get#TimeEntry"
                 in-map="[timeEntryId: timeEntryId]" out-map="context"/>
-    <log message="=====time entry out : ${timeEntry}"/>
             </actions>
     </service>
     
@@ -400,11 +401,12 @@ along with this software (see the LICENSE.md file). If not, see
                     .parseText(timeEntry).timeEntry</script>
             <service-call  out-map="context"
                     name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner"/>
-            <entity-find-one entity-name="mantle.work.effort.WorkEffort" value-field="workEffort">
-                <field-map field-name="workEffortId" from="timeEntryIn.taskId"/>
-                <field-map field-name="ownerPartyId"/>
-            </entity-find-one>
-            <if condition="!workEffort"><return error="true" message="Task not found: ${timeEntryIn.taskId}"/></if>
+            <if condition="singleCompany"><set field="ownerCompany" from="singleCompany"/></if>
+            <entity-find entity-name="mantle.work.effort.WorkEffort" list="workEfforts" limit="1">
+                <econdition field-name="workEffortId" from="timeEntryIn.taskId"/>
+                <econdition field-name="ownerPartyId" ignore-if-empty="true"/>
+            </entity-find>
+            <if condition="!workEfforts"><return error="true" message="Task not found: ${timeEntryIn.taskId}"/></if>
             <entity-find-one entity-name="mantle.work.time.TimeEntry" value-field="teOld">
                 <field-map field-name="timeEntryId" from="timeEntryIn.timeEntryId"/>
             </entity-find-one>

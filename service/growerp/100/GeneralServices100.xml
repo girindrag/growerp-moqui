@@ -15,13 +15,19 @@ along with this software (see the LICENSE.md file). If not, see
 <services xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/service-definition-2.1.xsd">
 
     <service verb="get" noun="RelatedCompanyAndOwner">
-        <description>Retrieves owner and company of a logged in or other person user</description>
+        <description>When multicompany, retrieves owner and company of a logged in or specified person user
+                    when single company, just provide companyPartyId but no ownerPartyId(unless wantOwner).
+        </description>
         <in-parameters>
             <parameter name="userPartyId"/><!-- of this particular user -->
+            <parameter name="wantOwner" default="false" type="Boolean">
+                <description>when have single company but still want ownerPartyId set this to true</description>
+            </parameter>
         </in-parameters>
         <out-parameters>
             <parameter name="ownerPartyId"/>
             <parameter name="companyPartyId"/>
+            <parameter name="singleCompany"/>
         </out-parameters>
         <actions>
             <if condition="!userPartyId">
@@ -38,45 +44,14 @@ along with this software (see the LICENSE.md file). If not, see
                 <select-field field-name="companyPartyId,ownerPartyId"/></entity-find>
             <if condition="relList">
                 <set field="companyPartyId" from="relList[0].companyPartyId" />
-                <set field="ownerPartyId" from="relList[0].ownerPartyId" />
+                <script>singleCompany = System.getProperty("singleCompany")</script>
+                <if condition="singleCompany">
+                    <if condition="wantOwner">
+                        <set field="ownerPartyId" from="singleCompany"/></if>
                 <else>
-                    <return message="User $userPartyId not found!"/>
-                </else>
-        </if>
-        </actions>
-    </service>
-
-    <service verb="get" noun="RelatedCompanyPartyId"><!-- depreciated -->
-        <in-parameters>
-            <parameter name="userPartyId"/><!-- of this particular user -->
-        </in-parameters>
-        <out-parameters>
-            <parameter name="ownerPartyId"/>
-            <parameter name="partyId" />
-        </out-parameters>
-        <actions>
-            <log level="warn" message="get#RelatedCompanyPartyId depreciated! Use: get#RelatedCompanyAndOwner"/>
-            <if condition="!userPartyId">
-                <if condition="ec.user &amp;&amp; ec.user?.userAccount?.partyId">
-                    <set field="userPartyId" from="ec.user.userAccount.partyId" />
-                    <else>
-                        <return/><!-- just return null if no related comany found -->
-                    </else>
-                </if>
-            </if>
-            <entity-find entity-name="mantle.party.PartyRelationship" list="relList">
-                <date-filter />
-                <econdition field-name="fromPartyId" from="userPartyId" />
-                <econdition field-name="toRoleTypeId" value="OrgInternal" />
-                <select-field field-name="toPartyId" />
-            </entity-find>
-            <if condition="relList">
-                <set field="ownerPartyId" from="relList[0].toPartyId" />
-                <set field="partyId" from="ownerPartyId" />
-                <else>
-                    <return message="User ${userPartyId} has no related company!!"/>
-                </else>
-            </if>
+                    <set field="ownerPartyId" from="relList[0].ownerPartyId"/></else></if>
+            <else>
+                <return message="User $userPartyId not found!"/></else></if>
         </actions>
     </service>
 
@@ -87,6 +62,7 @@ along with this software (see the LICENSE.md file). If not, see
             <service-call 
                 name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner"
                 out-map="context"/>
+            <if condition="singleCompany"><set field="ownerPartyId" from="singleCompany"/></if>
             <entity-find-one entity-name="growerp.general.Statistics" value-field="st">
                 <field-map field-name="ownerPartyId"/></entity-find-one>
             <entity-find-count count-field="myOpportunities"
@@ -116,8 +92,8 @@ along with this software (see the LICENSE.md file). If not, see
                 salesInvoicesNotPaidAmount: st.salesInvoicesNotPaidAmount.toString(),
                 purchInvoicesNotPaidCount:  st.purchInvoicesNotPaidCount.toString(),
                 purchInvoicesNotPaidAmount: st.purchInvoicesNotPaidAmount.toString(),
-                allTasks: st.allTasks.toString(),
-                notInvoicedHours: notInvoicedHours? notInvoicedHours.toString() : '0'
+                allTasks: st.allTasks? st.allTasks.toString() : '0',
+                notInvoicedHours: st.notInvoicedHours? st.notInvoicedHours.toString() : '0'
                 ]"/>
                 <else>
                     <set field="stats" from="[
@@ -421,12 +397,12 @@ along with this software (see the LICENSE.md file). If not, see
         </in-parameters>
         <actions>
             <if condition="ec.user.userAccount"><!-- only possible with a loggedin user -->
-                <service-call name="growerp.100.GeneralServices100.get#RelatedCompanyPartyId"
-                    out-map="context"/>
+                <service-call out-map="context"
+                    name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner"/>
                 <!-- make sure that username is only searched for in the logged in user own company -->
                 <entity-find entity-name="growerp.mobile.CompanyPersonAndLogin" list="accounts">
                     <econdition field-name="username"/>
-                    <econdition field-name="toPartyId" from="ownerPartyId"/></entity-find>
+                    <econdition field-name="toPartyId" from="companyPartyId"/></entity-find>
                 <if condition="!accounts"><return error="true"
                     message="cannot find username: ${username}" public="true"/></if>
             </if>

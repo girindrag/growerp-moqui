@@ -39,7 +39,7 @@ along with this software (see the LICENSE.md file). If not, see
             <if condition="isPrivate"><set field="isPriv" value="N"/></if>
             <if condition="chatRoomId || isPrivate"><!-- single chatroom or drop down with filter-->
                 <entity-find entity-name="growerp.general.ChatRoom" list="rooms">
-                    <econdition field-name="ownerPartyId"/>
+                    <econdition field-name="ownerPartyId" ignore-if-empty="true"/>
                     <econdition field-name="chatRoomId" from="chatRoomId" ignore-if-empty="true"/>
                     <econdition field-name="chatRoomName" from="filter" ignore-if-empty="true"/>
                     <econdition field-name="isPrivate" from="isPriv" ignore-if-empty="true"/>
@@ -47,7 +47,7 @@ along with this software (see the LICENSE.md file). If not, see
             <else-if condition="chatRoomName == ' ' &amp;&amp; userId"><!-- check existence of private chatroom -->
                     <entity-find entity-name="growerp.general.ChatRoomsAndFromToMembers"
                                 list="rooms" limit="1">
-                        <econdition field-name="ownerPartyId"/>
+                        <econdition field-name="ownerPartyId" ignore-if-empty="true"/>
                         <econdition field-name="chatRoomName" operator="is-null"/>
                         <econdition field-name="userId1" from="userId"/>
                         <econdition field-name="userId2" from="ec.user.userAccount.userId"/>
@@ -56,7 +56,7 @@ along with this software (see the LICENSE.md file). If not, see
             <else>
                 <entity-find entity-name="growerp.general.ChatRoomsAndMembers"
                         list="rooms" offset="start" limit="limit"><!-- lists for a user-->
-                    <econdition field-name="ownerPartyId"/>
+                    <econdition field-name="ownerPartyId" ignore-if-empty="true"/>
                     <econdition field-name="isActive" value="Y"/>
                     <econdition field-name="userId" from="ec.user.userAccount.userId"/>
                     <econdition field-name="chatRoomName" from="filter" ignore-if-empty="true"/>
@@ -120,8 +120,8 @@ along with this software (see the LICENSE.md file). If not, see
         <actions>
             <script> // convert JSON data
                 Object chatRoomIn = new groovy.json.JsonSlurper().parseText(chatRoom).chatRoom</script>
-            <service-call out-map="context"
-                 name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner"/>
+            <service-call out-map="context" in-map="[wantOwner: true]"
+                name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner"/>
             <!-- add chat room -->
             <service-call name="create#growerp.general.ChatRoom" out-map="context"
                  in-map="[chatRoomName: chatRoomIn.chatRoomName,
@@ -220,7 +220,7 @@ along with this software (see the LICENSE.md file). If not, see
                     ignore-if-empty="true"/>
                 <econdition field-name="chatMessageId" from="chatMessageId"
                     ignore-if-empty="true"/>
-                <econdition field-name="ownerPartyId"/>
+                <econdition field-name="ownerPartyId" ignore-if-empty="true"/>
                 <order-by field-name="-lastUpdatedStamp"/>
             </entity-find>
             <set field="chatMessages"  from="[]"/>
