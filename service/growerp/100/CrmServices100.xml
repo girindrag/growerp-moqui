@@ -19,7 +19,7 @@ along with this software (see the LICENSE.md file). If not, see
             <parameter name="opportunityId"/>
             <parameter name="start" type="Integer" default-value="0"/>
             <parameter name="limit" type="Integer" default-value="20"/>
-            <parameter name="all" default-value="true"/>
+            <parameter name="my" default-value="true"/>
             <parameter name="search" default="null"/>
         </in-parameters>
         <out-parameters>
@@ -29,7 +29,7 @@ along with this software (see the LICENSE.md file). If not, see
         <actions>
             <service-call out-map="context"
                 name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner"/>
-            <if condition="all == 'false'">
+            <if condition="my == 'true'">
                 <set field="accountPartyId" from="ec.user.userAccount.partyId"/></if>
             <if condition="search != null">
                 <set field="search" value="%${search}%"/></if>
