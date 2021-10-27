@@ -284,7 +284,7 @@ along with this software (see the LICENSE.md file). If not, see
         </description>
         <in-parameters>
             <parameter name="userPartyId"/><!-- if present select a single user, else a list -->
-            <parameter name="userGroupId"/><!-- if present select user from particular groups-->
+            <parameter name="userGroupIds" type="List"/><!-- if present select user from particular groups-->
             <parameter name="ownerPartyId"/><!-- required when registering company customers-->
             <parameter name="start" type="Integer" default-value="0"/>
             <parameter name="limit" type="Integer" default-value="20"/>
@@ -326,7 +326,8 @@ along with this software (see the LICENSE.md file). If not, see
                     <econdition field-name="emailAddress" ignore-case="true"
                         operator="like" from="search" ignore-if-empty="true"/>
                 </econditions>
-                <econdition field-name="userGroupId" ignore-if-empty="true"/>
+                <econdition field-name="userGroupId" operator="in"
+                    from="userGroupIds" ignore-if-empty="true"/>
                 <order-by field-name="lastName"/><order-by field-name="firstName"/>
             </entity-find>
             <if condition="!userPartyId"><set field="users" from="[]"/></if>
