@@ -344,9 +344,7 @@ along with this software (see the LICENSE.md file). If not, see
             <entity-condition><date-filter/></entity-condition></member-entity>
         <member-entity entity-alias="PROD" entity-name="mantle.product.Product"
                 join-from-alias="MEM" join-optional="true">
-            <key-map field-name="productId"/><entity-condition>
-            <date-filter from-field-name="productFromDate" thru-field-name="productThruDate"/>
-            </entity-condition></member-entity>
+            <key-map field-name="productId"/></member-entity>
         <member-entity entity-alias="PRICE" entity-name="mantle.product.ProductPrice"
                 join-from-alias="PROD" join-optional="true">
             <key-map field-name="productId"/>
@@ -402,15 +400,19 @@ along with this software (see the LICENSE.md file). If not, see
         <member-entity entity-alias="PARENT" entity-name="mantle.product.category.ProductCategory">
             <entity-condition>
                 <econditions combine="or">
-                    <econdition field-name="productCategoryTypeEnumId" value="PctRestaurant"/><!-- used in nativescript -->
-                    <econdition field-name="productCategoryTypeEnumId" value="PctRoot"/>
+                    <econdition field-name="productCategoryTypeEnumId" 
+                        value="PctRestaurant"/><!-- used in nativescript -->
+                    <econdition field-name="productCategoryTypeEnumId"
+                        value="PctRoot"/>
                 </econditions>
             </entity-condition>
         </member-entity>
-        <member-entity entity-alias="ROLLUP" entity-name="mantle.product.category.ProductCategoryRollup" join-from-alias="PARENT">
-            <key-map field-name="productCategoryId" related="parentProductCategoryId"/>
-            <entity-condition><date-filter/></entity-condition></member-entity>
-        <member-entity entity-alias="CHILD" entity-name="mantle.product.category.ProductCategory" join-from-alias="ROLLUP">
+        <member-entity entity-alias="ROLLUP"
+            entity-name="mantle.product.category.ProductCategoryRollup" join-from-alias="PARENT">
+            <key-map field-name="productCategoryId"
+                related="parentProductCategoryId"/></member-entity>
+        <member-entity entity-alias="CHILD" join-from-alias="ROLLUP"
+            entity-name="mantle.product.category.ProductCategory">
             <key-map field-name="productCategoryId"/></member-entity>
         <alias name="parentProductCategoryId" entity-alias="ROLLUP"/>
         <alias name="ownerPartyId" entity-alias="PARENT"/>
