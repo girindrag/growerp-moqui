@@ -77,9 +77,15 @@ along with this software (see the LICENSE.md file). If not, see
             <method type="delete"><service name="growerp.100.CatgProdServices100.delete#Asset"/></method></resource>
         <!--financial docs: order, invoice payments -->
         <resource name="FinDoc"><!-- get financial docs : order/invoice/payment -->
-            <method type="get"><service name="growerp.100.OrderServices100.get#FinDoc"/></method>
-            <method type="post"><service name="growerp.100.OrderServices100.create#FinDoc"/></method>
-            <method type="patch"><service name="growerp.100.OrderServices100.update#FinDoc"/></method></resource>
+            <method type="get"><service name="growerp.100.FinDocServices100.get#FinDoc"/></method>
+            <method type="post"><service name="growerp.100.FinDocServices100.create#FinDoc"/></method>
+            <method type="patch"><service name="growerp.100.FinDocServices100.update#FinDoc"/></method></resource>
+        <!--Warehouse location -->
+        <resource name="Location"><!-- get financial docs : order/invoice/payment -->
+            <method type="get"><service name="growerp.100.WarehouseServices100.get#Location"/></method>
+            <method type="post"><service name="growerp.100.WarehouseServices100.create#Location"/></method>
+            <method type="patch"><service name="growerp.100.WarehouseServices100.update#Location"/></method>
+            <method type="delete"><service name="growerp.100.WarehouseServices100.delete#Location"/></method></resource>
         <!--project/tasks -->
         <resource name="Project"><!-- get project tree-->
             <method type="get"><service name="growerp.100.TaskServices100.get#ProjectTree"/></method></resource>
@@ -93,7 +99,7 @@ along with this software (see the LICENSE.md file). If not, see
             <method type="delete"><service name="growerp.100.TaskServices100.delete#TimeEntry"/></method></resource>
         <!-- rental -->
         <resource name="RentalOccupancy">
-                <method type="get"><service name="growerp.100.OrderServices100.get#RentalOccupancy"/></method></resource>
+                <method type="get"><service name="growerp.100.FinDocServices100.get#RentalOccupancy"/></method></resource>
         <!-- itemTypes -->
         <resource name="ItemTypes">
             <method type="get"><service name="growerp.100.GeneralServices100.get#ItemTypes"/></method></resource>

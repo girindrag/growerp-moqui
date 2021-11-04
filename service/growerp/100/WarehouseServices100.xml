@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This software is in the public domain under CC0 1.0 Universal plus a
+Grant of Patent License.
+
+To the extent possible under law, the author(s) have dedicated all
+copyright and related and neighboring rights to this software to the
+public domain worldwide. This software is distributed without any
+warranty.
+
+You should have received a copy of the CC0 Public Domaicrn Dedication
+along with this software (see the LICENSE.md file). If not, see
+<http://creativecommons.org/publicdomain/zero/1.0/>.
+-->
+<services xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/service-definition-2.1.xsd">
+
+
+    <service verb="get" noun="Location" authenticate="false">
+        <description> get a single, or all warehouse locations</description>
+        <in-parameters>
+            <parameter name="locationId"/>
+            <parameter name="start" default-value="0" type="Integer"/>
+            <parameter name="limit" default-value="20" type="Integer"/>
+            <parameter name="search" default="null"/>
+        </in-parameters>
+        <out-parameters>
+            <parameter name="location" type="Map"/>
+            <parameter name="locations" type="List"/>
+        </out-parameters>
+        <actions>
+            <log message="=====get location input: $locationId"/>
+            <service-call out-map="context" 
+                name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner"/>
+            <entity-find entity-name="mantle.product.asset.AssetLocationProductUomDetail"
+                list="locationsRead">
+                <econdition field-name="locationSeqId" ignore-if-empty="true"/>
+                <econdition field-name="ownerPartyId" ignore-if-empty="true"/>
+                <econdition field-name="facilityId" operator="is-not-null"/>
+                <order-by field-name="locationSeqId"/>
+                <order-by field-name="productId"/>
+                <order-by field-name="assetId"/>
+            </entity-find>
+            <log message="======mess read# ${locationsRead.size()}"/>
+            <set field="lastItem" from="null"/>
+            <set field="assets" from="[]"/>
+            <if condition="!locationId">
+                <set field="locations" from="[]"/></if>
+            <iterate list="locationsRead" entry="loc">
+                <log message="====location: ${loc.locationSeqId}"/>
+                <if condition="lastItem  &amp;&amp; lastItem.locationSeqId != loc.locationSeqId">
+                    <set field="locOut" from="[
+                        locationId: lastItem.locationSeqId,
+                        locationName: lastItem.areaId,
+                        assets: assets]"/>
+                    <set field="assets" from="[]"/>
+                    <if condition="!locationId">
+                        <script>locations.add(locOut)</script></if>
+                </if>
+                <set field="product" from="[productId: loc.productId, productName: loc.productName]"/>
+                <set field="asset" from="[assetId: loc.assetId,
+                            assetName: loc.assetName, product: product]"/>
+                <script>assets.add(asset)</script>
+                <set field="lastItem" from="loc"/>
+            </iterate>
+            <if condition="lastItem">
+                <set field="locOut" from="[
+                    locationId: lastItem.locationSeqId,
+                    locationName: lastItem.areaId,
+                    assets: assets]"/>
+                <if condition="!locationId">
+                    <script>locations.add(locOut)</script>
+                <else>
+                    <set field="location" from="locOut"/>
+                </else></if>
+            </if>
+            <log message="=====get location output: $locations"/>
+        </actions>
+    </service>
+
+    <service verb="create" noun="Location" authenticate="false">
+        <description> get a single, or all warehouse locations</description>
+        <in-parameters>
+            <parameter name="location"/>
+        </in-parameters>
+        <out-parameters>
+            <parameter name="location" type="Map"/>
+        </out-parameters>
+        <actions>
+            <log message="=====get location create: $location"/>
+        </actions>
+    </service>
+
+    <service verb="update" noun="Location" authenticate="false">
+        <description> get a single, or all warehouse locations</description>
+        <in-parameters>
+            <parameter name="location"/>
+        </in-parameters>
+        <out-parameters>
+            <parameter name="location" type="Map"/>
+        </out-parameters>
+        <actions>
+            <log message="=====get location create: $location"/>
+        </actions>
+    </service>
+
+    <service verb="delete" noun="Location" authenticate="false">
+        <description> get a single, or all warehouse locations</description>
+        <in-parameters>
+            <parameter name="location"/>
+        </in-parameters>
+        <out-parameters>
+            <parameter name="location" type="Map"/>
+        </out-parameters>
+        <actions>
+            <log message="=====get location create: $location"/>
+        </actions>
+    </service>
+
+</services>

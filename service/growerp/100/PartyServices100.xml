@@ -136,8 +136,8 @@ along with this software (see the LICENSE.md file). If not, see
                 currencyId: org.baseCurrencyUomId,
                 image: imageFile,
                 address: address,
-                vatPerc: org.vatPerc.toString(),
-                salesPerc: org.salesPerc.toString(),
+                vatPerc: org.vatPerc ? org.vatPerc.toString() : null,
+                salesPerc: org.salesPerc ? org.salesPerc.toString() : null,
                 ]"/>
         </actions>
     </service>
@@ -1084,10 +1084,10 @@ along with this software (see the LICENSE.md file). If not, see
                 <!-- products and categories -->
                 <!-- products  -->
                 <set field="productsAdmin" from="[
-                    [ productName: 'cola', description:'The traditional american drink', price: 1.4, image: 'cola', categoryName: 'drinks'],
-                    [ productName: 'wiskey', description:'Yes, from Scotland', price: 5.21, image: 'wiskey', categoryName: 'drinks'],
-                    [ productName: 'macaroni', description:'yes from Italy', price: 8.40, image: 'macaroni', categoryName: 'Food'],
-                    [ productName: 'hamburger', description:'Another US special', price: 6.50, image: 'hamburger', categoryName: 'Food']
+                    [ productName: 'cola', description:'The traditional american drink', price: 1.4, image: 'cola', categoryName: 'drinks',assetTypeId: 'AsClsInventory'],
+                    [ productName: 'wiskey', description:'Yes, from Scotland', price: 5.21, image: 'wiskey', categoryName: 'drinks',assetTypeId: 'AsClsInventory'],
+                    [ productName: 'macaroni', description:'yes from Italy', price: 8.40, image: 'macaroni', categoryName: 'Food',assetTypeId: 'AsClsInventory'],
+                    [ productName: 'hamburger', description:'Another US special', price: 6.50, image: 'hamburger', categoryName: 'Food',assetTypeId: 'AsClsInventory']
                 ]"/>    
 
                 <set field="productsHotel" from="[
@@ -1202,6 +1202,12 @@ along with this software (see the LICENSE.md file). If not, see
                     <if condition="classificationId == 'AppHotel'"><set field="assetsIn" from="assetsHotel"/></if>
                     <if condition="classificationId == 'AppAdmin'"><set field="assetsIn" from="assetsAdmin"/></if>
 
+                    <!-- find warehouse -->
+                    <entity-find entity-name="mantle.facility.Facility" limit="1" list="facilities">
+                        <econdition field-name="ownerPartyId" from="companyPartyId"/>
+                    </entity-find>
+
+                    <set field="xLoc" value="0" type="Integer"/>
                     <iterate list="assetsIn" entry="asset">
                         <entity-find entity-name="mantle.product.Product" list="products">
                             <econdition field-name="ownerPartyId" from="companyPartyId"/>
@@ -1216,7 +1222,13 @@ along with this software (see the LICENSE.md file). If not, see
                                 <continue/>
                             </else>
                         </if>
-                        <!-- do not put fixed asset in inventory so normal reserve process does not work -->
+                        <!-- create location -->
+                            <service-call name="create#mantle.facility.FacilityLocation"
+                                in-map="[facilityId: facilities[0].facilityId,
+                                        areaId: 'loc' + xLoc++]"
+                                out-map="context"/>
+
+                        <!-- do not put fixed asset in inventory we do not want the normal reserve process to work -->
                         <service-call name="create#mantle.product.asset.Asset" in-map="
                             productId: product.productId,
                             classEnumId: product.assetClassEnumId,
@@ -1226,6 +1238,8 @@ along with this software (see the LICENSE.md file). If not, see
                             assetName: asset.assetName,
                             ownerPartyId: companyPartyId,
                             statusId: 'AstAvailable',
+                            facilityId: product.assetTypeEnumId != 'AstTpFixed'? facilities[0].facilityId : null,
+                            locationSeqId: product.assetTypeEnumId != 'AstTpFixed'?  locationSeqId : null
                             "/>
                     </iterate>
                 </if>
@@ -1365,7 +1379,7 @@ along with this software (see the LICENSE.md file). If not, see
                     </while>
                     <set field="order.orderId" from="orderId"/>
                     <service-call in-map="[order: [orderId: orderId, statusId:'OrderPlaced']]"
-                        name="growerp.100.OrderServices100.update#Order"/>
+                        name="growerp.100.FinDocServices100.update#Order"/>
                     <set field="index" from="index + 1"/>
                 </iterate>
 

@@ -33,7 +33,6 @@ along with this software (see the LICENSE.md file). If not, see
             <parameter name="count" type="Integer"/>
         </out-parameters>
         <actions>
-            <log message="=====get prod input: $productId"/>
             <service-call out-map="context"
                 name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner"/>
             <if condition="!companyPartyId">
@@ -58,10 +57,10 @@ along with this software (see the LICENSE.md file). If not, see
             <if condition="search != null">
                 <set field="search" value="%${search}%"/></if>
             <!-- convert AssetClassId -->
-            <service-call name="growerp.100.OrderServices100.convert#StatusId"
+            <service-call name="growerp.100.FinDocServices100.convert#StatusId"
                 in-map="[docType: 'asset', statusId: assetClassId]" out-map="assetClass"/>
             <!-- convert ProductTypeId -->
-            <service-call name="growerp.100.OrderServices100.convert#StatusId"
+            <service-call name="growerp.100.FinDocServices100.convert#StatusId"
                 in-map="[docType: 'product', statusId: productTypeId]" out-map="productType"/>
             <!-- get products -->
             <entity-find offset="start" limit="limit"
@@ -123,7 +122,7 @@ along with this software (see the LICENSE.md file). If not, see
                 <if condition="contents">
                     <service-call name="growerp.100.ImageServices100.download#Image"
                         in-map="[contentLocation: contents[0].contentLocation]" out-map="context"/></if>
-                    <service-call name="growerp.100.OrderServices100.convert#StatusId"
+                    <service-call name="growerp.100.FinDocServices100.convert#StatusId"
                         in-map="[docType: 'product', statusId: product.productTypeEnumId]" out-map="prodConvert"/>
                     <set field="productOut" from="[
                         productId: product.productId,
@@ -131,7 +130,7 @@ along with this software (see the LICENSE.md file). If not, see
                         productTypeId: prodConvert.convertedStatusId,
                         assetClassId: product.assetClassEnumId,
                         description: product.description?:'',
-                        price: product.price ? product.price.toString() : '0.00',
+                        price: product.price ? product.price.toString() : null,
                         category: [categoryId: product.categoryId, categoryName: product.categoryName],
                         assetCount: assetCount &amp;&amp; assetCount[0] &amp;&amp; assetCount[0].totalAssets ? assetCount[0].totalAssets.toString() : '0',
                         image: imageFile? imageFile : null]"/>
@@ -143,8 +142,6 @@ along with this software (see the LICENSE.md file). If not, see
                     </else>
                 </if>
             </iterate>
-            <log message="prod out product: $product "/>
-            <log message="prods out product: $products "/>
         </actions>
     </service>
 
@@ -163,9 +160,9 @@ along with this software (see the LICENSE.md file). If not, see
                 name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner"/>
             <set field="quantityUomId" value="OTH_ea"/>
             <!-- convert AssetClassId and product type-->
-            <service-call name="growerp.100.OrderServices100.convert#StatusId"
+            <service-call name="growerp.100.FinDocServices100.convert#StatusId"
                 in-map="[docType: 'asset', statusId: productIn.assetClassId]" out-map="context"/>
-            <service-call name="growerp.100.OrderServices100.convert#StatusId"
+            <service-call name="growerp.100.FinDocServices100.convert#StatusId"
                 in-map="[docType: 'product', statusId: productIn.productTypeId]" out-map="prodConvert"/>
             <!-- product -->
             <service-call name="create#mantle.product.Product" in-map="[
@@ -231,7 +228,6 @@ along with this software (see the LICENSE.md file). If not, see
         <actions>
             <script> // convert JSON data
                 Object productIn = new groovy.json.JsonSlurper().parseText(product).product</script>
-            <log message="====product update input $productIn"/>
             <if condition="!productIn.productId"><return error="true" message="ProductId required"/></if>
             <!-- for update no owner needed in single company use -->
             <service-call out-map="context"
@@ -241,7 +237,7 @@ along with this software (see the LICENSE.md file). If not, see
                 <econdition field-name="ownerPartyId" ignore-if-empty="true"/></entity-find>
             <set field="product" from="prods[0]"/>
             <if condition="!product"><return error="true" message="product ${productIn.productId} not found!}"/></if>
-            <service-call name="growerp.100.OrderServices100.convert#StatusId"
+            <service-call name="growerp.100.FinDocServices100.convert#StatusId"
                 in-map="[docType: 'product', statusId: productIn.productTypeId]" out-map="prodConvert"/>
             <if condition="(productIn.productName &amp;&amp; product.productName != productIn.productName)
                 || (productIn.description &amp;&amp; product.description != productIn.description)
@@ -332,7 +328,6 @@ along with this software (see the LICENSE.md file). If not, see
             <parameter name="assets" type="List"/>
         </out-parameters>
         <actions>
-            <log message="=======input value get asset: $assetId"/>
             <service-call out-map="context"
                 name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner"/>
             <if condition="filter != null">
@@ -341,7 +336,7 @@ along with this software (see the LICENSE.md file). If not, see
                 <set field="search" value="%${search}%"/></if>
             <if condition="!assetId"><!--single asset always show, list only active assets-->
                 <set field="activated" value="AstDeactivated"/></if>
-            <service-call name="growerp.100.OrderServices100.convert#StatusId"
+            <service-call name="growerp.100.FinDocServices100.convert#StatusId"
                 in-map="[docType: 'asset', statusId: assetClassId]" out-map="assetClass"/>
             <entity-find offset="start" limit="limit" list="assetList"
                 entity-name="mantle.product.asset.AssetAndProduct">
@@ -378,9 +373,9 @@ along with this software (see the LICENSE.md file). If not, see
                     </script>
                     <continue/>
                 </if>
-                <service-call name="growerp.100.OrderServices100.convert#StatusId"
+                <service-call name="growerp.100.FinDocServices100.convert#StatusId"
                     in-map="[docType: 'asset', statusId: item.statusId]" out-map="status"/>
-                <service-call name="growerp.100.OrderServices100.convert#StatusId"
+                <service-call name="growerp.100.FinDocServices100.convert#StatusId"
                     in-map="[docType: 'asset', statusId: item.classEnumId]" out-map="assetClass"/>
                 <set field="assetOut" from="[
                     assetId: item.assetId,
@@ -401,8 +396,6 @@ along with this software (see the LICENSE.md file). If not, see
                     </else>
                 </if>
             </iterate></if>
-            <log message="====get asset out: =======$asset"/>
-            <log message="====get assets out: =======$assets"/>
         </actions>
     </service>
 
@@ -419,9 +412,9 @@ along with this software (see the LICENSE.md file). If not, see
                 Object assetIn = new groovy.json.JsonSlurper().parseText(asset).asset</script>
             <service-call out-map="context" in-map="[wantOwner: true]"
                 name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner"/>
-            <service-call name="growerp.100.OrderServices100.convert#StatusId"
+            <service-call name="growerp.100.FinDocServices100.convert#StatusId"
                 in-map="[docType: 'asset', statusId: assetIn.statusId]" out-map="status"/>
-            <service-call name="growerp.100.OrderServices100.convert#StatusId"
+            <service-call name="growerp.100.FinDocServices100.convert#StatusId"
                 in-map="[docType: 'asset', statusId: assetIn.assetClassId]" out-map="assetClass"/>
             <service-call name="create#mantle.product.asset.Asset"
                 in-map="[
@@ -458,9 +451,9 @@ along with this software (see the LICENSE.md file). If not, see
                 <econdition field-name="ownerPartyId" ignore-if-empty="true"/></entity-find>
             <set field="assetOld" from="assets[0]"/>    
             <if condition="!assetOld"><return error="true" message="asset ${assetIn.assetId} not found!}"/></if>
-            <service-call name="growerp.100.OrderServices100.convert#StatusId"
+            <service-call name="growerp.100.FinDocServices100.convert#StatusId"
                 in-map="[docType: 'asset', statusId: assetIn.statusId]" out-map="status"/>
-            <service-call name="growerp.100.OrderServices100.convert#StatusId"
+            <service-call name="growerp.100.FinDocServices100.convert#StatusId"
                 in-map="[docType: 'asset', statusId: assetIn.assetClassId]" out-map="assetClass"/>
             <if condition=" assetOld.assetName != assetIn.assetName || 
                             assetOld.quantityOnHandTotal != assetIn.quantityOnHand ||

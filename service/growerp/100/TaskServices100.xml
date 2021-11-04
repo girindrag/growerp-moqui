@@ -102,7 +102,7 @@ along with this software (see the LICENSE.md file). If not, see
             <if condition="!taskId">
                 <set field="taskList" from="[]"/></if>
             <iterate entry="entry" list="entries">
-                <service-call name="growerp.100.OrderServices100.convert#StatusId"
+                <service-call name="growerp.100.FinDocServices100.convert#StatusId"
                     in-map="[docType: 'task', statusId: entry.statusId]" out-map="context"/>
                 <entity-find entity-name="mantle.work.time.TimeEntry" list="timeEntries">
                     <econdition field-name="workEffortId" from="entry.workEffortId"/>
@@ -165,7 +165,7 @@ along with this software (see the LICENSE.md file). If not, see
             <if condition="!taskIn.status">
                 <set field="taskIn.status" value="In Planning"/>
             </if>
-            <service-call name="growerp.100.OrderServices100.convert#StatusId"
+            <service-call name="growerp.100.FinDocServices100.convert#StatusId"
                 in-map="[docType: 'task', statusId: taskIn.status]" out-map="context"/>
             <service-call name="create#mantle.work.effort.WorkEffort" in-map="[
                     workEffortId: taskIn.taskId,
@@ -236,7 +236,7 @@ along with this software (see the LICENSE.md file). If not, see
             <service-call name="growerp.100.TaskServices100.get#Task"
                 in-map="[taskId: taskIn.taskId]" out-map="oldTask"/><!-- owner checked here -->
             <if condition="!oldTask"><return error="true" message="Task ${taskIn.taskId} not found"/></if>
-            <service-call name="growerp.100.OrderServices100.convert#StatusId"
+            <service-call name="growerp.100.FinDocServices100.convert#StatusId"
                 in-map="[docType: 'task', statusId: taskIn.status]" out-map="context"/>
             <if condition="
                 oldTask.name != taskIn.Name ||
