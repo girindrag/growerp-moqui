@@ -74,8 +74,14 @@ along with this software (see the LICENSE.md file). If not, see
                         <econdition field-name="categoryId" ignore-if-empty="true"/>
                         <econdition field-name="productId" operator="is-not-null"/>
                         <econdition field-name="productId" ignore-if-empty="true"/>
-                        <econdition field-name="productName" operator="like"
-                            from="filter" ignore-if-empty="true" ignore-case="true"/>
+                        <econditions combine="or">
+                            <econdition field-name="pseudoId" operator="like"
+                                from="filter" ignore-if-empty="true" ignore-case="true"/>
+                            <econdition field-name="productId" operator="like"
+                                from="filter" ignore-if-empty="true" ignore-case="true"/>
+                            <econdition field-name="productName" operator="like"
+                                from="filter" ignore-if-empty="true" ignore-case="true"/>
+                        </econditions>
                         <econditions combine="or">
                             <econdition field-name="productId" ignore-case="true"
                                 operator="like" from="search" ignore-if-empty="true"/>
@@ -100,9 +106,9 @@ along with this software (see the LICENSE.md file). If not, see
                 <if condition="filter != null">
                     <script>
                         products.add([
-                            productId: product.productId,
-                            productName: product.productName,
-                            price: product.price.toString()
+                        productId: product.productId,
+                        pseudoId: product.pseudoId,
+                        productName: product.productName
                                 ])
                     </script>
                     <continue/>
@@ -126,6 +132,7 @@ along with this software (see the LICENSE.md file). If not, see
                         in-map="[docType: 'product', statusId: product.productTypeEnumId]" out-map="prodConvert"/>
                     <set field="productOut" from="[
                         productId: product.productId,
+                        pseudoId: product.pseudoId,
                         productName: product.productName ?: '',
                         productTypeId: prodConvert.convertedStatusId,
                         assetClassId: product.assetClassEnumId,

@@ -67,6 +67,9 @@ along with this software (see the LICENSE.md file). If not, see
         <field name="purchInvoicesNotPaidAmount" type="number-float"/>
         <field name="allTasks" type="number-integer"/>
         <field name="notInvoicedHours" type="number-integer"/>
+        <field name="outgoingShipments" type="number-integer"/>
+        <field name="incomingShipments" type="number-integer"/>
+        <field name="whLocations" type="number-integer"/>
         <relationship type="one" title="Owner" related="mantle.party.Party" short-alias="owner">
             <key-map field-name="ownerPartyId"/></relationship>
     </entity>

@@ -355,6 +355,7 @@ along with this software (see the LICENSE.md file). If not, see
         <alias name="fromDate" entity-alias="MEM"/>
         <alias name="thruDate" entity-alias="MEM"/>
         <alias name="productId" entity-alias="PROD"/>
+        <alias name="pseudoId" entity-alias="PROD"/>
         <alias name="productTypeEnumId" entity-alias="PROD"/>
         <alias name="assetTypeEnumId" entity-alias="PROD"/>
         <alias name="assetClassEnumId" entity-alias="PROD"/>

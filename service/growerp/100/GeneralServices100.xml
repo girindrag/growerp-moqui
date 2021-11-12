@@ -76,47 +76,28 @@ along with this software (see the LICENSE.md file). If not, see
 
             <if condition="st">
             <set field="stats" from="[
-                admins: st.admins.toString(),
-                employees: st.employees.toString(),
-                suppliers: st.suppliers.toString(),
-                leads: st.leads.toString(),
-                customers: st.customers.toString(),
-                openSlsOrders: st.openSlsOrders.toString(),
-                openPurOrders: st.openPurOrders.toString(),
-                opportunities: st.opportunities.toString(),
-                myOpportunities: myOpportunities.toString(),
-                categories: st.categories.toString(),
-                products: st.products.toString(),
-                assets: st.assets.toString(),
-                salesInvoicesNotPaidCount:  st.salesInvoicesNotPaidCount.toString(),
-                salesInvoicesNotPaidAmount: st.salesInvoicesNotPaidAmount.toString(),
-                purchInvoicesNotPaidCount:  st.purchInvoicesNotPaidCount.toString(),
-                purchInvoicesNotPaidAmount: st.purchInvoicesNotPaidAmount.toString(),
-                allTasks: st.allTasks? st.allTasks.toString() : '0',
-                notInvoicedHours: st.notInvoicedHours? st.notInvoicedHours.toString() : '0'
+                admins: st.admins?.toString(),
+                employees: st.employees?.toString(),
+                suppliers: st.suppliers?.toString(),
+                leads: st.leads?.toString(),
+                customers: st.customers?.toString(),
+                openSlsOrders: st.openSlsOrders?.toString(),
+                openPurOrders: st.openPurOrders?.toString(),
+                opportunities: st.opportunities?.toString(),
+                myOpportunities: myOpportunities?.toString(),
+                categories: st.categories?.toString(),
+                products: st.products?.toString(),
+                assets: st.assets?.toString(),
+                salesInvoicesNotPaidCount:  st.salesInvoicesNotPaidCount?.toString(),
+                salesInvoicesNotPaidAmount: st.salesInvoicesNotPaidAmount?.toString(),
+                purchInvoicesNotPaidCount:  st.purchInvoicesNotPaidCount?.toString(),
+                purchInvoicesNotPaidAmount: st.purchInvoicesNotPaidAmount?.toString(),
+                allTasks: st.allTasks?.toString(),
+                notInvoicedHours: st.notInvoicedHours?.toString(),
+                outgoingShipments: outgoingShipments?.toString(),
+                incomngShipments: incomingShipments?.toString(),
+                whLocations: whLocations?.toString()
                 ]"/>
-                <else>
-                    <set field="stats" from="[
-                        admins: '0',
-                        employees: '0',
-                        suppliers: '0',
-                        leads: '0',
-                        customers: '0',
-                        openSlsOrders: '0',
-                        openPurOrders: '0',
-                        opportunities: '0',
-                        myOpportunities: '0',
-                        categories: '0',
-                        products: '0',
-                        assets: '0',
-                        salesInvoicesNotPaidCount: '0',
-                        salesInvoicesNotPaidAmount: '0',
-                        purchInvoicesNotPaidCount: '0',
-                        purchInvoicesNotPaidAmount: '0',
-                        allTasks: '0',
-                        notInvoicedHours: '0'
-                        ]"/>
-                </else>
             </if>
         </actions>
     </service>
@@ -230,8 +211,25 @@ along with this software (see the LICENSE.md file). If not, see
                 <iterate list="hours" entry="hour">
                     <set field="notInvoicedHours" from="notInvoicedHours + hour.hours"/>
                 </iterate>
+                <entity-find-count entity-name="mantle.shipment.ShipmentAndItemSource"
+                        count-field="outgoingShipments">
+                    <econdition field-name="fromPartyId" from="ownerPartyId"/>
+                    <econdition field-name="statusId" operator="in"
+                        from="['ShipInput','ShipScheduled','ShipPicked',
+                            'ShipPacked','Ship','Shipped']"/>
+                </entity-find-count>
+                <entity-find-count entity-name="mantle.shipment.ShipmentAndItemSource"
+                        count-field="incomingShipments">
+                    <econdition field-name="toPartyId" from="ownerPartyId"/>
+                    <econdition field-name="statusId" operator="in"
+                        from="['ShipInput','ShipScheduled','ShipPicked',
+                            'ShipPacked','Ship','Shipped']"/>
+                </entity-find-count>
+                <entity-find-count entity-name="mantle.product.asset.AssetLocationDetail" count-field="whLocations">
+                    <econdition field-name="ownerPartyId"/>
+                </entity-find-count>
                 <service-call name="delete#growerp.general.Statistics">
-                    <field-map field-name="ownerPartyId"/></service-call>  
+                    <field-map field-name="ownerPartyId"/></service-call>
                 <service-call name="create#growerp.general.Statistics"
                     in-map="[
                         ownerPartyId: ownerPartyId,
@@ -255,7 +253,9 @@ along with this software (see the LICENSE.md file). If not, see
                         purchInvoicesNotPaidAmount: allPblInvList
                             ? allPblInvList[0].unpaidTotal : '0.00',
                         allTasks: allTasks,
-                        notInvoicedHours: notInvoicedHours
+                        notInvoicedHours: notInvoicedHours,
+                        incomingShipments: incomingShipments, 
+                        outgoingShipments: outgoingShipments, 
                     ]"/>
             </iterate>
         </actions>

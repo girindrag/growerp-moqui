@@ -20,8 +20,11 @@ along with this software (see the LICENSE.md file). If not, see
             their role and or/existing security group.
             This service can be rerun regularly
         </description>
-        <in-parameters><parameter name="companyPartyId" default-value="ORG_ACCUGEO"/></in-parameters>
         <actions>
+            <service-call out-map="context"
+                name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner"/>
+            <set field="companyPartyId" from="singleCompany"/>
+
             <set field="userGroups"
                 from="['GROWERP_M_ADMIN', 'GROWERP_M_EMPLOYEE', 'GROWERP_M_CUSTOMER', 'GROWERP_M_LEAD', 'GROWERP_M_SUPPLIER']"/>
 
@@ -183,7 +186,7 @@ along with this software (see the LICENSE.md file). If not, see
             </iterate>
             <!-- fromDate is null -->
             <entity-find entity-name="mantle.party.PartyRelationship" list="rels">
-                <econdition field-name="toPartyId" from="user.companyPartyId"/>
+                <econdition field-name="toPartyId" from="companyPartyId"/>
                 <econdition field-name="fromDate" operator="is-null"/>
             </entity-find>
             <if condition="rels">
@@ -192,6 +195,73 @@ along with this software (see the LICENSE.md file). If not, see
                     <entity-update value-field="rel"/>
                 </iterate>
             </if>
+        </actions>
+    </service>
+
+    <service verb="add" noun="CategoriesToRootCategory">
+        <actions>
+            <!-- add all categories to the product store root categegory-->
+            <service-call out-map="context"
+                name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner"/>
+            <set field="companyPartyId" from="singleCompany"/>
+            <!-- get store -->
+            <set field="classificationId" value="AppAdmin"/>
+            <entity-find-one entity-name="mantle.product.store.ProductStore" value-field="store">
+                <field-map field-name="organizationPartyId" from="companyPartyId"/>
+                <field-map field-name="storeName" from="classificationId"/>
+            </entity-find-one>
+            <if condition="!store"><!-- if not exist create one -->
+                <service-call name="create#mantle.product.store.ProductStore"
+                in-map="[
+                    organizationPartyId: companyPartyId,
+                    storeName: classificationId
+                ]" out-map="context"/>
+                <else>
+                    <set field="productStoreId" from="store.productStoreId"/>
+                </else>
+            </if>
+            <!-- get category -->
+            <entity-find entity-name="mantle.product.store.ProductStoreCategory" list="rootCategories">
+                <econdition field-name="productStoreId" from="store.productStoreId"/>
+                <econdition field-name="storeCategoryTypeEnumId" value="PsctBrowseRoot"/>
+            </entity-find> 
+            <if condition="!rootCategories"><!-- if not exist create one -->
+                <service-call name="create#mantle.product.category.ProductCategory"
+                    in-map="[
+                        productCategoryTypeEnumId: 'PctRoot',
+                        ownerPartyId: companyPartyId,
+                        categoryName: 'Root category of company: ' +  companyPartyId,
+                        ]" out-map="context"/>
+                <service-call name="create#mantle.product.store.ProductStoreCategory"
+                    in-map="[
+                        productStoreId: productStoreId,
+                        storeCategoryTypeEnumId: 'PsctBrowseRoot',
+                        productCategoryId: productCategoryId
+                        ]"/>
+                <else>
+                    <set field="productCategoryId" from="rootCategories[0].productCategoryId"/>
+                </else>
+            </if>
+            <!-- get 'non root' categories -->
+            <entity-find entity-name="mantle.product.category.ProductCategory" list="categories">
+                <econdition field-name="productCategoryTypeEnumId" operator="not-equals" value="PctRoot"/>
+            </entity-find>
+            <!-- add to top category if not exist -->
+            <iterate list="categories" entry="category">
+                <entity-find entity-name="mantle.product.category.ProductCategoryRollup" list="rollUps">
+                    <econdition field-name="parentProductCategoryId" from="productCategoryId"/>
+                    <econdition field-name="productCategoryId" from="category.productCategoryId"/>
+                </entity-find>
+                <if condition="!rollUps">
+                    <service-call name="create#mantle.product.category.ProductCategoryRollup"
+                        in-map="[
+                            productCategoryId: category.productCategoryId,
+                            parentProductCategoryId: productCategoryId,
+                            fromDate: ec.user.nowTimestamp
+                        ]"/>
+                </if>
+            </iterate>
+
         </actions>
     </service>
 </services>
