@@ -28,7 +28,7 @@ create your first company!
 # Single company operation.
 
 1. create and download a snapshot of the current Moqui database
-2. run the following commands to load the zip file:
+2. run the following commands to load the snapshot zip file:
     - ./gradlew cleandb
     - java -jar moqui.war load raw location=/full_path_to_zip_file
 3.  get seed from growerp
@@ -40,4 +40,5 @@ create your first company!
     'GROWERP_M_ADMIN', 'GROWERP_M_EMPLOYEE', 'GROWERP_M_CUSTOMER', 'GROWERP_M_LEAD', 'GROWERP_M_SUPPLIER'
     - run the service: adapt#User  in the 'tools/services' menu with an input parameter: the partyId of the single company to support.
 5. In the growerp frontend set the same partyId in the assets/cfg/app_setting.json 'singleCompany'
+6. If not done already add current categories to the root category of the company: run service add#CategoriesToRootCategory
 

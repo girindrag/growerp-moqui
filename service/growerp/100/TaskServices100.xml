@@ -171,7 +171,7 @@ along with this software (see the LICENSE.md file). If not, see
                     workEffortId: taskIn.taskId,
                     parentWorkEffortId: taskIn.parentTaskId,
                     workTypeEnumId: 'WetTask',
-                    workEffortName: taskIn.name,
+                    workEffortName: taskIn.taskName,
                     statusId: convertedStatusId,
                     description: taskIn.description,
                     ownerPartyId: companyPartyId,
@@ -239,7 +239,7 @@ along with this software (see the LICENSE.md file). If not, see
             <service-call name="growerp.100.FinDocServices100.convert#StatusId"
                 in-map="[docType: 'task', statusId: taskIn.status]" out-map="context"/>
             <if condition="
-                oldTask.name != taskIn.Name ||
+                oldTask.taskName != taskIn.taskName ||
                 oldTask.description != taskIn.description ||
                 oldTask.status != taskIn.status ||
                 oldTask.parentTaskId != taskIn.parentTaskId ||
@@ -248,7 +248,7 @@ along with this software (see the LICENSE.md file). If not, see
                 <service-call name="update#mantle.work.effort.WorkEffort" in-map="[
                         workEffortId: taskIn.taskId,
                         parentWorkEffortId: taskIn.parentTask,
-                        workEffortName: taskIn.name,
+                        workEffortName: taskIn.taskName,
                         statusId: convertedStatusId,
                         description: taskIn.description,
                         actualStartDate: taskIn.startDate ? taskIn.startDate.substring(0,18) : null,

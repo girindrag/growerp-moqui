@@ -68,7 +68,8 @@ along with this software (see the LICENSE.md file). If not, see
             <iterate list="parties" entry="party">
                 <set field="company"
                     from="[partyId: party.partyId, name: party.organizationName,
-                                currencyId: party.baseCurrencyUomId]"/>
+                                currency: [currencyId: party.baseCurrencyUomId,
+                                        description: party.uomDescription]]"/>
                 <script>companies.add(company)</script>
             </iterate>
         </actions>
@@ -133,7 +134,8 @@ along with this software (see the LICENSE.md file). If not, see
                 partyId: companyPartyId,
                 name: org.organizationName,
                 email: emails[0].infoString,
-                currencyId: org.baseCurrencyUomId,
+                currency:
+                    [currencyId: org.baseCurrencyUomId,description: org.uomDescription],
                 image: imageFile,
                 address: address,
                 vatPerc: org.vatPerc ? org.vatPerc.toString() : null,

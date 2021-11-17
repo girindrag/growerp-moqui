@@ -28,11 +28,11 @@ along with this software (see the LICENSE.md file). If not, see
             <parameter name="locations" type="List"/>
         </out-parameters>
         <actions>
-            <log message="=====get location input: $locationId"/>
             <service-call out-map="context" 
                 name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner"/>
-            <entity-find entity-name="mantle.product.asset.AssetLocationProductUomDetail"
-                list="locationsRead">
+            <entity-find offset="start" limit="limit" list="locationsRead"
+                entity-name="mantle.product.asset.AssetLocationProductUomDetail">
+                <econdition field-name="locationSeqId" operator="is-not-null"/>
                 <econdition field-name="locationSeqId" ignore-if-empty="true"/>
                 <econdition field-name="ownerPartyId" ignore-if-empty="true"/>
                 <econdition field-name="facilityId" operator="is-not-null"/>
@@ -40,23 +40,22 @@ along with this software (see the LICENSE.md file). If not, see
                 <order-by field-name="productId"/>
                 <order-by field-name="assetId"/>
             </entity-find>
-            <log message="======mess read# ${locationsRead.size()}"/>
             <set field="lastItem" from="null"/>
             <set field="assets" from="[]"/>
             <if condition="!locationId">
                 <set field="locations" from="[]"/></if>
             <iterate list="locationsRead" entry="loc">
-                <log message="====location: ${loc.locationSeqId}"/>
                 <if condition="lastItem  &amp;&amp; lastItem.locationSeqId != loc.locationSeqId">
                     <set field="locOut" from="[
                         locationId: lastItem.locationSeqId,
-                        locationName: lastItem.areaId,
+                        locationName: lastItem.description,
                         assets: assets]"/>
                     <set field="assets" from="[]"/>
                     <if condition="!locationId">
                         <script>locations.add(locOut)</script></if>
                 </if>
-                <set field="product" from="[productId: loc.productId, productName: loc.productName]"/>
+                <set field="product" from="[productId: loc.productId,
+                                            pseudoId: loc.pseudoId, productName: loc.productName]"/>
                 <set field="asset" from="[assetId: loc.assetId,
                             assetName: loc.assetName, product: product]"/>
                 <script>assets.add(asset)</script>
@@ -65,7 +64,7 @@ along with this software (see the LICENSE.md file). If not, see
             <if condition="lastItem">
                 <set field="locOut" from="[
                     locationId: lastItem.locationSeqId,
-                    locationName: lastItem.areaId,
+                    locationName: lastItem.description,
                     assets: assets]"/>
                 <if condition="!locationId">
                     <script>locations.add(locOut)</script>
@@ -73,7 +72,6 @@ along with this software (see the LICENSE.md file). If not, see
                     <set field="location" from="locOut"/>
                 </else></if>
             </if>
-            <log message="=====get location output: $locations"/>
         </actions>
     </service>
 

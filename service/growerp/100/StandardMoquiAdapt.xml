@@ -20,11 +20,8 @@ along with this software (see the LICENSE.md file). If not, see
             their role and or/existing security group.
             This service can be rerun regularly
         </description>
+        <in-parameters><parameter name="companyPartyId" required="true"/></in-parameters>
         <actions>
-            <service-call out-map="context"
-                name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner"/>
-            <set field="companyPartyId" from="singleCompany"/>
-
             <set field="userGroups"
                 from="['GROWERP_M_ADMIN', 'GROWERP_M_EMPLOYEE', 'GROWERP_M_CUSTOMER', 'GROWERP_M_LEAD', 'GROWERP_M_SUPPLIER']"/>
 
@@ -199,11 +196,9 @@ along with this software (see the LICENSE.md file). If not, see
     </service>
 
     <service verb="add" noun="CategoriesToRootCategory">
+        <in-parameters><parameter name="companyPartyId" required="true"/></in-parameters>
         <actions>
-            <!-- add all categories to the product store root categegory-->
-            <service-call out-map="context"
-                name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner"/>
-            <set field="companyPartyId" from="singleCompany"/>
+            <!-- add all categories to the product store root category-->
             <!-- get store -->
             <set field="classificationId" value="AppAdmin"/>
             <entity-find-one entity-name="mantle.product.store.ProductStore" value-field="store">

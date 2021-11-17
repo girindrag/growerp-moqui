@@ -110,6 +110,86 @@ along with this software (see the LICENSE.md file). If not, see
         <alias name="paymentId" entity-alias="OPAY"/>
     </view-entity>
 
+    <view-entity entity-name="ShipmentAndPartiesAndWarehouse" package="growerp.warehouse">
+        <member-entity entity-alias="SHIP" entity-name="mantle.shipment.Shipment"/>
+        <member-entity entity-alias="SITEM" entity-name="mantle.shipment.ShipmentItem"
+            join-from-alias="SHIP"><key-map field-name="shipmentId"/></member-entity>
+        <member-entity entity-alias="SIS" entity-name="mantle.shipment.ShipmentItemSource"
+            join-from-alias="SITEM" join-optional="true"><key-map field-name="shipmentId"/>
+            <key-map field-name="productId"/></member-entity>
+        <!-- asset receipt and warehouse-->
+        <member-entity entity-alias="ASR" entity-name="mantle.product.receipt.AssetReceipt"
+             join-from-alias="SITEM" join-optional="true"><key-map field-name="shipmentId"/>
+            <key-map field-name="productId"/></member-entity>
+        <member-entity entity-alias="AST" entity-name="mantle.product.asset.Asset"
+            join-from-alias="ASR" join-optional="true">
+            <key-map field-name="assetId"/></member-entity>
+        <member-entity entity-alias="LOC" entity-name="mantle.facility.FacilityLocation"
+            join-from-alias="AST" join-optional="true"><key-map field-name="locationSeqId"/>
+            <key-map field-name="facilityId"/></member-entity> 
+        <!-- vendor data --> 
+        <member-entity entity-alias="VORG" entity-name="mantle.party.Organization"
+                 join-from-alias="SHIP" join-optional="true">
+            <key-map field-name="fromPartyId" related="partyId"/></member-entity>
+        <member-entity entity-alias="VOPP" entity-name="mantle.order.OrderPartParty"
+            join-from-alias="SIS" join-optional="true">
+            <key-map field-name="orderId"/><entity-condition>
+            <econdition field-name="vendorRoleTypeId" value="VendorContactPerson"/>
+            </entity-condition></member-entity>
+        <member-entity entity-alias="VPERSON" entity-name="mantle.party.Person"
+            join-from-alias="VOPP" join-optional="true">
+            <key-map field-name="partyId"/></member-entity>
+        <member-entity entity-alias="VACCOUNT" entity-name="moqui.security.UserAccount"
+            join-from-alias="VPERSON" join-optional="true">
+            <key-map field-name="partyId"/></member-entity>
+        <!-- customer data -->
+        <member-entity entity-alias="CORG" entity-name="mantle.party.Organization"
+            join-from-alias="SHIP" join-optional="true">
+            <key-map field-name="toPartyId" related="partyId"/></member-entity>
+        <member-entity entity-alias="COPP" entity-name="mantle.order.OrderPartParty"
+            join-from-alias="SIS" join-optional="true">
+            <key-map field-name="orderId"/>
+            <entity-condition>
+                <econdition field-name="customerRoleTypeId" value="CustomerContactPerson"/>
+            </entity-condition></member-entity>
+        <member-entity entity-alias="CPERSON" entity-name="mantle.party.Person"
+            join-from-alias="COPP" join-optional="true">
+            <key-map field-name="partyId"/></member-entity>
+        <member-entity entity-alias="CACCOUNT" entity-name="moqui.security.UserAccount"
+            join-from-alias="CPERSON" join-optional="true">
+            <key-map field-name="partyId"/></member-entity>
+
+        <alias name="shipmentId" entity-alias="SHIP"/>
+        <alias name="toPartyId" entity-alias="SHIP"/>
+        <alias name="fromPartyId" entity-alias="SHIP"/>
+        <alias name="statusId" entity-alias="SHIP"/>
+        <alias name="entryDate" entity-alias="SHIP"/>
+        <alias name="orderId" entity-alias="SIS"/>
+        <alias name="invoiceId" entity-alias="SIS"/>
+        <alias name="productId" entity-alias="SITEM"/>
+        <alias name="quantity" entity-alias="SITEM"/>
+        <alias name="assetId" entity-alias="AST"/>
+        <alias name="quantityOnHandTotal" entity-alias="AST"/>
+        <alias name="availableToPromiseTotal" entity-alias="AST"/>
+        <alias name="locationSeqId" entity-alias="LOC"/>
+
+        <alias name="vendorPartyId" field="partyId" entity-alias="VORG"/>
+        <alias name="vendorCompanyName" field="organizationName" entity-alias="VORG"/>
+        <alias name="vendorRoleTypeId" field="roleTypeId" entity-alias="VOPP"/>
+        <alias name="vendorUserPartyId" field="partyId" entity-alias="VPERSON"/>
+        <alias name="vendorFirstName" field="firstName" entity-alias="VPERSON"/>
+        <alias name="vendorLastName" field="lastName" entity-alias="VPERSON"/>
+        <alias name="vendorEmail" field="emailAddress" entity-alias="VACCOUNT"/>
+
+        <alias name="customerPartyId" field="partyId" entity-alias="CORG"/>
+        <alias name="customerCompanyName" field="organizationName" entity-alias="CORG"/>
+        <alias name="customerRoleTypeId" field="roleTypeId" entity-alias="COPP"/>
+        <alias name="customerUserPartyId" field="partyId" entity-alias="CPERSON"/>
+        <alias name="customerFirstName" field="firstName" entity-alias="CPERSON"/>
+        <alias name="customerLastName" field="lastName" entity-alias="CPERSON"/>
+        <alias name="customerEmail" field="emailAddress" entity-alias="CACCOUNT"/>
+    </view-entity>
+
     <view-entity entity-name="ProductAssetSummary" package="growerp.mobile.asset">
         <member-entity entity-alias="ASSET" entity-name="mantle.product.asset.Asset"/>
         <alias entity-alias="ASSET" name="productId"/>
@@ -121,22 +201,78 @@ along with this software (see the LICENSE.md file). If not, see
         <alias entity-alias="ASSET" name="totalAssets" field="quantityOnHandTotal" function="sum"/>
     </view-entity>
 
-    <view-entity entity-name="InvoiceAndItem" package="growerp.order">
+    <view-entity entity-name="InvoiceItemsAndParties" package="growerp.account">
         <member-entity entity-alias="INV" entity-name="mantle.account.invoice.Invoice"/>
         <member-entity entity-alias="ITEM" entity-name="mantle.account.invoice.InvoiceItem" join-from-alias="INV">
             <key-map field-name="invoiceId"/></member-entity>
-        <member-entity entity-alias="OINV" entity-name="mantle.order.OrderItemBilling"
+        <member-entity entity-alias="OIB" entity-name="mantle.order.OrderItemBilling"
+            join-from-alias="ITEM" join-optional="true"><key-map field-name="invoiceId"/>
+            <key-map field-name="invoiceItemSeqId"/></member-entity>
+        <!--member-entity entity-alias="PAY" entity-name="mantle.account.payment.Payment"
+            join-from-alias="OIB" join-optional="true">
+            <key-map field-name="orderId"/></member-entity-->
+        <!-- vendor data --> 
+        <member-entity entity-alias="VORG" entity-name="mantle.party.Organization"
+                 join-from-alias="INV" join-optional="true">
+            <key-map field-name="fromPartyId" related="partyId"/></member-entity>
+        <member-entity entity-alias="VOPP" entity-name="mantle.order.OrderPartParty"
+            join-from-alias="OIB" join-optional="true">
+            <key-map field-name="orderId"/><entity-condition>
+            <econdition field-name="vendorRoleTypeId" value="VendorContactPerson"/>
+            </entity-condition></member-entity>
+        <member-entity entity-alias="VPERSON" entity-name="mantle.party.Person"
+            join-from-alias="VOPP" join-optional="true">
+            <key-map field-name="partyId"/></member-entity>
+        <member-entity entity-alias="VACCOUNT" entity-name="moqui.security.UserAccount"
+            join-from-alias="VPERSON" join-optional="true">
+            <key-map field-name="partyId"/></member-entity>
+        <!-- customer data -->
+        <member-entity entity-alias="CORG" entity-name="mantle.party.Organization"
             join-from-alias="INV" join-optional="true">
-            <key-map field-name="invoiceId" /></member-entity>
-        <member-entity entity-alias="PAY" entity-name="mantle.account.payment.Payment"
-            join-from-alias="OINV" join-optional="true">
-            <key-map field-name="orderId"/></member-entity>
-        <alias-all entity-alias="INV"/>
-        <alias-all entity-alias="ITEM">
-            <exclude field="description"/></alias-all>
+            <key-map field-name="toPartyId" related="partyId"/></member-entity>
+        <member-entity entity-alias="COPP" entity-name="mantle.order.OrderPartParty"
+            join-from-alias="OIB" join-optional="true">
+            <key-map field-name="orderId"/>
+            <entity-condition>
+                <econdition field-name="customerRoleTypeId" value="CustomerContactPerson"/>
+            </entity-condition></member-entity>
+        <member-entity entity-alias="CPERSON" entity-name="mantle.party.Person"
+            join-from-alias="COPP" join-optional="true">
+            <key-map field-name="partyId"/></member-entity>
+        <member-entity entity-alias="CACCOUNT" entity-name="moqui.security.UserAccount"
+            join-from-alias="CPERSON" join-optional="true">
+            <key-map field-name="partyId"/></member-entity>
+        <alias name="invoiceId" entity-alias="INV"/>
+        <alias name="fromPartyId" entity-alias="INV"/>
+        <alias name="toPartyId" entity-alias="INV"/>
+        <alias name="statusId" entity-alias="INV"/>
+        <alias name="invoiceDate" entity-alias="INV"/>
+        <alias name="invoiceTotal" entity-alias="INV"/>
+        <alias name="invoiceItemSeqId" entity-alias="ITEM"/>
+        <alias name="productId" entity-alias="ITEM"/>
+        <alias name="itemTypeEnumId" entity-alias="ITEM"/>
+        <alias name="quantity" entity-alias="ITEM"/>
+        <alias name="amount" entity-alias="ITEM"/>
         <alias name="itemDescription" field="description" entity-alias="ITEM"></alias>
-        <alias name="paymentId" entity-alias="PAY"></alias>
-        <alias name="orderId" entity-alias="OINV"></alias>
+        <alias name="orderId" entity-alias="OIB"/>
+        <alias name="shipmentId" entity-alias="OIB"/>
+        <!--alias name="paymentId" entity-alias="PAY"/-->
+
+        <alias name="vendorPartyId" field="partyId" entity-alias="VORG"/>
+        <alias name="vendorCompanyName" field="organizationName" entity-alias="VORG"/>
+        <alias name="vendorRoleTypeId" field="roleTypeId" entity-alias="VOPP"/>
+        <alias name="vendorUserPartyId" field="partyId" entity-alias="VPERSON"/>
+        <alias name="vendorFirstName" field="firstName" entity-alias="VPERSON"/>
+        <alias name="vendorLastName" field="lastName" entity-alias="VPERSON"/>
+        <alias name="vendorEmail" field="emailAddress" entity-alias="VACCOUNT"/>
+
+        <alias name="customerPartyId" field="partyId" entity-alias="CORG"/>
+        <alias name="customerCompanyName" field="organizationName" entity-alias="CORG"/>
+        <alias name="customerRoleTypeId" field="roleTypeId" entity-alias="COPP"/>
+        <alias name="customerUserPartyId" field="partyId" entity-alias="CPERSON"/>
+        <alias name="customerFirstName" field="firstName" entity-alias="CPERSON"/>
+        <alias name="customerLastName" field="lastName" entity-alias="CPERSON"/>
+        <alias name="customerEmail" field="emailAddress" entity-alias="CACCOUNT"/>
     </view-entity>
 
     <view-entity entity-name="PaymentAndInfo" package="growerp.order">
@@ -280,18 +416,18 @@ along with this software (see the LICENSE.md file). If not, see
     <!-- depreciated!!!! -->
     <view-entity entity-name="CompanyPersonAndLogin" package="growerp.mobile">
         <description>get all people related to a certain companyId = PR => toPartyId</description>
-        <member-entity entity-alias="PR" entity-name="PartyRelationship">
+        <member-entity entity-alias="PR" entity-name="mantle.party.PartyRelationship">
             <entity-condition>
                 <!-- econdition field-name="fromRoleTypeId" value="Employee"/ selects the type of person: Employee, Customer etc -->
                 <econdition field-name="toRoleTypeId" value="OrgInternal"/>
                 <date-filter/></entity-condition></member-entity>
-        <member-entity entity-alias="PTYPERSON" entity-name="Party" join-from-alias="PR">
+        <member-entity entity-alias="PTYPERSON" entity-name="mantle.party.Party" join-from-alias="PR">
             <key-map field-name="fromPartyId" related="partyId"/>
             <entity-condition>
                 <econdition field-name="personDisabled" operator="equals" value="N" or-null="true"/>
             </entity-condition>
         </member-entity>
-        <member-entity entity-alias="PTYORG" entity-name="Party" join-from-alias="PR">
+        <member-entity entity-alias="PTYORG" entity-name="mantle.party.Party" join-from-alias="PR">
             <key-map field-name="toPartyId" related="partyId"/>
             <entity-condition>
                 <econdition field-name="companyDisabled" operator="equals" value="N" or-null="true"/>
@@ -344,7 +480,7 @@ along with this software (see the LICENSE.md file). If not, see
             <entity-condition><date-filter/></entity-condition></member-entity>
         <member-entity entity-alias="PROD" entity-name="mantle.product.Product"
                 join-from-alias="MEM" join-optional="true">
-            <key-map field-name="productId"/></member-entity>
+            <key-map field-name="productId"/></member-entity><!-- no from- to thrudate cond, want to see old ones?-->
         <member-entity entity-alias="PRICE" entity-name="mantle.product.ProductPrice"
                 join-from-alias="PROD" join-optional="true">
             <key-map field-name="productId"/>
@@ -362,6 +498,7 @@ along with this software (see the LICENSE.md file). If not, see
         <alias name="productName" entity-alias="PROD"/>
         <alias name="description" entity-alias="PROD"/>
         <alias name="ownerPartyId" entity-alias="PROD"/>
+        <alias name="requireInventory" entity-alias="PROD"/>
         <alias name="productFromDate" field="salesIntroductionDate" entity-alias="PROD"/>
         <alias name="productThruDate" field="salesDiscontinuationDate" entity-alias="PROD"/>
         <alias name="productPriceId" entity-alias="PRICE"/>
@@ -381,11 +518,15 @@ along with this software (see the LICENSE.md file). If not, see
                 join-from-alias="PARTY">
             <key-map field-name="partyId"/></member-entity>
         <member-entity entity-alias="PP" entity-name="mantle.ledger.config.PartyAcctgPreference"
-                join-from-alias="PARTY" join-optional="true">
+                join-from-alias="PARTY">
             <key-map field-name="partyId"/></member-entity>
         <member-entity entity-alias="PR" entity-name="mantle.party.PartyRole"
                 join-from-alias="PARTY" join-optional="true">
             <key-map field-name="partyId"/>
+        </member-entity>
+        <member-entity entity-alias="UOM" entity-name="moqui.basic.Uom"
+                join-from-alias="PP" join-optional="true">
+            <key-map field-name="baseCurrencyUomId" related="uomId"/>
         </member-entity>
         <alias name="partyId" entity-alias="PARTY"/>
         <alias name="ownerPartyId" entity-alias="PARTY"/>
@@ -394,6 +535,7 @@ along with this software (see the LICENSE.md file). If not, see
         <alias name="salesPerc" entity-alias="PARTY"/>
         <alias name="organizationName" entity-alias="ORG"/>
         <alias name="baseCurrencyUomId" entity-alias="PP"/>
+        <alias name="uomDescription" field="description" entity-alias="UOM"/>
         <alias name="roleTypeId" entity-alias="PR"/>
     </view-entity>
 
