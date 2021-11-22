@@ -104,7 +104,7 @@ along with this software (see the LICENSE.md file). If not, see
                 <set field="convertedStatusId" from="orderStatusValues[statusId]"/>
             </if>
             <if condition="docType == 'invoice'">
-                <if condition="sales == false">
+                <if condition="sales == true">
                     <set field="invoiceStatusValues" from="[
                         InvoiceInProcess: 'FinDocPrep',
                         FinDocPrep: 'InvoiceInProcess',
@@ -144,6 +144,7 @@ along with this software (see the LICENSE.md file). If not, see
                         FinDocApproved: 'PmntAuthorized',
                         PmntDelivered: 'FinDocCompleted',
                         FinDocCompleted: 'PmntDelivered',
+                        PmntConfirmed: 'FinDocCompleted',
                         PmntCancelled: 'FinDocCancelled',
                         FinDocCancelled: 'PmntCancelled'
                     ]"/>
@@ -331,16 +332,16 @@ along with this software (see the LICENSE.md file). If not, see
 
             <if condition="docType == 'invoice'">
                 <set field="openStatusList"
-                from="['InvoiceInProcess', 'InvoiceFinalized',
+                from="['InvoiceInProcess', 'InvoiceFinalized', 'InvoiceReceived',
                         'InvoiceSent', 'InvoicePmtRecvd']"/>
                 <if condition="finDocId">
                     <entity-find offset="start" limit="limit" 
                             entity-name="growerp.account.InvoiceItemsAndParties" list="items">
                         <econdition field-name="invoiceId" from="finDocId"/>
                         <econditions combine="or">
-                            <econdition field-name="fromPartyId" from="ownerPartyId"
+                            <econdition field-name="fromPartyId" from="customerPartyId"
                                 ignore-if-empty="true"/>
-                            <econdition field-name="toPartyId" from="ownerPartyId"
+                            <econdition field-name="toPartyId" from="vendorPartyId"
                                 ignore-if-empty="true"/>
                         </econditions>
                         <order-by field-name="invoiceItemSeqId"/>
@@ -461,20 +462,26 @@ along with this software (see the LICENSE.md file). If not, see
                     </else>
                 </if>
                 <iterate entry="item" list="items">
-                    <if condition="item.toPartyId == companyPartyId">
-                        <set field="sales" value="true" type="Boolean"/>
+                    <if condition="!sales">
+                        <set field="userOut" from="[
+                                        companyPartyId: item.vendorPartyId,
+                                        companyName: item.vendorCompanyName,
+                                        partyId: item.vendorUserPartyId,
+                                        firstName: item.vendorFirstName,
+                                        lastName: item.vendorLastName,
+                                        email: item.vendorEmail
+                                    ]"/>
                         <else>
-                            <set field="sales" value="false" type="Boolean"/>
+                            <set field="userOut" from="[
+                                        companyPartyId: item.customerPartyId,
+                                        companyName: item.customerCompanyName,
+                                        partyId: item.customerUserPartyId,
+                                        firstName: item.customerFirstName,
+                                        lastName: item.customerLastName,
+                                        email: item.customerEmail
+                                    ]"/>
                         </else>
                     </if>
-                    <entity-find list="others" 
-                        entity-name="growerp.mobile.CompanyPersonAndLoginGroup">
-                        <econdition field-name="companyPartyId" from="sales ? item.fromPartyId : item.toPartyId"/>
-                        <date-filter/><select-field field-name="userPartyId"/></entity-find>
-                    <if condition="!others">
-                        <return error="true" message="Could not find company ${sales ? item.fromPartyId : item.toPartyId} from payment ${item.paymentId} in view CompanyPersonAndLoginGroup"/></if>
-                    <service-call name="growerp.100.PartyServices100.get#User"
-                        in-map="[userPartyId: others[0].userPartyId]" out-map="userOut"/>
                     <service-call name="growerp.100.FinDocServices100.convert#StatusId"
                         in-map="[sales: sales, docType: docType, statusId: item.statusId]" out-map="context"/>
                     <set field="finDocOut" from="[
@@ -486,7 +493,7 @@ along with this software (see the LICENSE.md file). If not, see
                             ? item.effectiveDate.toString().substring(0,19) + 'Z' : null,
                         sales: sales.toString(),
                         docType: docType,
-                        otherUser: userOut.user,
+                        otherUser: userOut,
                         grandTotal: item.amount ? item.amount.toString() : null,
                         ]"/>
                     <script>finDocs.add(finDocOut)</script>
@@ -1080,9 +1087,9 @@ along with this software (see the LICENSE.md file). If not, see
                             <set field="invStatusId" value="InvoiceReceived"/>
                         </else>
                     </if>
-                    <!-- create payment -->
                     <service-call in-map="context + [statusId: invStatusId]" out-map="context"
                         name="mantle.account.InvoiceServices.create#EntireOrderPartInvoice"/>
+                    <!-- create payment -->
                     <service-call in-map="context" out-map="context"
                         name="mantle.order.OrderServices.add#OrderPartPayment"/>
                     <entity-find-one entity-name="mantle.account.payment.Payment"
@@ -1090,12 +1097,12 @@ along with this software (see the LICENSE.md file). If not, see
                     <set field="payment.statusId" value="PmntAuthorized"/>
                     <service-call
                         name="update#mantle.account.payment.Payment" in-map="payment"/>
-                    <!-- create shipment  not sure if done by moqui -->
-                    <!-- service-call in-map="orderId: orderId,
+                    <!-- create shipment  -->
+                    <service-call in-map="orderId: orderId,
                                 orderPartSeqId: orderPartSeqId" out-map="context"
                         name="mantle.shipment.ShipmentServices.create#OrderPartShipment"/>
                     <service-call name="update#mantle.shipment.Shipment" out-map="context"
-                        in-map="[shipmentId: shipmentId, statusId: 'ShipPacked']"/-->
+                        in-map="[shipmentId: shipmentId, statusId: 'ShipPacked']"/>
                 </if>
                 <if condition="order.statusId == 'OrderCompleted'">
                     <service-call name="mantle.order.OrderServices.complete#Order"

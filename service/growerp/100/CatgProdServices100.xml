@@ -400,7 +400,8 @@ along with this software (see the LICENSE.md file). If not, see
                     availableToPromise: item.availableToPromiseTotal? item.availableToPromiseTotal.toString() : '0',
                     receivedDate: item.receivedDate ? item.receivedDate.toString().substring(0,19) + 'Z' : null,
                     expectedEndOfLife: item.expectedEndOfLife ? item.expectedEndOfLife.toString().substring(0,19) + 'Z' : null,
-                    product: [productId: item.productId, productName: item.productName],
+                    product: [productId: item.productId, pseudoId: item.pseudoId,
+                    productName: item.productName],
                     ]"/>
                 <if condition="assetId">
                     <set field="asset" from="assetOut"/>

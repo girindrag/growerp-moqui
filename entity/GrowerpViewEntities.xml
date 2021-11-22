@@ -280,12 +280,62 @@ along with this software (see the LICENSE.md file). If not, see
         <member-entity entity-alias="OINV" entity-name="mantle.order.OrderItemBilling"
             join-from-alias="PAY" join-optional="true">
             <key-map field-name="orderId" /></member-entity>
-            <alias-all entity-alias="PAY">
-                <exclude field="orderItemSeqId"/>
-            </alias-all>
-            <alias-all entity-alias="OINV">
-                <exclude field="amount"/>
-            </alias-all>
+        <!-- vendor data --> 
+        <member-entity entity-alias="VORG" entity-name="mantle.party.Organization"
+                 join-from-alias="PAY" join-optional="true">
+            <key-map field-name="fromPartyId" related="partyId"/></member-entity>
+        <member-entity entity-alias="VOPP" entity-name="mantle.order.OrderPartParty"
+            join-from-alias="PAY" join-optional="true">
+            <key-map field-name="orderId"/><entity-condition>
+            <econdition field-name="vendorRoleTypeId" value="VendorContactPerson"/>
+            </entity-condition></member-entity>
+        <member-entity entity-alias="VPERSON" entity-name="mantle.party.Person"
+            join-from-alias="VOPP" join-optional="true">
+            <key-map field-name="partyId"/></member-entity>
+        <member-entity entity-alias="VACCOUNT" entity-name="moqui.security.UserAccount"
+            join-from-alias="VPERSON" join-optional="true">
+            <key-map field-name="partyId"/></member-entity>
+        <!-- customer data -->
+        <member-entity entity-alias="CORG" entity-name="mantle.party.Organization"
+            join-from-alias="PAY" join-optional="true">
+            <key-map field-name="toPartyId" related="partyId"/></member-entity>
+        <member-entity entity-alias="COPP" entity-name="mantle.order.OrderPartParty"
+            join-from-alias="PAY" join-optional="true">
+            <key-map field-name="orderId"/>
+            <entity-condition>
+                <econdition field-name="customerRoleTypeId" value="CustomerContactPerson"/>
+            </entity-condition></member-entity>
+        <member-entity entity-alias="CPERSON" entity-name="mantle.party.Person"
+            join-from-alias="COPP" join-optional="true">
+            <key-map field-name="partyId"/></member-entity>
+        <member-entity entity-alias="CACCOUNT" entity-name="moqui.security.UserAccount"
+            join-from-alias="CPERSON" join-optional="true">
+            <key-map field-name="partyId"/></member-entity>
+
+        <alias name="paymentId" entity-alias="PAY"/>
+        <alias name="fromPartyId" entity-alias="PAY"/>
+        <alias name="toPartyId" entity-alias="PAY"/>
+        <alias name="invoiceId" entity-alias="OINV"/>
+        <alias name="orderId" entity-alias="PAY"/>
+        <alias name="statusId" entity-alias="PAY"/>
+        <alias name="effectiveDate" entity-alias="PAY"/>
+        <alias name="amount" entity-alias="PAY"/>
+
+        <alias name="vendorPartyId" field="partyId" entity-alias="VORG"/>
+        <alias name="vendorCompanyName" field="organizationName" entity-alias="VORG"/>
+        <alias name="vendorRoleTypeId" field="roleTypeId" entity-alias="VOPP"/>
+        <alias name="vendorUserPartyId" field="partyId" entity-alias="VPERSON"/>
+        <alias name="vendorFirstName" field="firstName" entity-alias="VPERSON"/>
+        <alias name="vendorLastName" field="lastName" entity-alias="VPERSON"/>
+        <alias name="vendorEmail" field="emailAddress" entity-alias="VACCOUNT"/>
+
+        <alias name="customerPartyId" field="partyId" entity-alias="CORG"/>
+        <alias name="customerCompanyName" field="organizationName" entity-alias="CORG"/>
+        <alias name="customerRoleTypeId" field="roleTypeId" entity-alias="COPP"/>
+        <alias name="customerUserPartyId" field="partyId" entity-alias="CPERSON"/>
+        <alias name="customerFirstName" field="firstName" entity-alias="CPERSON"/>
+        <alias name="customerLastName" field="lastName" entity-alias="CPERSON"/>
+        <alias name="customerEmail" field="emailAddress" entity-alias="CACCOUNT"/>
     </view-entity>
 
     <view-entity entity-name="CompanyPersonAndLoginGroup" package="growerp.mobile">
