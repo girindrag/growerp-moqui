@@ -28,6 +28,10 @@ along with this software (see the LICENSE.md file). If not, see
             <parameter name="locations" type="List"/>
         </out-parameters>
         <actions>
+
+            <if condition="search != null">
+                <set field="search" value="%${search}%"/></if>
+
             <service-call out-map="context" 
                 name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner"/>
             <entity-find offset="start" limit="limit" list="locationsRead"
@@ -36,6 +40,12 @@ along with this software (see the LICENSE.md file). If not, see
                 <econdition field-name="locationSeqId" ignore-if-empty="true"/>
                 <econdition field-name="ownerPartyId" ignore-if-empty="true"/>
                 <econdition field-name="facilityId" operator="is-not-null"/>
+                <econditions combine="or">
+                    <econdition field-name="description" ignore-case="true"
+                        operator="like" from="search" ignore-if-empty="true"/>
+                    <econdition field-name="acquireShipmentId" ignore-case="true"
+                        operator="like" from="search" ignore-if-empty="true"/>
+                </econditions>
                 <order-by field-name="locationSeqId"/>
                 <order-by field-name="productId"/>
                 <order-by field-name="assetId"/>
