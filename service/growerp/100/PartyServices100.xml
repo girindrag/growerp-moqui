@@ -919,7 +919,7 @@ along with this software (see the LICENSE.md file). If not, see
             <!-- get productStore with classification(appname) -->
             <entity-find entity-name="mantle.product.store.ProductStore" list="stores">
                 <econdition field-name="organizationPartyId" from="companyPartyId"/>
-                <econdition field-name="storeName" from="classificationId"/>
+                <econdition field-name="storeDomain" from="classificationId"/>
             </entity-find>
             <if condition="stores">
                 <set field="productStore" from="stores[0]"/>
@@ -941,7 +941,7 @@ along with this software (see the LICENSE.md file). If not, see
             <!-- create map for productStore -->
             <set field="inMap" from="[
                 organizationPartyId: companyPartyId,
-                storeName: classificationId,
+                storeDomain: classificationId,
                 inventoryFacilityId: facilityId,
                 ]"/>
             <if condition="classificationId == 'AppAdmin'">
@@ -982,7 +982,7 @@ along with this software (see the LICENSE.md file). If not, see
                     fromDate: fromDate]" />
             <entity-find entity-name="mantle.product.store.ProductStore" list="stores">
                 <econdition field-name="organizationPartyId" from="companyPartyId"/>
-                <econdition field-name="storeName" from="classificationId"/>
+                <econdition field-name="storeDomain" from="classificationId"/>
             </entity-find>
             <set field="productStore" from="stores[0]"/>
             <!-- hotel app not using categories but need one for products -->
@@ -1174,7 +1174,7 @@ along with this software (see the LICENSE.md file). If not, see
                     <!-- assets -->
                     <entity-find entity-name="mantle.product.store.ProductStore" list="stores">
                         <econdition field-name="organizationPartyId" from="companyPartyId"/>
-                        <econdition field-name="storeName" from="classificationId"/>
+                        <econdition field-name="storeDomain" from="classificationId"/>
                     </entity-find>
                     <set field="assetsHotel" from="[
                         [ assetName: '01', productName: 'Single Room'],

@@ -206,7 +206,7 @@ along with this software (see the LICENSE.md file). If not, see
             </entity-find>
             <if condition="stores"><!-- user first one for growerp -->
                 <service-call name="update#mantle.product.store.ProductStore"
-                in-map="[productStoreId: stores[0].productStoreId, storeName: 'AppAdmin']"/>
+                in-map="[productStoreId: stores[0].productStoreId, storeDomain: 'AppAdmin']"/>
             </if>
             <service-call name="growerp.100.PartyServices100.verifyAndGet#ProductStore"
                 in-map="[companyPartyId: companyPartyId, classificationId: 'AppAdmin']"
