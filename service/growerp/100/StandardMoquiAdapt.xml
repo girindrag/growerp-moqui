@@ -194,27 +194,24 @@ along with this software (see the LICENSE.md file). If not, see
             </if>
         </actions>
     </service>
+      <!-- delete productStoreId 100000 add classification (AppAdmin) to existing productStore as name-->
 
     <service verb="add" noun="CategoriesToRootCategory">
         <in-parameters><parameter name="companyPartyId" required="true"/></in-parameters>
         <actions>
             <!-- add all categories to the product store root category-->
-            <!-- get store -->
-            <set field="classificationId" value="AppAdmin"/>
-            <entity-find-one entity-name="mantle.product.store.ProductStore" value-field="store">
-                <field-map field-name="organizationPartyId" from="companyPartyId"/>
-                <field-map field-name="storeName" from="classificationId"/>
-            </entity-find-one>
-            <if condition="!store"><!-- if not exist create one -->
-                <service-call name="create#mantle.product.store.ProductStore"
-                in-map="[
-                    organizationPartyId: companyPartyId,
-                    storeName: classificationId
-                ]" out-map="context"/>
-                <else>
-                    <set field="productStoreId" from="store.productStoreId"/>
-                </else>
+            <!-- verify productStore -->
+            <entity-find entity-name="mantle.product.store.ProductStore" limit="1" list="stores">
+                <econdition field-name="organizationPartyId" from="companyPartyId"/>
+            </entity-find>
+            <if condition="stores"><!-- user first one for growerp -->
+                <service-call name="update#mantle.product.store.ProductStore"
+                in-map="[productStoreId: stores[0].productStoreId, storeName: 'AppAdmin']"/>
             </if>
+            <service-call name="growerp.100.PartyServices100.verifyAndGet#ProductStore"
+                in-map="[companyPartyId: companyPartyId, classificationId: 'AppAdmin']"
+                out-map="context"/>
+            <set field="productStoreId" from="productStore.productStoreId"/>
             <!-- get category -->
             <entity-find entity-name="mantle.product.store.ProductStoreCategory" list="rootCategories">
                 <econdition field-name="productStoreId" from="productStoreId"/>
@@ -256,7 +253,6 @@ along with this software (see the LICENSE.md file). If not, see
                         ]"/>
                 </if>
             </iterate>
-
         </actions>
     </service>
-</services>
+ </services>

@@ -904,7 +904,7 @@ along with this software (see the LICENSE.md file). If not, see
             <if condition="!classification">
                 <return error="true" message="classificationId: $classificationId invalid"/>
             </if>
-            <!-- verify party classification -->
+            <!-- verify party classification application-->
             <entity-find-one entity-name="mantle.party.PartyClassificationAndAppl"
                     value-field="partyClassification">
                 <field-map field-name="partyId" from="companyPartyId"/>

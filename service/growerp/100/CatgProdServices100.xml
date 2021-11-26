@@ -92,6 +92,7 @@ along with this software (see the LICENSE.md file). If not, see
                         </econditions>
                         <date-filter from-field-name="productFromDate"
                             thru-field-name="productThruDate" ignore="productId"/>
+                        <date-filter/><!-- price thrudate-->
                         <order-by field-name="productName"/>
                     </entity-find>
             <if condition="!productId">
