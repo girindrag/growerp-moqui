@@ -249,7 +249,6 @@ along with this software (see the LICENSE.md file). If not, see
                     <if condition="open == true &amp;&amp; !finDocId &amp;&amp; !search">
                         <set field="status" from="statusList"/>
                     </if>
-                    <log message="parties vend: ${vendorPartyId}  customer: ${customerPartyId}"/>
                     <entity-find offset="start" limit="limit" list="items"
                             entity-name="growerp.order.OrderHeaderPartItemPartiesAndReservation">
                         <econdition field-name="vendorPartyId" from="vendorPartyId"
@@ -306,7 +305,7 @@ along with this software (see the LICENSE.md file). If not, see
                                 ? item.entryDate.toString().substring(0,19) + 'Z': null,
                             placedDate: item.placedDate
                                 ? item.entryDate.toString().substring(0,19) + 'Z' : null,
-                            sales: sales.toString(),
+                            sales: sales,
                             docType: docType,
                             otherUser: userOut,
                             grandTotal: item.grandTotal ? item.grandTotal.toString(): null,
@@ -407,7 +406,7 @@ along with this software (see the LICENSE.md file). If not, see
                             out-map="context"/>
                         <set field="finDocOut" from="[
                             docType: docType,
-                            sales: sales.toString(),
+                            sales: sales,
                             orderId: item.orderId,
                             invoiceId: item.invoiceId,
                             description: item.itemDescription,
@@ -474,7 +473,6 @@ along with this software (see the LICENSE.md file). If not, see
                         </entity-find>
                     </else>
                 </if>
-                <log message="==2==payments found: ${items.size()}"/> 
                 <iterate entry="item" list="items">
                     <if condition="!sales">
                         <set field="userOut" from="[
@@ -505,7 +503,7 @@ along with this software (see the LICENSE.md file). If not, see
                         statusId: convertedStatusId,
                         creationDate: item.effectiveDate 
                             ? item.effectiveDate.toString().substring(0,19) + 'Z' : null,
-                        sales: sales.toString(),
+                        sales: sales,
                         docType: docType,
                         otherUser: userOut,
                         grandTotal: item.amount ? item.amount.toString() : null,
@@ -514,7 +512,6 @@ along with this software (see the LICENSE.md file). If not, see
                 </iterate>
             </if>
             <if condition="docType == 'shipment'">
-                <log message="search: $search"/>
                 <set field="openStatusList"
                     from="['ShipInput','ShipScheduled','ShipPicked',
                             'ShipPacked','Ship','Shipped']"/>
@@ -584,7 +581,7 @@ along with this software (see the LICENSE.md file). If not, see
                             in-map="[sales: sales, docType: docType, statusId: item.statusId]" out-map="context"/>
                         <set field="finDocOut" from="[
                             docType: docType,
-                            sales: sales.toString(),
+                            sales: sales,
                             orderId: item.orderId,
                             shipmentId: item.shipmentId,
                             statusId: convertedStatusId,
@@ -656,7 +653,7 @@ along with this software (see the LICENSE.md file). If not, see
                                 statusId: item.isPosted == 'Y'? 'Posted' : 'NotPosted']" out-map="context"/>
                         <set field="finDocOut" from="[
                             docType: 'transaction',
-                            sales: 'true',
+                            sales: true,
                             paymentId: item.paymentId,
                             invoiceId: item.invoiceId,
                             shipmentId: item.shipmentId,

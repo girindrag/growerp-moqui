@@ -129,20 +129,20 @@ along with this software (see the LICENSE.md file). If not, see
                 <if condition="contents">
                     <service-call name="growerp.100.ImageServices100.download#Image"
                         in-map="[contentLocation: contents[0].contentLocation]" out-map="context"/></if>
-                    <service-call name="growerp.100.FinDocServices100.convert#StatusId"
-                        in-map="[docType: 'product', statusId: product.productTypeEnumId]" out-map="prodConvert"/>
-                    <set field="productOut" from="[
-                        productId: product.productId,
-                        pseudoId: product.pseudoId,
-                        productName: product.productName ?: '',
-                        productTypeId: prodConvert.convertedStatusId,
-                        assetClassId: product.assetClassEnumId,
-                        description: product.description?:'',
-                        price: product.price ? product.price.toString() : null,
-                        category: [categoryId: product.categoryId, categoryName: product.categoryName],
-                        useWarehouse: product.requireInventory == 'Y' ? true : false,
-                        assetCount: assetCount &amp;&amp; assetCount[0] &amp;&amp; assetCount[0].totalAssets ? assetCount[0].totalAssets.toString() : '0',
-                        image: imageFile? imageFile : null]"/>
+                <service-call name="growerp.100.FinDocServices100.convert#StatusId"
+                    in-map="[docType: 'product', statusId: product.productTypeEnumId]" out-map="prodConvert"/>
+                <set field="productOut" from="[
+                    productId: product.productId,
+                    pseudoId: product.pseudoId,
+                    productName: product.productName ?: '',
+                    productTypeId: prodConvert.convertedStatusId,
+                    assetClassId: product.assetClassEnumId,
+                    description: product.description?:'',
+                    price: product.price?.toString(),
+                    category: [categoryId: product.categoryId, categoryName: product.categoryName],
+                    useWarehouse: product.requireInventory == 'Y' ? true : false,
+                    assetCount: assetCount ? assetCount[0].totalAssets : null,
+                    image: imageFile]"/>
                 <if condition="productId">
                     <set field="product" from="productOut"/>
                     <else>

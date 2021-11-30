@@ -374,7 +374,7 @@ along with this software (see the LICENSE.md file). If not, see
                     email: userInfo?.emailAddress,
                     firstName: userInfo?.firstName,
                     lastName: userInfo?.lastName,
-                    loginDisabled: userInfo?.loginDisabled == 'Y'? 'true' : 'false',
+                    loginDisabled: userInfo?.loginDisabled == 'Y'? true : false,
                     loginName: userInfo?.username,
                     userGroupId: userInfo.userGroupId,
                     groupDescription: userInfo?.description,
@@ -1230,7 +1230,7 @@ along with this software (see the LICENSE.md file). If not, see
                         <!-- create location -->
                             <service-call name="create#mantle.facility.FacilityLocation"
                                 in-map="[facilityId: facilities[0].facilityId,
-                                        areaId: 'loc' + xLoc++]"
+                                        description: 'loc' + xLoc++]"
                                 out-map="context"/>
 
                         <!-- do not put fixed asset in inventory we do not want the normal reserve process to work -->

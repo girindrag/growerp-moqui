@@ -76,27 +76,27 @@ along with this software (see the LICENSE.md file). If not, see
 
             <if condition="st">
             <set field="stats" from="[
-                admins: st.admins?.toString(),
-                employees: st.employees?.toString(),
-                suppliers: st.suppliers?.toString(),
-                leads: st.leads?.toString(),
-                customers: st.customers?.toString(),
-                openSlsOrders: st.openSlsOrders?.toString(),
-                openPurOrders: st.openPurOrders?.toString(),
-                opportunities: st.opportunities?.toString(),
-                myOpportunities: myOpportunities?.toString(),
-                categories: st.categories?.toString(),
-                products: st.products?.toString(),
-                assets: st.assets?.toString(),
-                salesInvoicesNotPaidCount:  st.salesInvoicesNotPaidCount?.toString(),
+                admins: st.admins,
+                employees: st.employees,
+                suppliers: st.suppliers,
+                leads: st.leads,
+                customers: st.customers,
+                openSlsOrders: st.openSlsOrders,
+                openPurOrders: st.openPurOrders,
+                opportunities: st.opportunities,
+                myOpportunities: myOpportunities,
+                categories: st.categories,
+                products: st.products,
+                assets: st.assets,
+                salesInvoicesNotPaidCount:  st.salesInvoicesNotPaidCount,
                 salesInvoicesNotPaidAmount: st.salesInvoicesNotPaidAmount?.toString(),
-                purchInvoicesNotPaidCount:  st.purchInvoicesNotPaidCount?.toString(),
+                purchInvoicesNotPaidCount:  st.purchInvoicesNotPaidCount,
                 purchInvoicesNotPaidAmount: st.purchInvoicesNotPaidAmount?.toString(),
-                allTasks: st.allTasks?.toString(),
-                notInvoicedHours: st.notInvoicedHours?.toString(),
-                outgoingShipments: outgoingShipments?.toString(),
-                incomngShipments: incomingShipments?.toString(),
-                whLocations: whLocations?.toString()
+                allTasks: st.allTasks,
+                notInvoicedHours: st.notInvoicedHours,
+                outgoingShipments: outgoingShipments,
+                incomngShipments: incomingShipments,
+                whLocations: whLocations
                 ]"/>
             </if>
         </actions>
