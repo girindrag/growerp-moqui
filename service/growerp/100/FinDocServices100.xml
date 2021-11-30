@@ -810,8 +810,8 @@ along with this software (see the LICENSE.md file). If not, see
                                     assetId: item.assetId,
                                     orderId: orderId,
                                     orderItemSeqId: item.itemSeqId,
-                                    rentalFromDate: item.rentalFromDate.substring(0,18),
-                                    rentalThruDate: item.rentalThruDate.substring(0,18)
+                                    rentalFromDate: item.rentalFromDate,
+                                    rentalThruDate: item.rentalThruDate,
                                 ]"/>
                 </else-if>
                 <else>

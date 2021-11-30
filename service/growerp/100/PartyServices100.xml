@@ -38,7 +38,7 @@ along with this software (see the LICENSE.md file). If not, see
             <parameter name="filter" default="null"/>
         </in-parameters>
         <out-parameters>
-            <parameter name="companies"/>
+            <parameter name="companies" type="List"/>
         </out-parameters>
         <actions>
             <service-call out-map="context"
@@ -68,8 +68,11 @@ along with this software (see the LICENSE.md file). If not, see
             <iterate list="parties" entry="party">
                 <set field="company"
                     from="[partyId: party.partyId, name: party.organizationName,
-                                currency: [currencyId: party.baseCurrencyUomId,
-                                        description: party.uomDescription]]"/>
+                                currency: party.baseCurrencyUomId == null
+                                ? null : [currencyId: party.baseCurrencyUomId,
+                                        description: party.uomDescription],
+                                vatPerc: party.vatPerc ? party.vatPerc.toString() : null,
+                                salesPerc: party.salesPerc ? party.salesPerc.toString() : null]"/>
                 <script>companies.add(company)</script>
             </iterate>
         </actions>
@@ -134,7 +137,7 @@ along with this software (see the LICENSE.md file). If not, see
                 partyId: companyPartyId,
                 name: org.organizationName,
                 email: emails[0].infoString,
-                currency:
+                currency: org.baseCurrencyUomId == null ? null :
                     [currencyId: org.baseCurrencyUomId,description: org.uomDescription],
                 image: imageFile,
                 address: address,

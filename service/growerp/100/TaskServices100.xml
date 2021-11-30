@@ -341,7 +341,7 @@ along with this software (see the LICENSE.md file). If not, see
                 partyId: te.partyId,
                 hours: te.hours?.toString(),
                 comments: te.comments,
-                date: te.fromDate ? te.fromDate`.toString().substring(0,19) + 'Z': null
+                date: te.fromDate ? te.fromDate.toString().substring(0,19) + 'Z': null
             ]"/>
         </actions>
     </service>
