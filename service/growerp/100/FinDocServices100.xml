@@ -1029,7 +1029,7 @@ along with this software (see the LICENSE.md file). If not, see
                 <entity-find entity-name="mantle.order.OrderPart" list="parts" for-update="true">
                     <econdition field-name="orderId"/>
                 </entity-find>
-                <if condition="order.sales == 'true'">
+                <if condition="order.sales == true"><!-- quotes on true not required -->
                     <set field="parts[0].customerPartyId" from="order.otherUser.companyPartyId"/>
                     <set field="contactRole" value="CustomerContactPerson"/>
                     <else>

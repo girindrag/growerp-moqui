@@ -69,7 +69,7 @@ along with this software (see the LICENSE.md file). If not, see
                     description: opp.description,
                     nextStep: opp.nextStep,
                     estAmount: opp.estAmount?.toString(),
-                    estProbability: opp.estProbability?.toString(),
+                    estProbability: opp.estProbability,
                     employeeUser: employee.user,
                     leadUser: lead.user]"/>
                 <if condition="!opportunityId">
