@@ -24,7 +24,8 @@ along with this software (see the LICENSE.md file). If not, see
                 <description>when have single company but still want ownerPartyId set this to true</description>
             </parameter>
         </in-parameters>
-        <out-parameters>
+        <out-parameters>            
+            <parameter name="userPartyId"/>
             <parameter name="ownerPartyId"/>
             <parameter name="companyPartyId"/>
             <parameter name="singleCompany"/>
@@ -266,9 +267,26 @@ along with this software (see the LICENSE.md file). If not, see
         <actions><set field="ok" value="ok"/></actions>
     </service>
 
-    <service verb="check" noun="ApiKey">
-        <out-parameters><parameter name="ok"/></out-parameters>
-        <actions><set field="ok" value="ok"/></actions>
+    <service verb="get" noun="Authenticate"><!-- will end successfully when apiKey ok -->
+        <out-parameters>
+            <parameter name="company"/>
+            <parameter name="user"/>
+            <parameter name="stats"/>
+            <parameter name="apiKey"/>
+            <parameter name="moquiSessionToken"/>
+        </out-parameters>
+        <actions>
+            <service-call out-map="context"
+                name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner"/>
+            <service-call name="growerp.100.PartyServices100.get#User"
+                in-map="[userPartyId: userPartyId]" out-map="context"/>
+            <service-call name="growerp.100.PartyServices100.get#Company" 
+                in-map="companyPartyId: companyPartyId" out-map="context"/>
+            <set field="apiKey" from="ec.user.getLoginKey()"/>
+            <set field="moquiSessionToken" from="ec.web.sessionToken"/>
+            <service-call name="growerp.100.GeneralServices100.get#Stats"
+                out-map="context"/>           
+        </actions>
     </service>
 
     <service verb="get" noun="CurrencyList" authenticate="anonymous-all">
@@ -307,7 +325,21 @@ along with this software (see the LICENSE.md file). If not, see
         </actions>
     </service>
 
-    <service verb="login" noun="User" authenticate="anonymous-all">
+    <service verb="logout" noun="User" authenticate="anonymous-all">
+        <description>service to return an apikey if user/password ok, when not check for a reset password</description>
+        <actions>
+            <service-call out-map="context"
+                name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner"/>
+            <service-call name="growerp.100.PartyServices100.get#User"
+                in-map="[userPartyId: userPartyId]" out-map="context"/>
+                <script>
+                    if (ec.user.username) { ec.user.logoutUser(); ec.web.sendTextResponse("successful") }
+                    else { ec.web.sendTextResponse("no_user") }
+                </script>
+        </actions>
+    </service>
+
+            <service verb="login" noun="User" authenticate="anonymous-all">
         <description>service to return an apikey if user/password ok, when not check for a reset password</description>
         <in-parameters>
             <parameter name="username" required="true"/>
@@ -380,12 +412,9 @@ along with this software (see the LICENSE.md file). If not, see
         <in-parameters>
             <parameter name="username"/>
         </in-parameters>
-        <out-parameters>
-            <parameter name="response"/>
-        </out-parameters>
         <actions>
             <service-call name="org.moqui.impl.UserServices.reset#Password"
-                in-map="[username: username]" out-map="response"/>
+                in-map="[username: username]"/>
         </actions>
     </service>
 

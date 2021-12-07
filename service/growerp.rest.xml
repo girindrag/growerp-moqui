@@ -20,18 +20,20 @@ along with this software (see the LICENSE.md file). If not, see
         <!-- general -->
         <resource name="Ping">
             <method type="get"><service name="growerp.100.GeneralServices100.check#Ping"/></method></resource>
-        <resource name="CheckApiKey">
-            <method type="get"><service name="growerp.100.GeneralServices100.check#ApiKey"/></method></resource>
+        <resource name="Authenticate">
+            <method type="get"><service name="growerp.100.GeneralServices100.get#Authenticate"/></method></resource>
         <resource name="Currencies" require-authentication="anonymous-all">
             <method type="get"><service name="growerp.100.GeneralServices100.get#CurrencyList"/></method></resource>
         <resource name="Countries" require-authentication="anonymous-all">
             <method type="get"><service name="growerp.100.GeneralServices100.get#CountryList"/></method></resource>
         <resource name="Login" require-authentication="anonymous-all">
             <method type="post"><service name="growerp.100.GeneralServices100.login#User"/></method></resource>
+        <resource name="Logout">
+            <method type="post"><service name="growerp.100.GeneralServices100.logout#User"/></method></resource>
         <resource name="ResetPassword" require-authentication="anonymous-all">
             <method type="post"><service name="growerp.100.GeneralServices100.reset#Password"/></method></resource>
         <resource name="Password" require-authentication="anonymous-all">
-            <method type="put"><service name="growerp.100.GeneralServices100.update#Password"/></method></resource>
+            <method type="post"><service name="growerp.100.GeneralServices100.update#Password"/></method></resource>
         <resource name="Image">
             <method type="post"><service name="growerp.100.ImageServices100.upload#Image"/></method></resource>
         <!-- parties -->
@@ -44,10 +46,10 @@ along with this software (see the LICENSE.md file). If not, see
         <resource name="Company">
             <method type="post"><service name="growerp.100.PartyServices100.update#Company"/></method></resource>
         <resource name="RegisterUser" require-authentication="anonymous-all">
-            <method type="put"><service name="growerp.100.PartyServices100.register#User"/></method></resource>
+            <method type="post"><service name="growerp.100.PartyServices100.register#User"/></method></resource>
         <resource name="User">
             <method type="get"><service name="growerp.100.PartyServices100.get#User"/></method>
-            <method type="put"><service name="growerp.100.PartyServices100.create#User"/></method>
+            <method type="post"><service name="growerp.100.PartyServices100.create#User"/></method>
             <method type="patch"><service name="growerp.100.PartyServices100.update#User"/></method>
             <method type="delete"><service name="growerp.100.PartyServices100.delete#User"/></method></resource>
         <!--catalog (products and categories) -->
@@ -59,7 +61,7 @@ along with this software (see the LICENSE.md file). If not, see
             <method type="get"><service name="growerp.100.CatgProdServices100.get#ProductCategories"/></method>
         </resource>  
         <resource name="Category">
-            <method type="put"><service name="growerp.100.CatgProdServices100.create#ProductCategory"/></method>
+            <method type="post"><service name="growerp.100.CatgProdServices100.create#ProductCategory"/></method>
             <method type="patch"><service name="growerp.100.CatgProdServices100.update#ProductCategory"/></method>
             <method type="delete"><service name="growerp.100.CatgProdServices100.delete#ProductCategory"/></method></resource>
         <!-- products -->
@@ -67,12 +69,12 @@ along with this software (see the LICENSE.md file). If not, see
             <method type="get"><service name="growerp.100.CatgProdServices100.get#Products"/></method>
         </resource>
         <resource name="Product">
-            <method type="put"><service name="growerp.100.CatgProdServices100.create#Product"/></method>
+            <method type="post"><service name="growerp.100.CatgProdServices100.create#Product"/></method>
             <method type="patch"><service name="growerp.100.CatgProdServices100.update#Product"/></method>
             <method type="delete"><service name="growerp.100.CatgProdServices100.delete#Product"/></method></resource>
         <resource name="Asset">
             <method type="get"><service name="growerp.100.CatgProdServices100.get#Assets"/></method>
-            <method type="put"><service name="growerp.100.CatgProdServices100.create#Asset"/></method>
+            <method type="post"><service name="growerp.100.CatgProdServices100.create#Asset"/></method>
             <method type="patch"><service name="growerp.100.CatgProdServices100.update#Asset"/></method>
             <method type="delete"><service name="growerp.100.CatgProdServices100.delete#Asset"/></method></resource>
         <!--financial docs: order, invoice payments -->
@@ -110,7 +112,7 @@ along with this software (see the LICENSE.md file). If not, see
             <method type="get"><service name="growerp.100.CrmServices100.get#Crm"/></method></resource>
         <resource name="Opportunity">
             <method type="get"><service name="growerp.100.CrmServices100.get#Opportunity"/></method>
-            <method type="put"><service name="growerp.100.CrmServices100.create#Opportunity"/></method>
+            <method type="post"><service name="growerp.100.CrmServices100.create#Opportunity"/></method>
             <method type="patch"><service name="growerp.100.CrmServices100.update#Opportunity"/></method>
             <method type="delete"><service name="growerp.100.CrmServices100.delete#Opportunity"/></method></resource>
         <!-- Accounting -->
@@ -121,10 +123,10 @@ along with this software (see the LICENSE.md file). If not, see
         <!-- chat server -->
         <resource name="ChatMessage">
             <method type="get"><service name="growerp.100.ChatServices100.get#ChatMessage"/></method>
-            <method type="put"><service name="growerp.100.ChatServices100.create#ChatMessage"/></method></resource>
+            <method type="post"><service name="growerp.100.ChatServices100.create#ChatMessage"/></method></resource>
         <resource name="ChatRoom">
             <method type="get"><service name="growerp.100.ChatServices100.get#ChatRoom"/></method>
-            <method type="put"><service name="growerp.100.ChatServices100.create#ChatRoom"/></method>
+            <method type="post"><service name="growerp.100.ChatServices100.create#ChatRoom"/></method>
             <method type="patch"><service name="growerp.100.ChatServices100.update#ChatRoom"/></method>
             <method type="delete"><service name="growerp.100.ChatServices100.delete#ChatRoom"/></method></resource>
     </resource>
