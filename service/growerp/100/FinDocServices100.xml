@@ -243,6 +243,11 @@ along with this software (see the LICENSE.md file). If not, see
                         </econditions>
                         <order-by field-name="orderItemSeqId"/>
                     </entity-find>
+                    <if condition="items">
+                        <if condition="items[0].vendorPartyId == companyPartyId">
+                            <set field="sales" value="true" type="Boolean"/>
+                        <else>
+                            <set field="sales" value="false" type="Boolean"/></else></if></if>
                 <else><!-- multiple documents -->
                     <set field="statusList"
                         from="['OrderOpen','OrderPlaced','OrderApproved']"/> <!-- OrderCompleted OrderCancelled' -->
@@ -352,6 +357,11 @@ along with this software (see the LICENSE.md file). If not, see
                         </econditions>
                         <order-by field-name="invoiceItemSeqId"/>
                     </entity-find>
+                    <if condition="items">
+                        <if condition="items[0].fromPartyId == companyPartyId">
+                            <set field="sales" value="true" type="Boolean"/>
+                        <else>
+                            <set field="sales" value="false" type="Boolean"/></else></if></if>
                     <else><!-- invoice list -->
                         <if condition="open == true &amp;&amp; !finDocId &amp;&amp; !search">
                             <set field="statusList" from="openStatusList"/></if>
@@ -449,6 +459,11 @@ along with this software (see the LICENSE.md file). If not, see
                                 ignore-if-empty="true"/>
                         </econditions>
                     </entity-find>
+                    <if condition="items">
+                        <if condition="items[0].toPartyId == companyPartyId">
+                            <set field="sales" value="true" type="Boolean"/>
+                        <else>
+                            <set field="sales" value="false" type="Boolean"/></else></if></if>
                     <else>
                         <if condition="open == true &amp;&amp; !finDocId &amp;&amp; !search">
                             <set field="statusList" from="openStatusList"/>
@@ -526,6 +541,11 @@ along with this software (see the LICENSE.md file). If not, see
                                 ignore-if-empty="true"/>
                         </econditions>
                     </entity-find>
+                    <if condition="items">
+                        <if condition="items[0].fromPartyId == companyPartyId">
+                            <set field="sales" value="true" type="Boolean"/>
+                        <else>
+                            <set field="sales" value="false" type="Boolean"/></else></if></if>
                     <else>
                         <if condition="open == true &amp;&amp; !finDocId &amp;&amp; !search">
                             <set field="status" from="openStatusList"/></if>
@@ -729,7 +749,7 @@ along with this software (see the LICENSE.md file). If not, see
         <actions>
              <service-call out-map="context" in-map="[wantOwner: true]"
                 name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner"/>
-            <if condition="order.sales == 'true'"><!-- inside order object this field is a string -->
+            <if condition="order.sales == true"><!-- inside this order object this field is NOT a string -->
                 <set field="vendorPartyId" from="companyPartyId"/>
                 <set field="customerPartyId" from="order.otherUser.companyPartyId"/>
                 <set field="contactRole" value="CustomerContactPerson"/>
@@ -751,10 +771,24 @@ along with this software (see the LICENSE.md file). If not, see
             </entity-find-one>
             <set field="currencyUomId" from="aPref.baseCurrencyUomId"/>
             <!-- create order -->
-            <service-call name="mantle.order.OrderServices.create#Order"
-                in-map="context + [
-                    orderName: order.description,
-                ]" out-map="context"/>
+            <entity-find entity-name="mantle.facility.Facility" list="facilities">
+                <econdition field-name="ownerPartyId" from="companyPartyId"/>
+            </entity-find>
+            <if condition="order.sales == true">
+                <service-call name="mantle.order.OrderServices.create#Order"
+                    in-map="[productStoreId: productStoreId,
+                            facilityId: facilities[0].facilityId,
+                            vendorPartyId: vendorPartyId,
+                            customerPartyId: customerPartyId,
+                            orderName: order.description]" out-map="context"/>
+                <else>
+                    <service-call name="mantle.order.OrderServices.create#Order"
+                    in-map="[   vendorPartyId: vendorPartyId,
+                                customerPartyId: customerPartyId,
+                                facilityId: facilities[0].facilityId,
+                                orderName: order.description]" out-map="context"/>
+                </else>
+            </if>
             <!-- add vendor/customer contact person as an extra party at orderPartParty -->
             <service-call name="create#mantle.order.OrderPartParty"
                 in-map="[orderId:orderId, orderPartSeqId:orderPartSeqId,
@@ -1025,16 +1059,24 @@ along with this software (see the LICENSE.md file). If not, see
                 <entity-update value-field="orderHeader"/>
             </if>
             <if condition="order.otherUser">
-                <!-- update either vendor or customer -->
-                <entity-find entity-name="mantle.order.OrderPart" list="parts" for-update="true">
-                    <econdition field-name="orderId"/>
-                </entity-find>
-                <if condition="order.sales == true"><!-- quotes on true not required -->
-                    <set field="parts[0].customerPartyId" from="order.otherUser.companyPartyId"/>
+                <if condition="order.sales == true"><!-- quotes on true NOT required -->
+                    <set field="customerPartyId" from="order.otherUser.companyPartyId"/>
                     <set field="contactRole" value="CustomerContactPerson"/>
                     <else>
-                        <set field="parts[0].vendorPartyId" from="order.otherUser.companyPartyId"/>
+                        <set field="vendorPartyId" from="order.otherUser.companyPartyId"/>
                         <set field="contactRole" value="VendorContactPerson"/>
+                    </else>
+                </if>
+                <!-- update either vendor or customer -->
+                <entity-find entity-name="mantle.order.OrderPart" list="parts" for-update="true" limit="1">
+                    <econdition field-name="vendorPartyId" from="vendorPartyId" ignore-if-empty="true"/>
+                    <econdition field-name="customerPartyId" from="customerPartyId" ignore-if-empty="true"/>
+                    <econdition field-name="orderId"/>
+                </entity-find>
+                <if condition="order.sales == true"><!-- quotes on true NOT required -->
+                    <set field="parts[0].customerPartyId" from="customerPartyId"/>
+                    <else>
+                        <set field="parts[0].vendorPartyId" from="vendorPartyId"/>
                     </else>
                 </if>
                 <entity-update value-field="parts[0]"/>
@@ -1091,7 +1133,7 @@ along with this software (see the LICENSE.md file). If not, see
                     <service-call name="mantle.order.OrderServices.approve#Order"
                         in-map="context"/>
                     <!-- create invoice -->
-                    <if condition="order.sales == 'true'"><!-- inside order this is a string -->
+                    <if condition="order.sales == true">
                         <set field="invStatusId" value="InvoiceFinalized"/>
                         <else>
                             <set field="invStatusId" value="InvoiceReceived"/>
