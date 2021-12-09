@@ -19,6 +19,7 @@ along with this software (see the LICENSE.md file). If not, see
         <description> get a single, or all warehouse locations</description>
         <in-parameters>
             <parameter name="locationId"/>
+            <parameter name="facilityId"/>
             <parameter name="start" default-value="0" type="Integer"/>
             <parameter name="limit" default-value="20" type="Integer"/>
             <parameter name="search" default="null"/>
@@ -28,25 +29,23 @@ along with this software (see the LICENSE.md file). If not, see
             <parameter name="locations" type="List"/>
         </out-parameters>
         <actions>
-
             <if condition="search != null">
                 <set field="search" value="%${search}%"/></if>
 
             <service-call out-map="context" 
                 name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner"/>
             <entity-find offset="start" limit="limit" list="locationsRead"
-                entity-name="mantle.product.asset.AssetLocationProductUomDetail">
-                <econdition field-name="locationSeqId" operator="is-not-null"/>
-                <econdition field-name="locationSeqId" ignore-if-empty="true"/>
+                entity-name="growerp.warehouse.LocationAssetAndProductUomDetail">
+                <econdition field-name="locationId" ignore-if-empty="true"/>
                 <econdition field-name="ownerPartyId" ignore-if-empty="true"/>
-                <econdition field-name="facilityId" operator="is-not-null"/>
+                <econdition field-name="facilityId" ignore-if-empty="true"/>
                 <econditions combine="or">
                     <econdition field-name="description" ignore-case="true"
                         operator="like" from="search" ignore-if-empty="true"/>
                     <econdition field-name="acquireShipmentId" ignore-case="true"
                         operator="like" from="search" ignore-if-empty="true"/>
                 </econditions>
-                <order-by field-name="locationSeqId"/>
+                <order-by field-name="locationId"/>
                 <order-by field-name="productId"/>
                 <order-by field-name="assetId"/>
             </entity-find>
@@ -55,33 +54,30 @@ along with this software (see the LICENSE.md file). If not, see
             <if condition="!locationId">
                 <set field="locations" from="[]"/></if>
             <iterate list="locationsRead" entry="loc">
-                <if condition="lastItem  &amp;&amp; lastItem.locationSeqId != loc.locationSeqId">
+                <if condition="lastItem  &amp;&amp; lastItem.locationId != loc.locationId">
+                    <set field="locOut.assets" from="assets"/>
+                    <script>locations.add(locOut)</script>
+                </if>
+                <if condition="!lastItem || lastItem.locationId != loc.locationId">
                     <set field="locOut" from="[
-                        locationId: lastItem.locationSeqId,
-                        locationName: lastItem.description,
-                        assets: assets]"/>
+                        locationId: loc.locationId,
+                        locationName: loc.locationName]"/>
                     <set field="assets" from="[]"/>
-                    <if condition="!locationId">
-                        <script>locations.add(locOut)</script></if>
                 </if>
                 <set field="product" from="[productId: loc.productId,
-                                            pseudoId: loc.pseudoId, productName: loc.productName]"/>
-                <set field="asset" from="[assetId: loc.assetId,
+                            pseudoId: loc.pseudoId, productName: loc.productName]"/>
+                <set field="asset" from="[assetId: loc.assetId, statusId: loc.statusId,
                             assetName: loc.assetName, product: product]"/>
                 <script>assets.add(asset)</script>
                 <set field="lastItem" from="loc"/>
             </iterate>
             <if condition="lastItem">
-                <set field="locOut" from="[
-                    locationId: lastItem.locationSeqId,
-                    locationName: lastItem.description,
-                    assets: assets]"/>
+                <set field="locOut.assets" from="assets"/>
                 <if condition="!locationId">
                     <script>locations.add(locOut)</script>
-                <else>
-                    <set field="location" from="locOut"/>
-                </else></if>
-            </if>
+                    <else>
+                        <set field="location" from="locOut"/>
+                    </else></if></if>
         </actions>
     </service>
 
@@ -94,7 +90,22 @@ along with this software (see the LICENSE.md file). If not, see
             <parameter name="location" type="Map"/>
         </out-parameters>
         <actions>
-            <log message="=====get location create: $location"/>
+            <script> // convert JSON data
+                Object locationIn = new groovy.json.JsonSlurper().parseText(location).location</script>
+            <service-call out-map="context" in-map="[wantOwner: true]"
+                name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner"/>
+            <entity-find entity-name="mantle.facility.Facility" list="facilities">
+                <econdition field-name="ownerPartyId" from="companyPartyId"/>
+            </entity-find>
+            <entity-find entity-name="mantle.facility.Facility" list="facilities">
+                <econdition field-name="ownerPartyId" from="ownerPartyId"/>
+            </entity-find>
+            <service-call name="create#mantle.facility.FacilityLocation"
+                in-map="[facilityId: facilities[0].facilityId,
+                    description: locationIn.locationName]" out-map="context"/>
+            <service-call name="growerp.100.WarehouseServices100.get#Location"
+                    in-map="[facilityId: facilities[0].facilityId,
+                             locationId: locationSeqId]" out-map="context"/>
         </actions>
     </service>
 
@@ -107,7 +118,25 @@ along with this software (see the LICENSE.md file). If not, see
             <parameter name="location" type="Map"/>
         </out-parameters>
         <actions>
-            <log message="=====get location create: $location"/>
+            <script> // convert JSON data
+                Object locationIn = new groovy.json.JsonSlurper().parseText(location).location</script>
+            <service-call out-map="context" in-map="[wantOwner: true]"
+                name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner"/>
+            <entity-find entity-name="mantle.facility.Facility" list="facilities">
+                <econdition field-name="ownerPartyId" from="ownerPartyId"/>
+            </entity-find>
+            <entity-find entity-name="mantle.facility.FacilityLocation" list="locations"
+                for-update="true" limit="1">
+                <econdition field-name="facilityId" from="facilities[0].facilityId"/>
+                <econdition field-name="locationSeqId" from="locationIn.locationId"/>
+            </entity-find>
+            <if condition="locations[0].description != locationIn.locationName">
+                <set field="locations[0].description" from="locationIn.locationName"/>
+                <entity-update value-field="locations[0]"/>
+            </if>
+            <service-call name="growerp.100.WarehouseServices100.get#Location"
+                    in-map="[facilityId: facilities[0].facilityId,
+                             locationId: locationIn.locationId]" out-map="context"/>
         </actions>
     </service>
 
@@ -120,7 +149,22 @@ along with this software (see the LICENSE.md file). If not, see
             <parameter name="location" type="Map"/>
         </out-parameters>
         <actions>
-            <log message="=====get location create: $location"/>
+            <script> // convert JSON data
+                Object locationIn = new groovy.json.JsonSlurper().parseText(location).location</script>
+            <service-call out-map="context" in-map="[wantOwner: true]"
+                name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner"/>
+            <entity-find entity-name="mantle.facility.Facility" list="facilities">
+                <econdition field-name="ownerPartyId" from="ownerPartyId"/>
+            </entity-find>
+            <entity-find entity-name="mantle.facility.FacilityLocation" list="locations"
+                for-update="true" limit="1">
+                <econdition field-name="facilityId" from="facilities[0].facilityId"/>
+                <econdition field-name="locationSeqId" from="locationIn.locationId"/>
+            </entity-find>
+            <service-call name="growerp.100.WarehouseServices100.get#Location"
+                    in-map="[facilityId: facilities[0].facilityId,
+                             locationId: locationIn.locationId]" out-map="context"/>
+            <entity-delete value-field="locations[0]"/>
         </actions>
     </service>
 

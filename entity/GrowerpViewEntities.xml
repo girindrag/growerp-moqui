@@ -190,6 +190,41 @@ along with this software (see the LICENSE.md file). If not, see
         <alias name="customerEmail" field="emailAddress" entity-alias="CACCOUNT"/>
     </view-entity>
 
+    <view-entity entity-name="LocationAssetAndProductUomDetail" package="growerp.warehouse">
+        <member-entity entity-alias="FAC" entity-name="mantle.facility.Facility"/>
+        <member-entity entity-alias="FCL" entity-name="mantle.facility.FacilityLocation"
+                join-from-alias="FAC"><key-map field-name="facilityId"/></member-entity>
+        <member-entity entity-alias="AST" entity-name="mantle.product.asset.Asset"
+                 join-from-alias="FCL" join-optional="true">
+            <key-map field-name="facilityId"/><key-map field-name="locationSeqId"/></member-entity>
+        <member-entity entity-alias="PROD" entity-name="mantle.product.Product"
+                join-from-alias="AST" join-optional="true">
+            <key-map field-name="productId"/></member-entity>
+        <member-entity entity-alias="UOM" entity-name="moqui.basic.Uom"
+                join-from-alias="PROD" join-optional="true">
+            <key-map field-name="amountUomId" related="uomId"/></member-entity>
+        <alias name="facilityId" entity-alias="FAC"/>
+        <alias name="ownerPartyId" entity-alias="FAC"/>
+        <alias name="locationId" field="locationSeqId" entity-alias="FCL"/>
+        <alias name="locationName" field="description" entity-alias="FCL"/>
+
+        <alias name="assetId" entity-alias="AST"/>
+        <alias name="assetName" entity-alias="AST"/>
+        <alias name="assetClassId" field="classEnumId" entity-alias="AST"/>
+        <alias name="statusId" entity-alias="AST"/>
+        <alias name="quantityOnHand" field="quantityOnHandTotal" entity-alias="AST"/>
+        <alias name="availableToPromise" field="availableToPromiseTotal" entity-alias="AST"/>
+
+        <alias name="productId" entity-alias="PROD"/>
+        <alias name="pseudoId" entity-alias="PROD"/>
+        <alias name="productName" entity-alias="PROD"/>
+        <alias name="productTypeEnumId" entity-alias="PROD"/>
+        <alias name="productClassEnumId" entity-alias="PROD"/>
+        <alias name="uomTypeEnumId" entity-alias="UOM"/>
+        <alias name="uomAbbreviation" field="abbreviation" entity-alias="UOM"/>
+        <alias name="uomDescription" field="description" entity-alias="UOM"/>
+    </view-entity>
+
     <view-entity entity-name="ProductAssetSummary" package="growerp.mobile.asset">
         <member-entity entity-alias="ASSET" entity-name="mantle.product.asset.Asset"/>
         <alias entity-alias="ASSET" name="productId"/>
