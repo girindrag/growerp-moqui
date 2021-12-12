@@ -610,10 +610,23 @@ along with this software (see the LICENSE.md file). If not, see
                             otherUser: userOut,
                             ]"/>
                         <set field="finDocItems" from="[]"/>
-                    </if>                       
+                    </if>
+                    <set field="location" from="[
+                        locationId: item.locationId,
+                        locationName: item.locationName                        
+                        ]"/>
+                    <set field="asset" from="[
+                        assetId: item.assetId,
+                        assetName: item.assetName,
+                        receivedDate: item.receivedDate 
+                            ? item.receivedDate.toString().substring(0,19) + 'Z' : null,
+                        location: location
+                        ]"/>
                     <set field="finDocItem" from="[
                         productId: item.productId,
                         quantity: item.quantity ? item.quantity.toString() : null,
+                        description: item.itemDescription,
+                        asset: asset
                         ]"/>
                     <script>finDocItems.add(finDocItem)</script>
                     <set field="lastItem" from="item"/>
@@ -1187,14 +1200,17 @@ along with this software (see the LICENSE.md file). If not, see
     </service>
 
     <service verb="receive" noun="Shipment">
-            <description> Receive an incoming shipment either purchase or return.</description>
+            <description> Receive an incoming shipment either purchase or return.
+                        copied from receive#EntireShipment and then modified"
+            </description>
         <in-parameters>
-            <parameter name="finDoc"/></in-parameters>
+            <parameter name="finDoc" format="String"/></in-parameters>
         <out-parameters>
             <parameter name="finDoc" type="Map"/></out-parameters>
         <actions>
+            <set field="nowDate" from="ec.user.nowTimestamp.toString().substring(0,10)"/>
             <script>Object finDocIn = new groovy.json.JsonSlurper().parseText(finDoc).finDoc</script>
-            <service-call out-map="context"
+            <service-call out-map="context" in-map="[wantOwner: true]"
                 name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner"/>
             <entity-find list="shipmentItemDetailList"
                 entity-name="mantle.shipment.ShipmentItemDetail">
@@ -1203,7 +1219,7 @@ along with this software (see the LICENSE.md file). If not, see
                 <order-by field-name="productId"/>
             </entity-find>
             <entity-find entity-name="mantle.facility.Facility" list="facilities">
-                <econdition field-name="ownerPartyId" from="companyPartyId"/>
+                <econdition field-name="ownerPartyId" from="ownerPartyId"/>
             </entity-find>
             <set field="facilityId" from="facilities[0].facilityId"/>
             <iterate list="shipmentItemDetailList" entry="sid">
@@ -1211,15 +1227,17 @@ along with this software (see the LICENSE.md file). If not, see
                     from="sid.quantity - (sid.quantityAcceptedTotal ?: 0) - (sid.quantityRejectedTotal ?: 0)"/>
                 <set field="finDocItem"
                     from="finDocIn.items.find {element -> element.productId == sid.productId}"/>
-                <if condition="!finDocItem.locationSeqId"><!-- if empty create new location -->
+                <if condition="!finDocItem.location.locationSeqId"><!-- if empty create new location -->
                     <service-call name="create#mantle.facility.FacilityLocation"
-                        in-map="[description: sid.pseudoId, facilityId: facilityId]" out-map="context"/>
-                    <set field="finDocItem.locationSeqId" from="locationSeqId"/>
+                        in-map="[description: finDocItem.location.locationName ?: '${sid.pseudoId}(${nowDate})',
+                                facilityId: facilityId]" out-map="context"/>
+                    <set field="finDocItem.location.locationSeqId" from="locationSeqId"/>
                 </if>
                 <service-call name="mantle.shipment.ShipmentServices.receive#ShipmentProduct"
-                    in-map="[shipmentId:finDocIn.shipmentId, productId:sid.productId, statusId:statusId,
+                    in-map="[shipmentId:finDocIn.shipmentId, productId:sid.productId, statusId:'AstAvailable',
                             quantityAccepted:quantityRemaining, facilityId: facilityId,
-                            locationSeqId: finDocItem.locationSeqId]"/>
+                            ownerPartyId: ownerPartyId,
+                            locationSeqId: finDocItem.location.locationSeqId]"/>
             </iterate>
             <service-call out-map="context" in-map="[shipmentId:finDocIn.shipmentId]"
                 name="mantle.shipment.ShipmentServices.deliver#Shipment"/>

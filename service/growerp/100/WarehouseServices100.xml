@@ -40,6 +40,14 @@ along with this software (see the LICENSE.md file). If not, see
                 <econdition field-name="ownerPartyId" ignore-if-empty="true"/>
                 <econdition field-name="facilityId" ignore-if-empty="true"/>
                 <econditions combine="or">
+                    <econdition field-name="assetId" ignore-case="true"
+                        operator="like" from="search" ignore-if-empty="true"/>
+                    <econdition field-name="assetName" ignore-case="true"
+                        operator="like" from="search" ignore-if-empty="true"/>
+                    <econdition field-name="productId" ignore-case="true"
+                        operator="like" from="search" ignore-if-empty="true"/>
+                    <econdition field-name="productName" ignore-case="true"
+                        operator="like" from="search" ignore-if-empty="true"/>
                     <econdition field-name="description" ignore-case="true"
                         operator="like" from="search" ignore-if-empty="true"/>
                     <econdition field-name="acquireShipmentId" ignore-case="true"

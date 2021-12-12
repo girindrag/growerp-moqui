@@ -117,6 +117,9 @@ along with this software (see the LICENSE.md file). If not, see
         <member-entity entity-alias="SIS" entity-name="mantle.shipment.ShipmentItemSource"
             join-from-alias="SITEM" join-optional="true"><key-map field-name="shipmentId"/>
             <key-map field-name="productId"/></member-entity>
+        <member-entity entity-alias="ORDERITEM" entity-name="mantle.order.OrderItem"
+            join-from-alias="SIS" join-optional="true"><key-map field-name="orderId"/>
+            <key-map field-name="orderItemSeqId"/></member-entity>
         <!-- asset receipt and warehouse-->
         <member-entity entity-alias="ASR" entity-name="mantle.product.receipt.AssetReceipt"
              join-from-alias="SITEM" join-optional="true"><key-map field-name="shipmentId"/>
@@ -124,6 +127,9 @@ along with this software (see the LICENSE.md file). If not, see
         <member-entity entity-alias="AST" entity-name="mantle.product.asset.Asset"
             join-from-alias="ASR" join-optional="true">
             <key-map field-name="assetId"/></member-entity>
+        <member-entity entity-alias="UOM" entity-name="moqui.basic.Uom"
+            join-from-alias="AST" join-optional="true">
+            <key-map field-name="originalQuantityUomId" related="uomId"/></member-entity> 
         <member-entity entity-alias="LOC" entity-name="mantle.facility.FacilityLocation"
             join-from-alias="AST" join-optional="true"><key-map field-name="locationSeqId"/>
             <key-map field-name="facilityId"/></member-entity> 
@@ -165,13 +171,19 @@ along with this software (see the LICENSE.md file). If not, see
         <alias name="statusId" entity-alias="SHIP"/>
         <alias name="entryDate" entity-alias="SHIP"/>
         <alias name="orderId" entity-alias="SIS"/>
+        <alias name="orderItemSeqId" entity-alias="SIS"/>
         <alias name="invoiceId" entity-alias="SIS"/>
         <alias name="productId" entity-alias="SITEM"/>
         <alias name="quantity" entity-alias="SITEM"/>
+        <alias name="receivedDate" field="receivedDate" entity-alias="ASR"/>
+        <alias name="itemDescription" entity-alias="ORDERITEM"/>
         <alias name="assetId" entity-alias="AST"/>
-        <alias name="quantityOnHandTotal" entity-alias="AST"/>
-        <alias name="availableToPromiseTotal" entity-alias="AST"/>
-        <alias name="locationSeqId" entity-alias="LOC"/>
+        <alias name="assetName" entity-alias="AST"/>
+        <alias name="originalQuantityUomId" entity-alias="AST"/>
+        <alias name="uomId" entity-alias="UOM"/>
+        <alias name="uomAbbreviation" field="abbreviation" entity-alias="UOM"/>
+        <alias name="locationId" field="locationSeqId" entity-alias="LOC"/>
+        <alias name="locationName" field="description" entity-alias="LOC"/>
 
         <alias name="vendorPartyId" field="partyId" entity-alias="VORG"/>
         <alias name="vendorCompanyName" field="organizationName" entity-alias="VORG"/>
@@ -193,7 +205,7 @@ along with this software (see the LICENSE.md file). If not, see
     <view-entity entity-name="LocationAssetAndProductUomDetail" package="growerp.warehouse">
         <member-entity entity-alias="FAC" entity-name="mantle.facility.Facility"/>
         <member-entity entity-alias="FCL" entity-name="mantle.facility.FacilityLocation"
-                join-from-alias="FAC"><key-map field-name="facilityId"/></member-entity>
+            join-from-alias="FAC"><key-map field-name="facilityId"/></member-entity>
         <member-entity entity-alias="AST" entity-name="mantle.product.asset.Asset"
                  join-from-alias="FCL" join-optional="true">
             <key-map field-name="facilityId"/><key-map field-name="locationSeqId"/></member-entity>
@@ -212,6 +224,7 @@ along with this software (see the LICENSE.md file). If not, see
         <alias name="assetName" entity-alias="AST"/>
         <alias name="assetClassId" field="classEnumId" entity-alias="AST"/>
         <alias name="statusId" entity-alias="AST"/>
+        <alias name="originalQuantity" entity-alias="AST"/>
         <alias name="quantityOnHand" field="quantityOnHandTotal" entity-alias="AST"/>
         <alias name="availableToPromise" field="availableToPromiseTotal" entity-alias="AST"/>
 
