@@ -875,7 +875,6 @@ along with this software (see the LICENSE.md file). If not, see
                 <script>ec.user.loginUser(username, newPassword)</script>
                 <if condition="demoData == 'true'">
                     <service-call name="growerp.100.PartyServices100.load#DefaultData"
-                        include-user-login="true"  async="true"
                         in-map="[companyPartyId: companyPartyId,
                                 currencyId: currencyId,
                                 classificationId: classificationId,
@@ -1011,7 +1010,7 @@ along with this software (see the LICENSE.md file). If not, see
     </service>
 
     <!--internal service used in register to run async-->
-    <service verb="load" noun="DefaultData" authenticate="anonymous-all" transaction-timeout="3600">
+    <service verb="load" noun="DefaultData" transaction-timeout="3600">
         <!-- not reachable outside -->
         <in-parameters>
             <parameter name="companyPartyId" required="true"/>
@@ -1021,7 +1020,7 @@ along with this software (see the LICENSE.md file). If not, see
             <parameter name="counterMax" default="1" type="Integer"/>
         </in-parameters>
         <actions>
-            <script>sleep(3000)</script><!-- wait for registration above to commit -->
+            <!--script>sleep(3000)</script--><!-- wait for registration above to commit for async-->
             <entity-find entity-name="mantle.product.category.ProductCategory" list="rootList">
                 <econdition field-name="productCategoryTypeEnumId" value="PctRoot"/>
                 <econdition field-name="ownerPartyId" from="companyPartyId"/></entity-find>
