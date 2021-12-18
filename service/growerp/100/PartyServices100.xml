@@ -147,6 +147,21 @@ along with this software (see the LICENSE.md file). If not, see
         </actions>
     </service>
 
+    <service verb="create" noun="Company">
+        <description>
+            create company information
+        </description>
+        <in-parameters>
+            <parameter name="company"/>
+        </in-parameters>
+        <out-parameters>
+            <parameter name="company" type="Map"/>
+        </out-parameters>
+        <actions>
+            <log message="===========not implemented yet"/>
+        </actions>
+    </service>
+
     <service verb="update" noun="Company">
         <description>
             update company information
