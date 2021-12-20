@@ -45,7 +45,7 @@ along with this software (see the LICENSE.md file). If not, see
         artifactGroupId="GROWERP_API" authzTypeEnumId="AUTHZT_ALWAYS" authzActionEnumId="AUTHZA_ALL"/>
     <moqui.security.ArtifactAuthz artifactAuthzId="GROWERPAPI_AUTHZ_ADMIN" userGroupId="GROWERP_M_ADMIN" 
         artifactGroupId="GROWERP_API" authzTypeEnumId="AUTHZT_ALWAYS" authzActionEnumId="AUTHZA_ALL"/>
-    <!-- Read permissions for all employees user group temporary set to all too....-->
+    <!-- Read permissions for all employees user group temporary set to all too..better in app..-->
     <moqui.security.ArtifactAuthz artifactAuthzId="GROWERPAPI_AUTHZ_EMPL" userGroupId="GROWERP_M_EMPLOYEE"
         artifactGroupId="GROWERP_API" authzTypeEnumId="AUTHZT_ALWAYS" authzActionEnumId="AUTHZA_ALL"/>
 
