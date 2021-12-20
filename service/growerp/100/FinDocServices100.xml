@@ -73,7 +73,7 @@ along with this software (see the LICENSE.md file). If not, see
                 ]"/>
                 <set field="convertedStatusId" from="assetStatusValues[statusId]"/>
             </if>
-            <if condition="docType == 'order'">
+            <if condition="docType == 'Order'">
                 <set field="orderStatusValues" from="[
                     OrderOpen: 'FinDocPrep',
                     FinDocPrep: 'OrderOpen',
@@ -88,7 +88,7 @@ along with this software (see the LICENSE.md file). If not, see
                 ]"/>
                 <set field="convertedStatusId" from="orderStatusValues[statusId]"/>
             </if>
-            <if condition="docType == 'shipment'">
+            <if condition="docType == 'Shipment'">
                 <set field="orderStatusValues" from="[
                     ShipInput: 'FinDocPrep',
                     FinDocPrep: 'ShipInput',
@@ -103,7 +103,7 @@ along with this software (see the LICENSE.md file). If not, see
                 ]"/>
                 <set field="convertedStatusId" from="orderStatusValues[statusId]"/>
             </if>
-            <if condition="docType == 'invoice'">
+            <if condition="docType == 'Invoice'">
                 <if condition="sales == true">
                     <set field="invoiceStatusValues" from="[
                         InvoiceInProcess: 'FinDocPrep',
@@ -135,7 +135,7 @@ along with this software (see the LICENSE.md file). If not, see
                 </if>
                 <set field="convertedStatusId" from="invoiceStatusValues[statusId]"/>
             </if>
-            <if condition="docType == 'payment'">
+            <if condition="docType == 'Payment'">
                     <set field="paymentStatusValues" from="[
                         PmntProposed: 'FinDocPrep',
                         FinDocPrep: 'PmntProposed',
@@ -151,7 +151,7 @@ along with this software (see the LICENSE.md file). If not, see
                     ]"/>
                 <set field="convertedStatusId" from="paymentStatusValues[statusId]"/>
             </if>
-            <if condition="docType == 'transaction'">
+            <if condition="docType == 'Transaction'">
                 <set field="transactionStatusValues" from="[
                         NotPosted: 'FinDocPrep',
                         FinDocPrep: 'NotPosted',
@@ -202,7 +202,7 @@ along with this software (see the LICENSE.md file). If not, see
             <else>
                 <set field="customerPartyId" from="companyPartyId"/></else></if>
             <set field="current" value="0" type="Integer"/>
-            <if condition="docType == 'order'">
+            <if condition="docType == 'Order'">
                 <if condition="search">
                     <entity-find list="items" offset="start" limit="limit"
                             entity-name="growerp.order.OrderHeaderPartItemPartiesAndReservation">
@@ -341,7 +341,7 @@ along with this software (see the LICENSE.md file). If not, see
                 </if>
             </if>
 
-            <if condition="docType == 'invoice'">
+            <if condition="docType == 'Invoice'">
                 <set field="openStatusList"
                 from="['InvoiceInProcess', 'InvoiceFinalized', 'InvoiceReceived',
                         'InvoiceSent', 'InvoicePmtRecvd']"/>
@@ -445,7 +445,7 @@ along with this software (see the LICENSE.md file). If not, see
                     <script>finDocs.add(finDocOut)</script>
                 </if>
             </if>
-            <if condition="docType == 'payment'">
+            <if condition="docType == 'Payment'">
                 <set field="openStatusList"
                     from="['PmntProposed','PmntPromised','PmntAuthorized']"/>
                 <if condition="finDocId">
@@ -526,7 +526,7 @@ along with this software (see the LICENSE.md file). If not, see
                     <script>finDocs.add(finDocOut)</script>
                 </iterate>
             </if>
-            <if condition="docType == 'shipment'">
+            <if condition="docType == 'Shipment'">
                 <set field="openStatusList"
                     from="['ShipInput','ShipScheduled','ShipPicked',
                             'ShipPacked','Ship','Shipped']"/>
@@ -636,7 +636,7 @@ along with this software (see the LICENSE.md file). If not, see
                     <script>finDocs.add(finDocOut)</script>
                 </if>
             </if>
-            <if condition="docType == 'transaction'">
+            <if condition="docType == 'Transaction'">
                 <if condition="finDocId">
                     <entity-find  offset="start" list="entries"
                         entity-name="growerp.account.AcctgTransAndEntryAndCompany">
@@ -682,10 +682,10 @@ along with this software (see the LICENSE.md file). If not, see
                             companyName: item.otherCompanyName,
                         ]"/>
                         <service-call name="growerp.100.FinDocServices100.convert#StatusId"
-                            in-map="[docType: 'transaction', 
+                            in-map="[docType: 'Transaction', 
                                 statusId: item.isPosted == 'Y'? 'Posted' : 'NotPosted']" out-map="context"/>
                         <set field="finDocOut" from="[
-                            docType: 'transaction',
+                            docType: 'Transaction',
                             sales: true,
                             paymentId: item.paymentId,
                             invoiceId: item.invoiceId,
@@ -740,12 +740,12 @@ along with this software (see the LICENSE.md file). If not, see
             <service-call name="growerp.100.FinDocServices100.convert#StatusId"  out-map="context"
                 in-map="[sales: finDocIn?.sales, docType: finDocIn.docType, statusId: finDocIn.statusId]"/>
             <set field="finDocIn.statusId" from="convertedStatusId"/>
-            <if condition="finDocIn.docType == 'order'">
+            <if condition="finDocIn.docType == 'Order'">
                 <service-call name="growerp.100.FinDocServices100.create#Order"
                     in-map="[order: finDocIn]" out-map="context"/>
-                <set field="inMap" from="[finDocId: orderId, docType: 'order']"/>
+                <set field="inMap" from="[finDocId: orderId, docType: 'Order']"/>
                 <else>
-                    <return error="true" message="Document ${finDoc.docType} not supported yet...."/>
+                    <return error="true" message="Document ${finDocIn.docType} not supported yet...."/>
                 </else>
             </if>
             <service-call name="growerp.100.FinDocServices100.get#FinDoc"
@@ -900,16 +900,16 @@ along with this software (see the LICENSE.md file). If not, see
             <service-call name="growerp.100.FinDocServices100.convert#StatusId"  out-map="context"
                 in-map="[sales: finDocIn?.sales, docType: finDocIn.docType, statusId: finDocIn.statusId]"/>
             <set field="finDocIn.statusId" from="convertedStatusId"/>
-            <if condition="finDocIn.docType == 'order'">
+            <if condition="finDocIn.docType == 'Order'">
                 <service-call name="growerp.100.FinDocServices100.update#Order"
                     in-map="[order: finDocIn]"/>
-                <set field="inMap" from="[finDocId: finDocIn.orderId, docType: 'order']"/>
-            <else-if condition="finDocIn.docType == 'invoice'">
+                <set field="inMap" from="[finDocId: finDocIn.orderId, docType: 'Order']"/>
+            <else-if condition="finDocIn.docType == 'Invoice'">
                 <service-call name="update#mantle.account.invoice.Invoice"
                     in-map="[invoiceId: finDocIn.invoiceId, statusId: finDocIn.statusId]" out-map="context"/>
-                <set field="inMap" from="[finDocId: finDocIn.invoiceId, docType: 'invoice']"/>
+                <set field="inMap" from="[finDocId: finDocIn.invoiceId, docType: 'Invoice']"/>
                 </else-if>
-            <else-if condition="finDocIn.docType == 'payment'">
+            <else-if condition="finDocIn.docType == 'Payment'">
                 <service-call name="update#mantle.account.payment.Payment"
                     in-map="[paymentId: finDocIn.paymentId, statusId: finDocIn.statusId,
                             effectiveDate: ec.user.nowTimestamp]" out-map="context"/>
@@ -917,12 +917,12 @@ along with this software (see the LICENSE.md file). If not, see
                     <service-call in-map="paymentId: finDocIn.paymentId, invoiceId: finDocIn.invoiceId"
                         name="mantle.account.PaymentServices.apply#InvoicePayment"/>
                 </if>
-                <set field="inMap" from="[finDocId: finDocIn.paymentId, docType: 'payment']"/>
+                <set field="inMap" from="[finDocId: finDocIn.paymentId, docType: 'Payment']"/>
                 </else-if>
-            <else-if condition="finDocIn.docType == 'shipment'">
+            <else-if condition="finDocIn.docType == 'Shipment'">
                 <service-call name="update#mantle.shipment.Shipment" out-map="context"
                     in-map="[shipmentId: finDocIn.shipmentId, statusId: finDocIn.statusId]"/>
-                <set field="inMap" from="[finDocId: finDocIn.shipmentId, docType: 'shipment']"/>
+                <set field="inMap" from="[finDocId: finDocIn.shipmentId, docType: 'Shipment']"/>
                 </else-if>
             <else>
                 <return error="true" message="doctype finDocIn.docType not supported!"/>
@@ -1242,7 +1242,7 @@ along with this software (see the LICENSE.md file). If not, see
             <service-call out-map="context" in-map="[shipmentId:finDocIn.shipmentId]"
                 name="mantle.shipment.ShipmentServices.deliver#Shipment"/>
             <service-call name="growerp.100.FinDocServices100.get#FinDoc"
-                in-map="[finDocId: finDocIn.shipmentId, docType: 'shipment']"
+                in-map="[finDocId: finDocIn.shipmentId, docType: 'Shipment']"
                 out-map="context"/>
         </actions>
     </service>
