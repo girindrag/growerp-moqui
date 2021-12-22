@@ -15,13 +15,6 @@ along with this software (see the LICENSE.md file). If not, see
 <entities xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
           xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/entity-definition-2.1.xsd">
 
-    <!--extend-entity entity-name="FacilityLocation" package="mantle.facility">
-        <relationship type="many" related="mantle.product.asset.Asset"
-                short-alias="AssetLocation">
-            <key-map field-name="facilityId"/>
-            <key-map field-name="locationSeqId"/></relationship>
-    </extend-entity-->
-
     <!--extend-entity entity-name="Asset" package="mantle.product.asset">
         <relationship type="one" related="mantle.facility.FacilityLocation" short-alias="location">
             <key-map field-name="facilityId"/><key-map field-name="locationSeqid"/>

@@ -383,7 +383,9 @@ along with this software (see the LICENSE.md file). If not, see
                         assets.add([
                             assetId: item.assetId,
                             assetName: item.assetName,
-                            productName: item.productName
+                            receivedDate: item.receivedDate,
+                            productName: item.productName,
+                            productId: item.productId
                                 ])
                     </script>
                     <continue/>
@@ -401,7 +403,7 @@ along with this software (see the LICENSE.md file). If not, see
                     quantityOnHand: item.quantityOnHandTotal? item.quantityOnHandTotal.toString() : '0',
                     availableToPromise: item.availableToPromiseTotal? item.availableToPromiseTotal.toString() : '0',
                     receivedDate: item.receivedDate ? item.receivedDate.toString().substring(0,19) + 'Z' : null,
-                    expectedEndOfLife: item.expectedEndOfLife ? item.expectedEndOfLife.toString().substring(0,19) + 'Z' : null,
+                    expectedEndOfLifeDate: item.expectedEndOfLife ? item.expectedEndOfLife.toString().substring(0,19) + 'Z' : null,
                     product: [productId: item.productId, pseudoId: item.pseudoId,
                     productName: item.productName],
                     ]"/>

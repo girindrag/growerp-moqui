@@ -69,13 +69,16 @@ along with this software (see the LICENSE.md file). If not, see
                 <if condition="!lastItem || lastItem.locationId != loc.locationId">
                     <set field="locOut" from="[
                         locationId: loc.locationId,
-                        locationName: loc.locationName]"/>
+                        locationName: loc.locationName,
+                        assets: assets]"/>
                     <set field="assets" from="[]"/>
                 </if>
                 <set field="product" from="[productId: loc.productId,
                             pseudoId: loc.pseudoId, productName: loc.productName]"/>
                 <set field="asset" from="[assetId: loc.assetId, statusId: loc.statusId,
-                            assetName: loc.assetName, product: product]"/>
+                            assetName: loc.assetName, product: product,
+                            quantityOnHand: loc.quantityOnHand?.toString(),
+                            availableToPromise: loc.availableToPromise?.toString()]"/>
                 <script>assets.add(asset)</script>
                 <set field="lastItem" from="loc"/>
             </iterate>
