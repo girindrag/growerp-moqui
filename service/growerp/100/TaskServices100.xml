@@ -156,8 +156,7 @@ along with this software (see the LICENSE.md file). If not, see
         </out-parameters>
         <actions>
             <script> // convert JSON data
-                Object taskIn = new groovy.json.JsonSlurper()
-                    .parseText(task).task</script>
+                Object taskIn = new groovy.json.JsonSlurper().parseText(task)</script>
             <service-call  out-map="context"
                     name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner"/>
             <if condition="singleCompany"><set field="ownerCompany" from="singleCompany"/></if>
@@ -231,8 +230,7 @@ along with this software (see the LICENSE.md file). If not, see
         </out-parameters>
         <actions>
             <script> // convert JSON data
-                Object taskIn = new groovy.json.JsonSlurper()
-                    .parseText(task).task</script>
+                Object taskIn = new groovy.json.JsonSlurper().parseText(task)</script>
             <service-call name="growerp.100.TaskServices100.get#Task"
                 in-map="[taskId: taskIn.taskId]" out-map="oldTask"/><!-- owner checked here -->
             <if condition="!oldTask"><return error="true" message="Task ${taskIn.taskId} not found"/></if>
@@ -357,7 +355,7 @@ along with this software (see the LICENSE.md file). If not, see
         <actions>
             <script> // convert JSON data
                 Object timeEntryIn = new groovy.json.JsonSlurper()
-                    .parseText(timeEntry).timeEntry</script>
+                    .parseText(timeEntry)</script>
             <service-call  out-map="context"
                     name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner"/>
             <if condition="singleCompany"><set field="ownerCompany" from="singleCompany"/></if>
@@ -398,7 +396,7 @@ along with this software (see the LICENSE.md file). If not, see
         <actions>
             <script> // convert JSON data
                 Object timeEntryIn = new groovy.json.JsonSlurper()
-                    .parseText(timeEntry).timeEntry</script>
+                    .parseText(timeEntry)</script>
             <service-call  out-map="context"
                     name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner"/>
             <if condition="singleCompany"><set field="ownerCompany" from="singleCompany"/></if>

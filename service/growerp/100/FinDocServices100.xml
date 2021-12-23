@@ -731,7 +731,7 @@ along with this software (see the LICENSE.md file). If not, see
             <parameter name="finDoc"></parameter>
         </out-parameters>
         <actions>
-            <script>Object finDocIn = new groovy.json.JsonSlurper().parseText(finDoc).finDoc</script>
+            <script>Object finDocIn = new groovy.json.JsonSlurper().parseText(finDoc)</script>
             <service-call out-map="context"
                 name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner"/>
             <if condition="!finDocIn.otherUser || !finDocIn.otherUser.companyPartyId">
@@ -879,7 +879,7 @@ along with this software (see the LICENSE.md file). If not, see
             <parameter name="order"/></out-parameters>
         <actions>
             <script>
-                Object order = new groovy.json.JsonSlurper().parseText(order).order
+                Object order = new groovy.json.JsonSlurper().parseText(order)
             </script>
             <service-call in-map="[invoiceId: order.invoiceId, order.paymentId]"
                 name="mantle.account.PaymentServices.send#PromisedPayment">
@@ -896,7 +896,7 @@ along with this software (see the LICENSE.md file). If not, see
             <parameter name="finDoc" type="Map"/>
         </out-parameters>
         <actions>
-            <script>Object finDocIn = new groovy.json.JsonSlurper().parseText(finDoc).finDoc</script>
+            <script>Object finDocIn = new groovy.json.JsonSlurper().parseText(finDoc)</script>
             <service-call name="growerp.100.FinDocServices100.convert#StatusId"  out-map="context"
                 in-map="[sales: finDocIn?.sales, docType: finDocIn.docType, statusId: finDocIn.statusId]"/>
             <set field="finDocIn.statusId" from="convertedStatusId"/>
@@ -1209,7 +1209,7 @@ along with this software (see the LICENSE.md file). If not, see
             <parameter name="finDoc" type="Map"/></out-parameters>
         <actions>
             <set field="nowDate" from="ec.user.nowTimestamp.toString().substring(0,10)"/>
-            <script>Object finDocIn = new groovy.json.JsonSlurper().parseText(finDoc).finDoc</script>
+            <script>Object finDocIn = new groovy.json.JsonSlurper().parseText(finDoc)</script>
             <service-call out-map="context" in-map="[wantOwner: true]"
                 name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner"/>
             <entity-find list="shipmentItemDetailList"

@@ -165,7 +165,7 @@ along with this software (see the LICENSE.md file). If not, see
         </out-parameters>
         <actions>
             <script> // convert JSON data
-                Object productIn = new groovy.json.JsonSlurper().parseText(product).product</script>
+                Object productIn = new groovy.json.JsonSlurper().parseText(product)</script>
             <service-call out-map="context" in-map="[wantOwner: true]"
                 name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner"/>
             <set field="quantityUomId" value="OTH_ea"/>
@@ -238,7 +238,7 @@ along with this software (see the LICENSE.md file). If not, see
         </out-parameters>
         <actions>
             <script> // convert JSON data
-                Object productIn = new groovy.json.JsonSlurper().parseText(product).product</script>
+                Object productIn = new groovy.json.JsonSlurper().parseText(product)</script>
             <if condition="!productIn.productId"><return error="true" message="ProductId required"/></if>
             <!-- for update no owner needed in single company use -->
             <service-call out-map="context"
@@ -313,7 +313,7 @@ along with this software (see the LICENSE.md file). If not, see
         </out-parameters>
         <actions>
             <script> // convert JSON data
-                Object productIn = new groovy.json.JsonSlurper().parseText(product).product</script>
+                Object productIn = new groovy.json.JsonSlurper().parseText(product)</script>
             <service-call out-map="context"
                 name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner"/>
             <entity-find list="prods" entity-name="mantle.product.Product" for-update="true" limit="1">
@@ -427,7 +427,7 @@ along with this software (see the LICENSE.md file). If not, see
         </out-parameters>
         <actions>
             <script> // convert JSON data
-                Object assetIn = new groovy.json.JsonSlurper().parseText(asset).asset</script>
+                Object assetIn = new groovy.json.JsonSlurper().parseText(asset)</script>
             <service-call out-map="context" in-map="[wantOwner: true]"
                 name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner"/>
             <service-call name="growerp.100.FinDocServices100.convert#StatusId"
@@ -459,7 +459,7 @@ along with this software (see the LICENSE.md file). If not, see
         </out-parameters>
         <actions>
             <script> // convert JSON data
-                Object assetIn = new groovy.json.JsonSlurper().parseText(asset).asset</script>
+                Object assetIn = new groovy.json.JsonSlurper().parseText(asset)</script>
             <!-- for update no owner needed in single company use -->
             <service-call out-map="context"
                 name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner"/>
@@ -499,7 +499,7 @@ along with this software (see the LICENSE.md file). If not, see
         </out-parameters>
         <actions>
             <script> // convert JSON data
-                Object assetIn = new groovy.json.JsonSlurper().parseText(asset).asset</script>
+                Object assetIn = new groovy.json.JsonSlurper().parseText(asset)</script>
             <service-call  out-map="context"
                 name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner"/>
             <entity-find list="assets" limit="1"
@@ -630,7 +630,7 @@ along with this software (see the LICENSE.md file). If not, see
         </out-parameters>
         <actions>
             <script> // convert JSON data
-                Object categoryIn = new groovy.json.JsonSlurper().parseText(category).category</script>
+                Object categoryIn = new groovy.json.JsonSlurper().parseText(category)</script>
             <service-call out-map="context" in-map="[wantOwner: true]"
                 name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner"/>
             <service-call  name="growerp.100.PartyServices100.verifyAndGet#ProductStore"
@@ -673,7 +673,7 @@ along with this software (see the LICENSE.md file). If not, see
         <out-parameters><parameter name="category"/></out-parameters>
         <actions>
             <script> // convert JSON data
-                Object categoryIn = new groovy.json.JsonSlurper().parseText(category).category</script>
+                Object categoryIn = new groovy.json.JsonSlurper().parseText(category)</script>
             <service-call  out-map="context"
                 name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner"/>
             <entity-find for-update="true"  list="productCategories" limit="1"
@@ -706,7 +706,7 @@ along with this software (see the LICENSE.md file). If not, see
         <out-parameters><parameter name="category"/></out-parameters>
         <actions>
             <script> // convert JSON data
-                Object categoryIn = new groovy.json.JsonSlurper().parseText(category).category</script>
+                Object categoryIn = new groovy.json.JsonSlurper().parseText(category)</script>
             <service-call out-map="context"
                 name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner"/>
             <entity-find list="productCategories"

@@ -91,7 +91,7 @@ along with this software (see the LICENSE.md file). If not, see
         <actions>
             <script> // convert JSON data
                 Object opportunityIn = new groovy.json.JsonSlurper()
-                    .parseText(opportunity).opportunity</script>
+                    .parseText(opportunity)</script>
             <if condition="!opportunityIn.stageId">
                 <entity-find list="stages"
                     entity-name="mantle.sales.opportunity.SalesOpportunityStage">
@@ -134,7 +134,7 @@ along with this software (see the LICENSE.md file). If not, see
         </out-parameters>
         <actions>
             <script> // convert JSON data
-                Object opportunityIn = new groovy.json.JsonSlurper().parseText(opportunity).opportunity</script>
+                Object opportunityIn = new groovy.json.JsonSlurper().parseText(opportunity)</script>
             <service-call out-map="context"
                 name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner"/>
             <entity-find list="opps" for-update="true" limit="1"
@@ -216,7 +216,7 @@ along with this software (see the LICENSE.md file). If not, see
         </out-parameters>
         <actions>
             <script> // convert JSON data
-                Object opportunityIn = new groovy.json.JsonSlurper().parseText(opportunity).opportunity</script>
+                Object opportunityIn = new groovy.json.JsonSlurper().parseText(opportunity)</script>
             <service-call out-map="context"
                 name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner"/>
             <!-- make sure it exists -->

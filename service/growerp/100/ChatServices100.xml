@@ -119,7 +119,7 @@ along with this software (see the LICENSE.md file). If not, see
         </out-parameters>
         <actions>
             <script> // convert JSON data
-                Object chatRoomIn = new groovy.json.JsonSlurper().parseText(chatRoom).chatRoom</script>
+                Object chatRoomIn = new groovy.json.JsonSlurper().parseText(chatRoom)</script>
             <service-call out-map="context" in-map="[wantOwner: true]"
                 name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner"/>
             <!-- add chat room -->
@@ -158,7 +158,7 @@ along with this software (see the LICENSE.md file). If not, see
         </out-parameters>
         <actions>
             <script> // convert JSON data
-                Object chatRoomIn = new groovy.json.JsonSlurper().parseText(chatRoom).chatRoom</script>
+                Object chatRoomIn = new groovy.json.JsonSlurper().parseText(chatRoom)</script>
             <service-call out-map="context"
                  name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner"/>
             <service-call name="growerp.100.ChatServices100.get#ChatRoom"
