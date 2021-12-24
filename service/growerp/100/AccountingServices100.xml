@@ -214,4 +214,37 @@ along with this software (see the LICENSE.md file). If not, see
         </actions>
     </service>
 
+    <service verb="confirm" noun="PurchasePayment">
+        <in-parameters><parameter name="paymentId"/></in-parameters>
+        <out-parameters><parameter name="finDoc"/></out-parameters>
+        <actions>
+            <set field="nowDate" from="ec.user.nowTimestamp"/>
+            <service-call  out-map="context" in-map="[wantOwner: true]"
+                name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner"/>
+            <!-- get payment -->
+            <entity-find-one entity-name="mantle.account.payment.Payment" value-field="payment"/>
+            <if condition="!payment 
+                || (payment.fromPartyId != ownerPartyId &amp;&amp; payment.toPartyId != ownerPartyId)">
+                <return error="true" message="Payment $paymentId not found"/>
+            </if>
+            <!-- set effective date -->
+            <service-call name="mantle.account.PaymentServices.update#Payment"
+                in-map="[paymentId: paymentId, effectiveDate: nowDate]"/>
+            <!-- update status to delivered -->
+            <service-call name="mantle.account.PaymentServices.update#Payment"
+                in-map="[paymentId: paymentId, statusId: 'PmntDelivered']"/>
+            <!-- find related invoice over orderItemBilling -->
+            <entity-find entity-name="mantle.order.OrderItemBilling" list="billings">
+                <econdition field-name="orderId" from="payment.orderId"/></entity-find>
+            <!-- apply payment to invoice -->
+            <service-call name="mantle.account.PaymentServices.apply#InvoicePayment"
+                in-map="[paymentId: paymentId, invoiceId: billings[0].invoiceId]"/>
+            <!-- update status to confirm paid -->
+            <service-call name="mantle.account.PaymentServices.update#Payment"
+                in-map="[paymentId: paymentId, statusId: 'PmntConfirmed']"/>
+            <service-call name="growerp.100.FinDocServices100.get#FinDoc"
+                in-map="[docType: 'Payment', finDocId: paymentId]" out-map="context"/>
+        </actions>
+    </service>
+
 </services>

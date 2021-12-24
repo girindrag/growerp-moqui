@@ -228,6 +228,7 @@ along with this software (see the LICENSE.md file). If not, see
         <alias name="originalQuantity" entity-alias="AST"/>
         <alias name="quantityOnHand" field="quantityOnHandTotal" entity-alias="AST"/>
         <alias name="availableToPromise" field="availableToPromiseTotal" entity-alias="AST"/>
+        <alias name="acquireShipmentId" entity-alias="AST"/>
 
         <alias name="productId" entity-alias="PROD"/>
         <alias name="pseudoId" entity-alias="PROD"/>
