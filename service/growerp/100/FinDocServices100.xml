@@ -641,16 +641,12 @@ along with this software (see the LICENSE.md file). If not, see
                     <entity-find  offset="start" list="entries"
                         entity-name="growerp.account.AcctgTransAndEntryAndCompany">
                         <econdition field-name="organizationPartyId" from="ownerPartyId"/>
-                        <econdition field-name="isPosted" value="Y"/>
                         <econdition field-name="transactionId" from="finDocId"/>
                     </entity-find>
                     <else>
-                        <if condition="open == true">
-                            <set field="status" from="openStatusList"/></if>
-                        <entity-find  offset="start" limit="limit" list="items"
+                        <entity-find  offset="start" limit="limit*2" list="items"
                                 entity-name="growerp.account.AcctgTransAndEntryAndCompany">
                             <econdition field-name="ownerPartyId" from="companyPartyId"/>
-                            <econdition field-name="isPosted" value="Y"/>
                             <econditions combine="or">
                                 <econdition field-name="invoiceId" ignore-case="true"
                                     operator="like" from="search" ignore-if-empty="true"/>
@@ -661,7 +657,7 @@ along with this software (see the LICENSE.md file). If not, see
                                 <econdition field-name="otherCompanyPartyId" ignore-case="true"
                                     operator="like" from="search" ignore-if-empty="true"/>
                             </econditions>
-                            <order-by field-name="-transactionDate"/>
+                            <order-by field-name="-transactionId"/>
                             <order-by field-name="entryId"/>
                             <use-iterator/>
                         </entity-find>
@@ -670,11 +666,8 @@ along with this software (see the LICENSE.md file). If not, see
                 <set field="lastItem" from="null"/>
                 <iterate entry="item" list="items">
                     <if condition="lastItem &amp;&amp; lastItem.transactionId != item.transactionId">
-                        <script>
-                            finDocOut.grandTotal = grandTotal ? grandTotal.toString() : null;
-                            finDocs.add(finDocOut)
-                        </script>
-                        <if condition="current++ == limit"><break/></if>
+                        <set field="finDocOut.items" from="finDocItems"/> 
+                        <script>finDocs.add(finDocOut)</script>
                     </if>   
                     <if condition="!lastItem || lastItem.transactionId != item.transactionId">
                         <set field="userOut" from="[
@@ -695,23 +688,22 @@ along with this software (see the LICENSE.md file). If not, see
                             creationDate: item.transactionDate 
                                 ? item.transactionDate.toString().substring(0,19) + 'Z' : null,
                             otherUser: userOut,
-                            grandTotal: '',
-                            items: [],
                         ]"/>
-                        <set field="grandTotal" from="BigDecimal.ZERO" type="BigDecimal"/>
+                        <set field="finDocItems" from="[]"/>
                     </if>
                     <set field="finDocItem" from="[
                             itemSeqId: item.entryId,
-                            amount: item.debitCreditFlag == 'D'? item.amount : (item.amount * -1),
+                            price: item.debitCreditFlag == 'D'
+                                ? item.amount.toString() : (item.amount * -1).toString(),
+                            itemTypeId: item.typeId,
                             glAccountId: item.glAccountId,
                             productId: item.productId,
                         ]"/>
-                    <set field="grandTotal" from="grandTotal.add(item.amount)"/>
-                    <script>finDocOut.items.add(finDocItem)</script>
+                    <script>finDocItems.add(finDocItem)</script>
                     <set field="lastItem" from="item"/>
                 </iterate>
                 <if condition="lastItem">
-                    <set field="finDocOut.grandTotal" from="grandTotal ? grandTotal.toString() : null"/>
+                    <set field="finDocOut.items" from="finDocItems"/>
                     <script>finDocs.add(finDocOut)</script>
                 </if>
             </if>
