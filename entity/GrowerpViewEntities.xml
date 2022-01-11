@@ -327,9 +327,9 @@ along with this software (see the LICENSE.md file). If not, see
 
     <view-entity entity-name="PaymentAndInfo" package="growerp.order">
         <member-entity entity-alias="PAY" entity-name="mantle.account.payment.Payment"/>
-        <member-entity entity-alias="OINV" entity-name="mantle.order.OrderItemBilling"
+        <!--member-entity entity-alias="OINV" entity-name="mantle.order.OrderItemBilling"
             join-from-alias="PAY" join-optional="true">
-            <key-map field-name="orderId" /></member-entity>
+            <key-map field-name="orderId" /></member-entity-->
         <!-- vendor data --> 
         <member-entity entity-alias="VORG" entity-name="mantle.party.Organization"
                  join-from-alias="PAY" join-optional="true">
@@ -365,7 +365,7 @@ along with this software (see the LICENSE.md file). If not, see
         <alias name="paymentId" entity-alias="PAY"/>
         <alias name="fromPartyId" entity-alias="PAY"/>
         <alias name="toPartyId" entity-alias="PAY"/>
-        <alias name="invoiceId" entity-alias="OINV"/>
+        <!--alias name="invoiceId" entity-alias="OINV"/-->
         <alias name="orderId" entity-alias="PAY"/>
         <alias name="statusId" entity-alias="PAY"/>
         <alias name="effectiveDate" entity-alias="PAY"/>

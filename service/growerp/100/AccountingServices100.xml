@@ -214,6 +214,7 @@ along with this software (see the LICENSE.md file). If not, see
         </actions>
     </service>
 
+    <!-- replace by update findoc payment status to 'PmntDelivered' -->
     <service verb="confirm" noun="PurchasePayment">
         <in-parameters><parameter name="paymentId"/></in-parameters>
         <out-parameters><parameter name="finDoc"/></out-parameters>
@@ -243,7 +244,7 @@ along with this software (see the LICENSE.md file). If not, see
             <service-call name="mantle.account.PaymentServices.update#Payment"
                 in-map="[paymentId: paymentId, statusId: 'PmntConfirmed']"/>
             <service-call name="growerp.100.FinDocServices100.get#FinDoc"
-                in-map="[docType: 'Payment', finDocId: paymentId]" out-map="context"/>
+                in-map="[docType: 'Payment', finDocId: paymentId, sales: ]" out-map="context"/>
         </actions>
     </service>
 

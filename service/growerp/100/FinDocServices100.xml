@@ -169,7 +169,7 @@ along with this software (see the LICENSE.md file). If not, see
         </description>
         <in-parameters>
             <parameter name="finDocId"/><!-- depending on type can be invoice/payment/order -->
-            <parameter name="sales" type="Boolean"/>
+            <parameter name="sales" type="Boolean" required="true"/>
             <parameter name="docType" required="true"/>
             <parameter name="open" type="Boolean" default-value="true"/>
             <parameter name="startDate"><description>Format should be YYYY-MM-DD</description></parameter>
@@ -179,8 +179,8 @@ along with this software (see the LICENSE.md file). If not, see
             <parameter name="customerCompanyPartyId"/>
         </in-parameters>
         <out-parameters>
-            <parameter name="finDocs" type="List"/>
-            <parameter name="finDoc" type="Map"/>
+            <parameter name="finDocs" type="List" default="[]"/>
+            <parameter name="finDoc" type="Map" default="[:]"/>
         </out-parameters>
         <actions>
             <service-call out-map="context"
@@ -193,7 +193,7 @@ along with this software (see the LICENSE.md file). If not, see
             <if condition="search != null">
                 <set field="search" value="%${search}%"/></if>
 
-            <set field="finDoc" from="[:]"/>
+            <set field="finDocOut" from="[:]"/>
             <set field="finDocs" from="[]"/>
             <set field="finDocItems" from="[]"/>
 
@@ -357,11 +357,14 @@ along with this software (see the LICENSE.md file). If not, see
                         </econditions>
                         <order-by field-name="invoiceItemSeqId"/>
                     </entity-find>
-                    <if condition="items">
-                        <if condition="items[0].fromPartyId == companyPartyId">
-                            <set field="sales" value="true" type="Boolean"/>
+                    <if condition="!items">
+                        <return error="false" message="Invoice: $finDocId not found!"/>
                         <else>
-                            <set field="sales" value="false" type="Boolean"/></else></if></if>
+                            <if condition="items[0].fromPartyId == companyPartyId">
+                                <set field="sales" value="true" type="Boolean"/>
+                            <else>
+                                <set field="sales" value="false" type="Boolean"/></else></if>
+                        </else></if>
                     <else><!-- invoice list -->
                         <if condition="open == true &amp;&amp; !finDocId &amp;&amp; !search">
                             <set field="statusList" from="openStatusList"/></if>
@@ -427,7 +430,7 @@ along with this software (see the LICENSE.md file). If not, see
                             grandTotal: item.invoiceTotal
                                 ? item.invoiceTotal.toString() : null,
                             ]"/>
-                        <set field="finDocItems" from="[]"/>
+                            <set field="finDocItems" from="[]"/>
                     </if>                       
                     <set field="finDocItem" from="[
                         itemSeqId: item.invoiceItemSeqId,
@@ -513,7 +516,6 @@ along with this software (see the LICENSE.md file). If not, see
                         in-map="[sales: sales, docType: docType, statusId: item.statusId]" out-map="context"/>
                     <set field="finDocOut" from="[
                         orderId: item.orderId,
-                        invoiceId: item.invoiceId,
                         paymentId: item.paymentId,
                         statusId: convertedStatusId,
                         creationDate: item.effectiveDate 
@@ -529,7 +531,7 @@ along with this software (see the LICENSE.md file). If not, see
             <if condition="docType == 'Shipment'">
                 <set field="openStatusList"
                     from="['ShipInput','ShipScheduled','ShipPicked',
-                            'ShipPacked','Ship','Shipped']"/>
+                            'ShipPacked','ShipShipped']"/>
                 <if condition="finDocId">
                     <entity-find 
                             entity-name="growerp.warehouse.ShipmentAndPartiesAndWarehouse" list="items">
@@ -708,7 +710,7 @@ along with this software (see the LICENSE.md file). If not, see
                 </if>
             </if>
             <if condition="finDocId">
-                <set field="finDoc" from="finDocs[0]"/>
+                <set field="finDoc" from="finDocOut"/>
                 <set field="finDocs" from="[]"/>
             </if>
         </actions>
@@ -720,10 +722,11 @@ along with this software (see the LICENSE.md file). If not, see
             <parameter name="finDoc" type="String"/>
         </in-parameters>
         <out-parameters>
-            <parameter name="finDoc"></parameter>
+            <parameter name="finDoc" type="Map"></parameter>
         </out-parameters>
         <actions>
             <script>Object finDocIn = new groovy.json.JsonSlurper().parseText(finDoc)</script>
+            <set field="finDoc" from="[:]"/>
             <service-call out-map="context"
                 name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner"/>
             <if condition="!finDocIn.otherUser || !finDocIn.otherUser.companyPartyId">
@@ -735,7 +738,7 @@ along with this software (see the LICENSE.md file). If not, see
             <if condition="finDocIn.docType == 'Order'">
                 <service-call name="growerp.100.FinDocServices100.create#Order"
                     in-map="[order: finDocIn]" out-map="context"/>
-                <set field="inMap" from="[finDocId: orderId, docType: 'Order']"/>
+                <set field="inMap" from="[finDocId: orderId, docType: 'Order', sales: finDocIn.sales]"/>
                 <else>
                     <return error="true" message="Document ${finDocIn.docType} not supported yet...."/>
                 </else>
@@ -863,58 +866,110 @@ along with this software (see the LICENSE.md file). If not, see
         </actions>
     </service>
 
-    <service verb="pay" noun="Order">
-        <description> Update the order by re-creatingonly in the 'OrderOpen' status'.</description>
-        <in-parameters>
-            <parameter name="order" required="true" type="String"/></in-parameters>
-        <out-parameters>
-            <parameter name="order"/></out-parameters>
-        <actions>
-            <script>
-                Object order = new groovy.json.JsonSlurper().parseText(order)
-            </script>
-            <service-call in-map="[invoiceId: order.invoiceId, order.paymentId]"
-                name="mantle.account.PaymentServices.send#PromisedPayment">
-            </service-call>
-        </actions>
-    </service>
-
     <service verb="update" noun="FinDoc">
         <description>Update a financial document either order, invoice or payment</description>
         <in-parameters>
-            <parameter name="finDoc"/>
+            <parameter name="finDoc" type="String"/>
         </in-parameters>
         <out-parameters>
             <parameter name="finDoc" type="Map"/>
         </out-parameters>
         <actions>
             <script>Object finDocIn = new groovy.json.JsonSlurper().parseText(finDoc)</script>
+            <set field="finDoc" from="[:]"/>
+            <service-call out-map="context"
+                name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner"/>
             <service-call name="growerp.100.FinDocServices100.convert#StatusId"  out-map="context"
                 in-map="[sales: finDocIn?.sales, docType: finDocIn.docType, statusId: finDocIn.statusId]"/>
             <set field="finDocIn.statusId" from="convertedStatusId"/>
             <if condition="finDocIn.docType == 'Order'">
+                <entity-find entity-name="mantle.order.OrderHeaderAndPart" list="check" limit="1">
+                    <econdition field-name="orderId" from="finDocIn.orderId"/>
+                    <econditions combine="or">
+                        <econdition field-name="vendorPartyId" from="companyPartyId"/>
+                        <econdition field-name="customerPartyId" from="companyPartyId"/>
+                    </econditions>
+                </entity-find>
+                <if condition="!check"><return message="Order not found!"/></if>
                 <service-call name="growerp.100.FinDocServices100.update#Order"
                     in-map="[order: finDocIn]"/>
-                <set field="inMap" from="[finDocId: finDocIn.orderId, docType: 'Order']"/>
+                <set field="inMap" from="[finDocId: finDocIn.orderId, 
+                                            docType: 'Order', sales: finDocIn.sales]"/>
             <else-if condition="finDocIn.docType == 'Invoice'">
+                <entity-find entity-name="mantle.account.invoice.Invoice" list="check" limit="1">
+                    <econdition field-name="invoiceId" from="finDocIn.invoiceId"/>
+                    <econditions combine="or">
+                        <econdition field-name="fromPartyId" from="companyPartyId"/>
+                        <econdition field-name="toPartyId" from="companyPartyId"/>
+                    </econditions>
+                </entity-find>
+                <if condition="!check"><return message="Invoice not found!"/></if>
                 <service-call name="update#mantle.account.invoice.Invoice"
                     in-map="[invoiceId: finDocIn.invoiceId, statusId: finDocIn.statusId]" out-map="context"/>
-                <set field="inMap" from="[finDocId: finDocIn.invoiceId, docType: 'Invoice']"/>
+                <set field="inMap" from="[finDocId: finDocIn.invoiceId,
+                            docType: 'Invoice', sales: finDocIn.sales]"/>
                 </else-if>
             <else-if condition="finDocIn.docType == 'Payment'">
-                <service-call name="update#mantle.account.payment.Payment"
-                    in-map="[paymentId: finDocIn.paymentId, statusId: finDocIn.statusId,
-                            effectiveDate: ec.user.nowTimestamp]" out-map="context"/>
+                <entity-find entity-name="mantle.account.payment.Payment" list="check" limit="1">
+                    <econdition field-name="paymentId" from="finDocIn.paymentId"/>
+                    <econditions combine="or">
+                        <econdition field-name="fromPartyId" from="companyPartyId"/>
+                        <econdition field-name="toPartyId" from="companyPartyId"/>
+                    </econditions>
+                </entity-find>
+                <if condition="!check"><return message="Payment not found!"/></if>
+                <!-- confirm payment and related invoice is paid-->
                 <if condition="finDocIn.statusId == 'PmntDelivered'">
-                    <service-call in-map="paymentId: finDocIn.paymentId, invoiceId: finDocIn.invoiceId"
-                        name="mantle.account.PaymentServices.apply#InvoicePayment"/>
+                    <entity-find-one entity-name="mantle.account.payment.Payment"
+                            value-field="payment" for-update="true">
+                       <field-map field-name="paymentId" from="finDocIn.paymentId"/>
+                    </entity-find-one>
+                    <set field="payment.effectiveDate" from="ec.user.nowTimestamp"/>
+                    <entity-update value-field="payment"/>
+                    <entity-find entity-name="mantle.order.OrderItemBilling"
+                            limit="1" list="invoices">
+                        <econdition field-name="orderId" from="payment.orderId"/>
+                    </entity-find>
+                    <service-call in-map="[invoiceId: invoices[0].invoiceId,
+                                            paymentId: finDocIn.paymentId]"
+                            name="mantle.account.PaymentServices.send#PromisedPayment"/>
                 </if>
-                <set field="inMap" from="[finDocId: finDocIn.paymentId, docType: 'Payment']"/>
+                <set field="inMap" from="[finDocId: finDocIn.paymentId,
+                        docType: 'Payment', sales: finDocIn.sales]"/>
                 </else-if>
             <else-if condition="finDocIn.docType == 'Shipment'">
+                <entity-find entity-name="mantle.shipment.Shipment" list="check" limit="1">
+                    <econdition field-name="shipmentId" from="finDocIn.shipmentId"/>
+                    <econditions combine="or">
+                        <econdition field-name="fromPartyId" from="companyPartyId"/>
+                        <econdition field-name="toPartyId" from="companyPartyId"/>
+                    </econditions>
+                </entity-find>
+                <if condition="!check"><return message="Shipment not found!"/></if>
+                <if condition="finDocIn.sales == true &amp;&amp; finDocIn.statusId == 'ShipPacked'">
+                    <entity-find entity-name="mantle.shipment.ShipmentItemSource" list="shipmentItemSourceList">
+                        <econdition field-name="shipmentId" from="finDocIn.shipmentId"/>
+                    </entity-find>
+                    <iterate list="shipmentItemSourceList" entry="itemSource">
+                        <service-call name="mantle.shipment.ShipmentServices.pack#ShipmentItemSource"
+                            in-map="[shipmentItemSourceId: itemSource.shipmentItemSourceId,
+                                    quantity: itemSource.quantity]"/>
+                    </iterate>
+                    <iterate list="shipmentItemSourceList" entry="shipmentItemSource">
+                        <if condition="shipmentItemSource.orderId &amp;&amp; shipmentItemSource.orderItemSeqId">
+                            <entity-find-one entity-name="mantle.order.OrderItem" value-field="orderItem">
+                                <field-map field-name="orderId" from="shipmentItemSource.orderId"/>
+                                <field-map field-name="orderItemSeqId" from="shipmentItemSource.orderItemSeqId"/>
+                            </entity-find-one>
+                            <service-call name="mantle.order.OrderServices.checkComplete#OrderPart"
+                                in-map="[orderId:orderItem.orderId, orderPartSeqId:orderItem.orderPartSeqId]"/>
+                        </if>
+                    </iterate>
+                </if>
                 <service-call name="update#mantle.shipment.Shipment" out-map="context"
                     in-map="[shipmentId: finDocIn.shipmentId, statusId: finDocIn.statusId]"/>
-                <set field="inMap" from="[finDocId: finDocIn.shipmentId, docType: 'Shipment']"/>
+                <set field="inMap" from="[finDocId: finDocIn.shipmentId,
+                                    docType: 'Shipment', sales: finDocIn.sales]"/>
                 </else-if>
             <else>
                 <return error="true" message="doctype finDocIn.docType not supported!"/>
@@ -1034,6 +1089,7 @@ along with this software (see the LICENSE.md file). If not, see
     <service verb="update" noun="Order">
             <description> Update the order by re-creating only in the 'OrderOpen' status'.</description>
         <in-parameters>
+            <!-- order has model of client -->
             <parameter name="order" required="true" type="Map"/></in-parameters>
         <actions>
             <!-- status sequence:
@@ -1135,8 +1191,21 @@ along with this software (see the LICENSE.md file). If not, see
                     </if>
                 </if>
                 <if condition="order.statusId == 'OrderApproved'">
+                    <!-- when sales order: set shipping address and method -->
+                    <!-- Simplescreens orderDetail.xml line 1138 -->
+                    <if  condition="order.sales == true">
+                        <service-call name="mantle.party.ContactServices.get#PartyContactInfoList"
+                                out-map="customerShippingInfo"
+                            in-map="[partyId: order.otherUser.companyPartyId,
+                                    postalContactMechPurposeId:'PostalShippingDest']"/>
+                        <set field="postalAddress" from="customerShippingInfo.postalAddressList[0]"/>
+                        <service-call name="mantle.order.OrderServices.set#OrderBillingShippingInfo"
+                            in-map="[orderId: order.orderId, orderPartSeqId: orderPartSeqId,
+                            shippingPostalContactMechId: postalAddress.postalContactMechId,
+                            carrierAndShipmentMethod: '_NA_:ShMthPickUp']"/><!-- carrierPartyId:shipmentMethodEnumId -->
+                    </if>
                     <service-call name="mantle.order.OrderServices.approve#Order"
-                        in-map="context"/>
+                        in-map="[orderId: order.orderId]"/>
                     <!-- create invoice -->
                     <if condition="order.sales == true">
                         <set field="invStatusId" value="InvoiceFinalized"/>
@@ -1155,11 +1224,14 @@ along with this software (see the LICENSE.md file). If not, see
                     <service-call
                         name="update#mantle.account.payment.Payment" in-map="payment"/>
                     <!-- create shipment  -->
-                    <service-call in-map="orderId: orderId,
-                                orderPartSeqId: orderPartSeqId" out-map="context"
+                    <entity-find entity-name="mantle.facility.Facility" list="facilities" limit="1">
+                        <econdition field-name="ownerPartyId" from="companyPartyId"/>
+                    </entity-find>
+                    <service-call in-map="[orderId: order.orderId, facilityId: facilities[0].facilityId,
+                                orderPartSeqId: orderPartSeqId]" out-map="context"
                         name="mantle.shipment.ShipmentServices.create#OrderPartShipment"/>
                     <service-call name="update#mantle.shipment.Shipment" out-map="context"
-                        in-map="[shipmentId: shipmentId, statusId: 'ShipPacked']"/>
+                        in-map="[shipmentId: shipmentId, statusId: order.sales == true ? 'ShipScheduled' : 'ShipPacked']"/>
                 </if>
                 <if condition="order.statusId == 'OrderCompleted'">
                     <service-call name="mantle.order.OrderServices.complete#Order"
@@ -1202,6 +1274,7 @@ along with this software (see the LICENSE.md file). If not, see
         <actions>
             <set field="nowDate" from="ec.user.nowTimestamp.toString().substring(0,10)"/>
             <script>Object finDocIn = new groovy.json.JsonSlurper().parseText(finDoc)</script>
+            <set field="finDoc" from="[:]"/>
             <service-call out-map="context" in-map="[wantOwner: true]"
                 name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner"/>
             <entity-find list="shipmentItemDetailList"
@@ -1234,7 +1307,8 @@ along with this software (see the LICENSE.md file). If not, see
             <service-call out-map="context" in-map="[shipmentId:finDocIn.shipmentId]"
                 name="mantle.shipment.ShipmentServices.deliver#Shipment"/>
             <service-call name="growerp.100.FinDocServices100.get#FinDoc"
-                in-map="[finDocId: finDocIn.shipmentId, docType: 'Shipment']"
+                in-map="[finDocId: finDocIn.shipmentId, docType: 'Shipment',
+                                sales: finDocIn.sales]"
                 out-map="context"/>
         </actions>
     </service>
