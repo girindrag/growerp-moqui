@@ -19,8 +19,10 @@ java -jar moqui.war
 
 In a different terminal:
 ```
-git clone https://github.com/growerp/growerp/master admin
-cd admin
+git clone https://github.com/growerp/growerp
+cd growerp/packages/core
+flutter pub run build_runner build
+cd ../admin
 flutter run
 ```
 create your first company!
