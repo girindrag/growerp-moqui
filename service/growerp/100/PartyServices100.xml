@@ -1265,14 +1265,14 @@ along with this software (see the LICENSE.md file). If not, see
 
                 <!-- users -->
                 <iterate list="users" entry="us">
-                    <set field="userIn" from="groovy.json.JsonOutput.toJson([user:[
+                    <set field="userIn" from="groovy.json.JsonOutput.toJson([
                         firstName: us.firstName,
                         lastName: us.lastName + counter,
                         email: us.emailAddress.substring(0,us.emailAddress.indexOf('@')) + counter + companyCount + us.emailAddress.substring(us.emailAddress.indexOf('@')),
                         locale: 'EN',
                         name: us.username + counter + companyCount,
                         userGroupId: us.userGroupId, companyName: us.companyName,
-                    ]])"/>
+                    ])"/>
                     <service-call name="growerp.100.PartyServices100.create#User"
                             in-map="[user: userIn]" out-map="context"/>
                 </iterate>
@@ -1280,7 +1280,7 @@ along with this software (see the LICENSE.md file). If not, see
                 <!-- opportunities -->
                 <set field="index" value="0" type="Integer"/>
                 <iterate list="opportunities" entry="opp">
-                    <set field="oppIn" from="groovy.json.JsonOutput.toJson([opportunity:[
+                    <set field="oppIn" from="groovy.json.JsonOutput.toJson([
                         opportunityName: opp.opportunityName,
                         description: opp.description,
                         nextStep: opp.nextStep,
@@ -1290,7 +1290,7 @@ along with this software (see the LICENSE.md file). If not, see
                         ownerPartyId: companyPartyId,
                         accountPartyId: index%2 == 0? userPartyId: employeeUser1,
                         leadPartyId: index%2 == 0 ? leadUser1 : leadUser2
-                    ]])"/>
+                    ])"/>
                     <service-call name="growerp.100.CrmServices100.create#Opportunity"
                                     in-map="[opportunity: oppIn]" out-map="context"/>
                     <set field="index" from="index + 1"/>
@@ -1410,26 +1410,26 @@ along with this software (see the LICENSE.md file). If not, see
                 <set field="index" value="0" type="Integer"/>
                 <iterate list="tasks" entry="task">
                     <!-- add task -->
-                    <set field="taskIn" from="groovy.json.JsonOutput.toJson([task:[
+                    <set field="taskIn" from="groovy.json.JsonOutput.toJson([
                         name: task.name
-                    ]])"/>
+                    ])"/>
                     <service-call name="growerp.100.TaskServices100.create#Task"
                                     in-map="[task: taskIn]" out-map="context"/>
                     <!-- time entry -->
-                    <set field="teIn" from="groovy.json.JsonOutput.toJson([timeEntry:[
+                    <set field="teIn" from="groovy.json.JsonOutput.toJson([
                         taskId: task.taskId,
                         partyId: employees[0].userPartyId,
                         hours: index,
                         date: nowDate.plus(1),
-                    ]])"/>
+                    ])"/>
                     <service-call name="growerp.100.TaskServices100.create#TimeEntry"
                                     in-map="[timeEntry: teIn]" out-map="context"/>
-                    <set field="teIn" from="groovy.json.JsonOutput.toJson([timeEntry:[
+                    <set field="teIn" from="groovy.json.JsonOutput.toJson([
                         taskId: task.taskId,
                         partyId: ec.user.userAccount.partyId,
                         hours: index,
                         date: nowDate.plus(3),
-                    ]])"/>
+                    ])"/>
                     <service-call name="growerp.100.TaskServices100.create#TimeEntry"
                                     in-map="[timeEntry: teIn]" out-map="context"/>
                     <set field="index" from="index + 1"/>
