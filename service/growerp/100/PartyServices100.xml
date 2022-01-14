@@ -827,8 +827,7 @@ along with this software (see the LICENSE.md file). If not, see
             <parameter name="demoData" default-value="true"/><!-- string bolean -->
         </in-parameters>
         <out-parameters>
-            <parameter name="user" />
-            <parameter name="company" />
+            <parameter name="authenticate"/>
         </out-parameters>
         <actions>
             <service-call name="mantle.party.PartyServices.create#Account" 
@@ -896,10 +895,10 @@ along with this software (see the LICENSE.md file). If not, see
                                 userPartyId: userAccount.partyId]"/></if>
                 <!-- return company Data -->
                 <service-call name="growerp.100.PartyServices100.get#Company"
-                    out-map="context"/>
+                    out-map="authenticate"/>
                 <!-- return user data -->
                 <service-call name="growerp.100.PartyServices100.get#User"
-                    in-map="userPartyId: userPartyId" out-map="context"/>
+                    in-map="userPartyId: userPartyId" out-map="authenticate"/>
                 </if>
         </actions>
     </service>
