@@ -324,6 +324,9 @@ along with this software (see the LICENSE.md file). If not, see
                 <service-call out-map="relatedLogin"
                     name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner"/>
                 <set field="ownerPartyId" from="relatedLogin.ownerPartyId"/></if>
+            <if condition="!userPartyId">
+                <set field="users" from="[]"/>
+                <set field="disabled" value="N"/></if>
             <entity-find offset="start" limit="limit" list="userInfos"
                 entity-name="growerp.mobile.CompanyPersonAndLoginGroup">
                 <econdition field-name="ownerPartyId" ignore-if-empty="true"/>
@@ -348,9 +351,12 @@ along with this software (see the LICENSE.md file). If not, see
                 </econditions>
                 <econdition field-name="userGroupId" operator="in"
                     from="userGroupIds" ignore-if-empty="true"/>
+                <econdition field-name="companyDisabled" operator="equals"
+                            from="disabled" or-null="true" ignore-if-empty="true"/>
+                <econdition field-name="userDisabled" operator="equals"
+                            from="disabled" or-null="true" ignore-if-empty="true"/>        
                 <order-by field-name="lastName"/><order-by field-name="firstName"/>
             </entity-find>
-            <if condition="!userPartyId"><set field="users" from="[]"/></if>
             <iterate entry="userInfo" list="userInfos">
                 <if condition="filter != null">
                     <script>
@@ -782,7 +788,7 @@ along with this software (see the LICENSE.md file). If not, see
             <parameter name="partyId" required="true"/>
         </in-parameters>
         <out-parameters>
-            <parameter name="partyId"/>
+            <parameter name="user" format="Map"/>
         </out-parameters>
         <actions>
             <!-- check if this user has an admin account -->
@@ -800,6 +806,8 @@ along with this software (see the LICENSE.md file). If not, see
                     <return error="true" message="You need at least a single Admin in your company: cannot delete this one!"/></if>
             </if>
             <service-call name="update#mantle.party.Party" in-map="[partyId: partyId, disabled: 'Y']"/>
+            <service-call name="growerp.100.PartyServices100.get#User"
+                in-map="[userPartyId: partyId]" out-map="context"/>
         </actions>
     </service>
 
