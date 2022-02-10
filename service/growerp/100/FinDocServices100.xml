@@ -44,7 +44,7 @@ along with this software (see the LICENSE.md file). If not, see
                 ]"/>
                 <set field="convertedStatusId" from="taskStatusValues[statusId]"/>
             </if>
-            <!-- Asset status and classEnumId translation -->
+            <!-- Product status and classEnumId translation -->
             <if condition="docType == 'product'">
                 <set field="productTypeValues" from="[
                 'PtService': 'Service',
