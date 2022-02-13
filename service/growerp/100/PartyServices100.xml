@@ -354,7 +354,7 @@ along with this software (see the LICENSE.md file). If not, see
                 <econdition field-name="companyDisabled" operator="equals"
                             from="disabled" or-null="true" ignore-if-empty="true"/>
                 <econdition field-name="userDisabled" operator="equals"
-                            from="disabled" or-null="true" ignore-if-empty="true"/>        
+                            from="disabled" or-null="true" ignore-if-empty="true"/>
                 <order-by field-name="lastName"/><order-by field-name="firstName"/>
             </entity-find>
             <iterate entry="userInfo" list="userInfos">
@@ -406,8 +406,7 @@ along with this software (see the LICENSE.md file). If not, see
                     userId: userInfo?.userId,
                     locale: userInfo?.locale,
                     externalId: userInfo?.externalId,
-                    address: address]"/>
-
+                    companyAddress: address]"/>
                 <if condition="!userPartyId">
                     <script>users.add(userOut)</script>
                     <else>
@@ -550,16 +549,9 @@ along with this software (see the LICENSE.md file). If not, see
                         firstName: userIn.firstName, lastName: userIn.lastName,
                         emailAddress: userIn.email, disabled: 'N',
                         username: userIn.loginName, newPassword: password,
-                        newPasswordVerify: password]"
+                        newPasswordVerify: password, ownerPartyId: relComp.ownerPartyId]"
                 out-map="userAccount" />
             <set field="userPartyId" from="userAccount.partyId"/>
-            <!-- update owner on userPartyId -->
-            <entity-find-one entity-name="mantle.party.Party"
-                    value-field="party" for-update="true">
-                <field-map field-name="partyId" from="userPartyId"/>
-            </entity-find-one>
-            <set field="party.ownerPartyId" from="relComp.ownerPartyId"/>
-            <entity-update value-field="party"/>
             <!-- no need to create company for employee and admin -->
             <if condition="userIn.userGroupId != 'GROWERP_M_ADMIN' &amp;&amp; 
                             userIn.userGroupId != 'GROWERP_M_EMPLOYEE'">
@@ -595,23 +587,23 @@ along with this software (see the LICENSE.md file). If not, see
                     in-map="[type: 'user', id: userIn.partyId,
                         base64: userIn.image]"/>
             </if>
-            <if condition="userIn.address">
+            <if condition="userIn.companyAddress">
                 <entity-find entity-name="moqui.basic.Geo" list="countries">
-                    <econdition field-name="geoName" from="userIn.address.country"/>
+                    <econdition field-name="geoName" from="userIn.companyAddress.country"/>
                     <econdition field-name="geoTypeEnumId" value="GEOT_COUNTRY"/>
                 </entity-find>
                 <service-call
                     name="mantle.party.ContactServices.create#PostalAddress"
                     out-map="context"
                     in-map="[
-                        address1: userIn.address.address1,
-                        address2: userIn.address.address2,
-                        city: userIn.address.city,
-                        postalCode: userIn.address.postalCode,
-                        stateProvince: userIn.address.province,
+                        address1: userIn.companyAddress.address1,
+                        address2: userIn.companyAddress.address2,
+                        city: userIn.companyAddress.city,
+                        postalCode: userIn.companyAddress.postalCode,
+                        stateProvince: userIn.companyAddress.province,
                         countryGeoId: countries[0].geoId,
                         contactMechPurposeId: 'PostalPrimary',
-                        partyId: userPartyId
+                        partyId: companyPartyId
                         ]"/>
             </if>
             <service-call name="growerp.100.PartyServices100.get#User"
@@ -692,18 +684,15 @@ along with this software (see the LICENSE.md file). If not, see
                 <set field="roleTypeId" value="Supplier"/></if>
 
             <!-- company partyId is empty, name provided: means new company-->
-            <if condition="!userIn.companyPartyId &amp;&amp; userIn.companyName">
+            <if condition="(!userIn.companyPartyId &amp;&amp; userIn.companyName) ||
+                    (userIn.companyPartyId != oldValue.user.companyPartyId) ">
                 <service-call out-map="comp"
                     name="mantle.party.PartyServices.create#Organization"
                     in-map="[organizationName: userIn.companyName,
                             ownerPartyId: ownerPartyId, roleTypeId: roleTypeId,
                             disabled: 'N']"/>
+                <set field="userIn.companyPartyId" from="comp.partyId"/>
                 <set field="companyPartyId" from="comp.partyId"/>
-                <!-- create new relationship -->
-                <service-call name="create#mantle.party.PartyRelationship"
-                    in-map="[fromPartyId: userIn.partyId, fromRoleTypeId: 'Employee',
-                        relationshipTypeEnumId: 'PrtEmployee', fromDate: ec.user.nowTimestamp,
-                        toPartyId: comp.partyId, toRoleTypeId: roleTypeId]" />
             </if>
             <!-- company partyId changed, change to existing company -->
             <if condition="userIn.companyPartyId != oldValue.user.companyPartyId">
@@ -728,35 +717,36 @@ along with this software (see the LICENSE.md file). If not, see
                         toPartyId: userIn.companyPartyId, toRoleTypeId: roleTypeId]" />
             </if>
             <!-- update postal address -->
-            <if condition="userIn.address">
+            <if condition="userIn.companyAddress">
                 <entity-find entity-name="moqui.basic.Geo" list="countries">
-                    <econdition field-name="geoName" from="userIn.address.country"/>
+                    <econdition field-name="geoName" from="userIn.companyAddress.country"/>
                     <econdition field-name="geoTypeEnumId" value="GEOT_COUNTRY"/>
                 </entity-find>
-                <if condition="userIn.address.addressId">
+                <if condition="userIn.companyAddress.addressId">
                     <entity-find list="addr"
                         entity-name="mantle.party.contact.PartyContactMechPostalAddress">
-                        <econdition field-name="partyId" from="userIn.partyId"/>
-                        <econdition field-name="contactMechId" from="userIn.address.addressId"/>
+                        <econdition field-name="partyId" from="userIn.companyPartyId"/>
+                        <econdition field-name="contactMechId" from="userIn.companyAddress.addressId"/>
                     </entity-find>
                     <if condition="
-                        userIn.address.address1 != addr[0].address1 ||
-                        userIn.address.address2 != addr[0].address2 ||
-                        userIn.address.city != addr[0].city ||
-                        userIn.address.postalCode != addr[0].postalCode ||
-                        userIn.address.stateProvince != addr[0].province ||
-                        userIn.address.country != countries[0].geoName
+                        userIn.companyAddress.address1 != addr[0].address1 ||
+                        userIn.companyAddress.address2 != addr[0].address2 ||
+                        userIn.companyAddress.city != addr[0].city ||
+                        userIn.companyAddress.postalCode != addr[0].postalCode ||
+                        userIn.companyAddress.stateProvince != addr[0].province ||
+                        userIn.companyAddress.country != countries[0].geoName
                         ">
+                        <log message="=======contactmechId: ${userIn.companyAddress.addressId}"/>
                         <entity-find-one for-update="true"
                             entity-name="mantle.party.contact.ContactMech" value-field="cm">
-                            <field-map field-name="contactMechId" from="userIn.address.addressId"/>
+                            <field-map field-name="contactMechId" from="userIn.companyAddress.addressId"/>
                         </entity-find-one>
                         <script>
-                            cm.address1 = userIn.address.address1;
-                            cm.address2 = userIn.address.address2;
-                            cm.city = userIn.address.city;
-                            cm.potalCode = userIn.address.postalCode;
-                            cm.provinceState = userIn.address.province;
+                            cm.address1 = userIn.companyAddress.address1;
+                            cm.address2 = userIn.companyAddress.address2;
+                            cm.city = userIn.companyAddress.city;
+                            cm.potalCode = userIn.companyAddress.postalCode;
+                            cm.provinceState = userIn.companyAddress.province;
                             cm.countryGeoId = countries[0].geoId;
                         </script>
                         <entity-update value-field="cm"/>
@@ -767,13 +757,13 @@ along with this software (see the LICENSE.md file). If not, see
                         name="mantle.party.ContactServices.findOrCreate#PartyPostalAddress"
                         in-map="[
                             contactMechPurposeId: 'PostalPrimary',
-                            partyId: userIn.partyId,
-                            address1: userIn.address.address1,
-                            address2: userIn.address.address2,
-                            city: userIn.address.city,
+                            partyId: userIn.companyPartyId,
+                            address1: userIn.companyAddress.address1,
+                            address2: userIn.companyAddress.address2,
+                            city: userIn.companyAddress.city,
                             countryGeoId: countries[0].geoId,
-                            postalCode: userIn.address.postalCode,
-                            stateProvince: userIn.address.province,
+                            postalCode: userIn.companyAddress.postalCode,
+                            stateProvince: userIn.companyAddress.province,
                         ]"/>
                 </else>
             </if></if>    

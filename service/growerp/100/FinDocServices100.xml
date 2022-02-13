@@ -1198,6 +1198,9 @@ along with this software (see the LICENSE.md file). If not, see
                                 out-map="customerShippingInfo"
                             in-map="[partyId: order.otherUser.companyPartyId,
                                     postalContactMechPurposeId:'PostalShippingDest']"/>
+                        <if condition="customerShippingInfo.postalAddressList == null">
+                            <return error="true" message="Customer does not have a shipping address!"/>
+                        </if>
                         <set field="postalAddress" from="customerShippingInfo.postalAddressList[0]"/>
                         <service-call name="mantle.order.OrderServices.set#OrderBillingShippingInfo"
                             in-map="[orderId: order.orderId, orderPartSeqId: orderPartSeqId,
