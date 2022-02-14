@@ -692,7 +692,9 @@ along with this software (see the LICENSE.md file). If not, see
                             ownerPartyId: ownerPartyId, roleTypeId: roleTypeId,
                             disabled: 'N']"/>
                 <set field="userIn.companyPartyId" from="comp.partyId"/>
-                <set field="userIn.companyAddress.addressId" from="null"/><!-- new address -->
+                <if condition="userIn.companyAddress">
+                    <set field="userIn.companyAddress.addressId" from="null"/><!-- new address -->
+                </if>
                 <set field="companyPartyId" from="comp.partyId"/>
             </if>
             <!-- company partyId changed, change to existing company -->
