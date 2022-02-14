@@ -692,6 +692,7 @@ along with this software (see the LICENSE.md file). If not, see
                             ownerPartyId: ownerPartyId, roleTypeId: roleTypeId,
                             disabled: 'N']"/>
                 <set field="userIn.companyPartyId" from="comp.partyId"/>
+                <set field="userIn.companyAddress.addressId" from="null"/><!-- new address -->
                 <set field="companyPartyId" from="comp.partyId"/>
             </if>
             <!-- company partyId changed, change to existing company -->
@@ -725,7 +726,7 @@ along with this software (see the LICENSE.md file). If not, see
                 <if condition="userIn.companyAddress.addressId">
                     <entity-find list="addr"
                         entity-name="mantle.party.contact.PartyContactMechPostalAddress">
-                        <econdition field-name="partyId" from="userIn.companyPartyId"/>
+                        <econdition field-name="partyId" from="oldValue.user.companyPartyId"/>
                         <econdition field-name="contactMechId" from="userIn.companyAddress.addressId"/>
                     </entity-find>
                     <if condition="
@@ -736,7 +737,6 @@ along with this software (see the LICENSE.md file). If not, see
                         userIn.companyAddress.stateProvince != addr[0].province ||
                         userIn.companyAddress.country != countries[0].geoName
                         ">
-                        <log message="=======contactmechId: ${userIn.companyAddress.addressId}"/>
                         <entity-find-one for-update="true"
                             entity-name="mantle.party.contact.ContactMech" value-field="cm">
                             <field-map field-name="contactMechId" from="userIn.companyAddress.addressId"/>
