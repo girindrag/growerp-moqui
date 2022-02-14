@@ -12,6 +12,8 @@ git clone https://github.com/growerp/mantle-udm.git -b growerp runtime/component
 git clone https://github.com/growerp/mantle-usl.git runtime/component/mantle-usl
 git clone https://github.com/growerp/SimpleScreens.git runtime/component/SimpleScreens
 git clone https://github.com/growerp/moqui-fop.git runtime/component/moqui-fop
+git clone https://github.com/growerp/growerp-moqui.git runtime/component/growerp
+
 ./gradlew build
 java -jar moqui.war load types=seed,seed-initial,install
 java -jar moqui.war
