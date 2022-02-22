@@ -158,7 +158,7 @@ along with this software (see the LICENSE.md file). If not, see
             <parameter name="company" type="Map"/>
         </out-parameters>
         <actions>
-            <log message="===========not implemented yet"/>
+            <log message="===========not implemented yet, required?"/>
         </actions>
     </service>
 

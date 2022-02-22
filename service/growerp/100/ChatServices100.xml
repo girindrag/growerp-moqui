@@ -70,7 +70,7 @@ along with this software (see the LICENSE.md file). If not, see
                     <set field="roomOut" from="[
                         chatRoomId: room.chatRoomId,
                         chatRoomName: room.chatRoomName,
-                        isPrivate: room.isPrivate == 'Y' ? 'true' : 'false']"/>
+                        isPrivate: room.isPrivate == 'Y' ? true : false]"/>
                     <script>chatRooms.add(roomOut)</script>
                 </iterate>
                 <else>
@@ -83,21 +83,26 @@ along with this software (see the LICENSE.md file). If not, see
                             <if condition="chatRoomMember.userId != ec.user.userAccount.userId">
                                 <service-call name="growerp.100.PartyServices100.get#User"
                                     in-map="[userPartyId: chatRoomMember.partyId]" out-map="context"/>
+                                <if condition="room.chatRoomName == null">
+                                    <set field="room.chatRoomName" value="${user.firstName} ${user.lastName}"/>
+                                </if>
                                 <else>
                                     <set field="user" from="[partyId: chatRoomMember.partyId,
                                                             userId: chatRoomMember.userId]"/>
+                                    <set field="hasRead" from="chatRoomMember.hasRead == 'Y' ? true : false"/>
                                 </else>
                             </if>
                             <set field="member" from="[
                                     member: user, 
-                                    hasRead: chatRoomMember.hasRead == 'Y' ? 'true' : 'false',
-                                    isActive: chatRoomMember.isActive == 'Y' ? 'true' : 'false`']"/>
+                                    hasRead: chatRoomMember.hasRead == 'Y' ? true : false,
+                                    isActive: chatRoomMember.isActive == 'Y' ? true : false]"/>
                             <script>members.add(member)</script>
                         </iterate>
                         <set field="roomOut" from="[
                                 chatRoomId: room.chatRoomId,
                                 chatRoomName: room.chatRoomName,
-                                isPrivate: room.isPrivate == 'Y' ? 'true' : 'false',
+                                hasRead: hasRead,
+                                isPrivate: room.isPrivate == 'Y' ? true : false,
                                 members: members]"/>
                         <if condition="chatRoomId"><set field="chatRoom" from="roomOut"/>
                             <else>
@@ -126,14 +131,14 @@ along with this software (see the LICENSE.md file). If not, see
             <service-call name="create#growerp.general.ChatRoom" out-map="context"
                  in-map="[chatRoomName: chatRoomIn.chatRoomName,
                             ownerPartyId: ownerPartyId,
-                    isPrivate: chatRoomIn.isPrivate == 'true' ? 'Y' : 'N']"/>
-            <!-- add members -->
+                    isPrivate: chatRoomIn.isPrivate == true ? 'Y' : 'N']"/>
+            <!-- add 'other' members -->
             <iterate list="chatRoomIn.members" entry="memberIn">
                 <if condition="memberIn.member.userId != ec.user.userAccount.userId">
                     <service-call name="create#growerp.general.ChatRoomMember"
                         in-map="[chatRoomId: chatRoomId,
-                                isActive: memberIn.member.isActive = 'true' ? 'Y' : 'N',
-                                hasRead: memberIn.member.hasRead = 'true' ? 'Y' : 'N',
+                                isActive: memberIn.member.isActive = true ? 'Y' : 'N',
+                                hasRead: memberIn.member.hasRead = true ? 'Y' : 'N',
                                 userId: memberIn.member.userId]"/>
                 </if>
             </iterate>
@@ -169,7 +174,7 @@ along with this software (see the LICENSE.md file). If not, see
                 <service-call name="update#growerp.general.ChatRoom"
                     in-map="[chatRoomId: chatRoomIn.chatRoomId,
                             chatRoomName: chatRoomIn.chatRoomName,
-                            isPrivate: chatRoomIn.isPrivate == 'true' ? 'Y' : 'N']"/>
+                            isPrivate: chatRoomIn.isPrivate == true ? 'Y' : 'N']"/>
             </if>
             <!-- replace all members by chatRoom in members -->
             <!-- delete existing -->
@@ -180,8 +185,8 @@ along with this software (see the LICENSE.md file). If not, see
             <iterate list="chatRoomIn.members" entry="member">
                 <service-call name="create#growerp.general.ChatRoomMember"
                     in-map="[chatRoomId: chatRoomIn.chatRoomId,
-                            isActive: member.isActive == 'true' ? 'Y' : 'N',
-                            hasRead: member.hasRead == 'true' ? 'Y' : 'N',
+                            isActive: member.isActive == true ? 'Y' : 'N',
+                            hasRead: member.hasRead == true ? 'Y' : 'N',
                             userId: member.member.userId]"/>
             </iterate>
             <service-call name="growerp.100.ChatServices100.get#ChatRoom"
