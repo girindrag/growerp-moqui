@@ -49,10 +49,10 @@ along with this software (see the LICENSE.md file). If not, see
                 <set field="productTypeValues" from="[
                 'PtService': 'Service',
                 'PtAsset': 'Physical Good',
-                'PtAssetUse': 'Rental',
+                'PtFixedAssetUse': 'Rental',
                 'Service': 'PtService',
                 'Physical Good': 'PtAsset',
-                'Rental': 'PtAssetUse',
+                'Rental': 'PtFixedAssetUse',
                 ]"/>
                 <set field="convertedStatusId" from="productTypeValues[statusId]"/>
             </if>

@@ -1110,19 +1110,19 @@ along with this software (see the LICENSE.md file). If not, see
 
                 <set field="productsHotel" from="[
                     [ productName: 'Single Room', description:'The Single bed room',
-                        productTypeId: 'PtAssetUse', assetClassId: 'AsClsRoom', assetTypeId: 'AstTpFixed',
+                        productTypeId: 'PtFixedAssetUse', assetClassId: 'AsClsRoom', assetTypeId: 'AstTpFixed',
                         price: 50, image: 'demoRooms/room1', categoryName: 'rooms'],
                     [ productName: 'Standard Room', description:'The Standard room',
-                        productTypeId: 'PtAssetUse', assetClassId: 'AsClsRoom', assetTypeId: 'AstTpFixed',
+                        productTypeId: 'PtFixedAssetUse', assetClassId: 'AsClsRoom', assetTypeId: 'AstTpFixed',
                         price: 80, image: 'demoRooms/room2', categoryName: 'rooms'],
                     [ productName: 'Deluxe Room', description:'The Deluxe room offering',
-                        productTypeId: 'PtAssetUse', assetClassId: 'AsClsRoom', assetTypeId: 'AstTpFixed',
+                        productTypeId: 'PtFixedAssetUse', assetClassId: 'AsClsRoom', assetTypeId: 'AstTpFixed',
                         price: 170, image: 'demoRooms/room3', categoryName: 'rooms'],
                     [ productName: 'Suite', description:'The Suite',
-                        productTypeId: 'PtAssetUse', assetClassId: 'AsClsRoom', assetTypeId: 'AstTpFixed',
+                        productTypeId: 'PtFixedAssetUse', assetClassId: 'AsClsRoom', assetTypeId: 'AstTpFixed',
                         price: 360, image: 'demoRooms/room4', categoryName: 'rooms'],
                     [ productName: 'Appartment', description:'The living,  two bedroom appartment',
-                        productTypeId: 'PtAssetUse', assetClassId: 'AsClsRoom', assetTypeId: 'AstTpFixed',
+                        productTypeId: 'PtFixedAssetUse', assetClassId: 'AsClsRoom', assetTypeId: 'AstTpFixed',
                         price: 460, image: 'demoRooms/room5', categoryName: 'rooms'],
                 ]"/>  
                 <if condition="classificationId == 'AppAdmin'"><set field="productsIn" from="productsAdmin"/></if>

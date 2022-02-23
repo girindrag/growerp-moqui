@@ -51,6 +51,9 @@ along with this software (see the LICENSE.md file). If not, see
     <moqui.basic.Enumeration enumId="PctRoot" description="Root category" enumTypeId="ProductCategoryType"/>
     <moqui.basic.Enumeration enumId="PctRestaurant" description="Menu for Restauarant" enumTypeId="ProductCategoryType"/><!-- depreciated -->
 
+    <!-- hotel room reservation new product type: no shipment -->
+    <moqui.basic.Enumeration description="Fixed Asset Use" enumId="PtFixedAssetUse" enumTypeId="ProductType"/>
+
     <!-- additional roles -->
     <!-- ordertaker is also stored in the field enteredByPartyId in orderheader -->
     <mantle.party.RoleType description="Added more after initial entry of the order" roleTypeId="OrderTakeMore"/><!--  when entered as an update -->
