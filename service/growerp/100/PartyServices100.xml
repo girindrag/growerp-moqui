@@ -133,6 +133,27 @@ along with this software (see the LICENSE.md file). If not, see
                 countryId: addresses[0].countryId,
                 ]"/>
             </if>
+            <!-- payment method: credit card -->
+            <entity-find entity-name="mantle.account.method.PaymentMethod" list="paymentMethods">
+                <econdition field-name="ownerPartyId" from="companyPartyId"/>
+                <econdition field-name="paymentMethodTypeEnumId" value="PmtCreditCard"/>
+                <date-filter/>
+            </entity-find>
+            <if condition="paymentMethods">
+                <entity-find entity-name="mantle.account.method.CreditCard" list="cCards">
+                    <econdition field-name="paymentMethodId" from="paymentMethods[0].paymentMethodId"/>
+                </entity-find>
+                <set field="cardType" from="ec.entity.find('moqui.basic.Enumeration')
+                        .condition('enumId', cCards[0].creditCardTypeEnumId).one().description"/>
+                <set field="nrLength" from="cCards[0].cardNumber.length()"/>
+                <set field="cardNumberHidden" value="${cardType}**********${cCards[0].cardNumber.substring(nrLength-4,nrLength)} ${cCards[0].expireDate}"/>
+                <set field="paymentMethod" from="[ccDescription: cardNumberHidden]"/>
+            </if>
+            <!-- telephone -->
+            <entity-find entity-name="mantle.party.contact.PartyContactMechTelecomNumber" list="telNos">
+                <econdition field-name="partyId" from="companyPartyId"/>
+                <date-filter/>
+            </entity-find>
             <set field="company" from="[
                 partyId: companyPartyId,
                 name: org.organizationName,
@@ -143,6 +164,8 @@ along with this software (see the LICENSE.md file). If not, see
                 address: address,
                 vatPerc: org.vatPerc ? org.vatPerc.toString() : null,
                 salesPerc: org.salesPerc ? org.salesPerc.toString() : null,
+                paymentMethod: paymentMethod,
+                telephoneNr: telNos ? telNos[0].contactNumber : null,
                 ]"/>
         </actions>
     </service>
@@ -158,7 +181,7 @@ along with this software (see the LICENSE.md file). If not, see
             <parameter name="company" type="Map"/>
         </out-parameters>
         <actions>
-            <log message="===========not implemented yet, required?"/>
+            <log message="===========not implemented yet, required? now implemented with create user"/>
         </actions>
     </service>
 
@@ -208,8 +231,8 @@ along with this software (see the LICENSE.md file). If not, see
                     value-field="pref" for-update="true">
                 <field-map field-name="organizationPartyId" from="compIn.partyId"/>
             </entity-find-one>
-            <if condition="pref.baseCurrencyUomId != compIn.currencyId">
-                <set field="pref.baseCurrencyUomId" from="compIn.currencyId"/>
+            <if condition="pref.baseCurrencyUomId != compIn.currency.currencyId">
+                <set field="pref.baseCurrencyUomId" from="compIn.currency.currencyId"/>
                 <entity-update value-field="pref" />
             </if>
             <!-- update image -->
@@ -272,6 +295,63 @@ along with this software (see the LICENSE.md file). If not, see
                         out-map="result"/>
                 </if>
             </if>
+            <!-- telephone -->
+            <if condition="compIn.telephoneNr">
+                <entity-find entity-name="mantle.party.contact.PartyContactMechTelecomNumber" list="telNos">
+                    <econdition field-name="partyId" from="oldValue.company.partyId"/>
+                    <date-filter/>
+                </entity-find>
+                <if condition="telNos">
+                    <if condition="telNos[0].contactNumber != compIn.telephoneNr">
+                        <service-call name="update#mantle.party.contact.TelecomNumber"
+                            in-map="[contactMechId: telNos[0].contactMechId,
+                                    contactNumber: compIn.telephoneNr]"/>
+                    </if>
+                    <else>
+                        <service-call name="mantle.party.ContactServices.create#TelecomNumber"
+                            in-map="[
+                                contactMechPurposeId: 'PhonePrimary',
+                                contactNumber: compIn.telephoneNr,
+                                partyId: companyPartyId]"/>
+                    </else>
+                </if>
+            </if>
+            <!-- payment methods -->
+            <if condition="compIn.paymentMethod">
+                <!-- credit card -->
+                <if condition="compIn.paymentMethod.creditCardType">
+                    <set field="expireDate" value="${compIn.paymentMethod.expireMonth}/${compIn.paymentMethod.expireYear}"/>
+                    <set field="inMap" from="[
+                        ownerPartyId: oldValue.company.partyId,
+                        cardNumber: compIn.paymentMethod.creditCardNumber,
+                        creditCardTypeEnumId: ec.entity.find('moqui.basic.Enumeration')
+                            .condition('description', compIn.paymentMethod.creditCardType).one().enumId,
+                        expireDate: expireDate,
+                        ]"/>
+                    <entity-find entity-name="mantle.account.method.PaymentMethod" list="paymentMethods">
+                        <econdition field-name="ownerPartyId" from="oldValue.company.partyId"/>
+                        <econdition field-name="paymentMethodTypeEnumId" value="PmtCreditCard"/>
+                        <date-filter/>
+                    </entity-find>
+                    <if condition="!paymentMethods">
+                        <service-call
+                            name="mantle.account.PaymentMethodServices.create#CreditCard"
+                            in-map="inMap"/>
+                        <else>
+                            <entity-find-one entity-name="mantle.account.method.CreditCard" value-field="cc">
+                                <field-map field-name="paymentMethodId" from="paymentMethods[0].paymentMethodId"/>
+                            </entity-find-one>
+                            <if condition="inMap.cardNumber != cc.cardNumber ||
+                                            inMap.expireDate != cc.expireDate">
+                                <set field="inMap.paymentMethodId" from="paymentMethods[0].paymentMethodId"/>
+                                <service-call
+                                    name="mantle.account.PaymentMethodServices.update#CreditCard"
+                                    in-map="inMap"/>
+                            </if>
+                        </else>
+                    </if>
+                </if>
+            </if>
             <!-- sales/vat tax percentage -->
             <if condition="compIn.salesPerc || compIn.vatPerc">
                 <entity-find-one
@@ -312,8 +392,8 @@ along with this software (see the LICENSE.md file). If not, see
             <parameter name="search" default="null"/>
         </in-parameters>
         <out-parameters>
-            <parameter name="users" type="List"/>
-            <parameter name="user" type="Map"/>
+            <parameter name="users" type="List" default="[]"/>
+            <parameter name="user" type="Map" default="[:]"/>
         </out-parameters>
         <actions>
             <if condition="filter != null">
@@ -324,12 +404,15 @@ along with this software (see the LICENSE.md file). If not, see
                 <service-call out-map="relatedLogin"
                     name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner"/>
                 <set field="ownerPartyId" from="relatedLogin.ownerPartyId"/></if>
-            <if condition="!userPartyId">
+            <if condition="!userPartyId &amp;&amp; !search">
                 <set field="users" from="[]"/>
                 <set field="disabled" value="N"/></if>
             <entity-find offset="start" limit="limit" list="userInfos"
-                entity-name="growerp.mobile.CompanyPersonAndLoginGroup">
-                <econdition field-name="ownerPartyId" ignore-if-empty="true"/>
+                    entity-name="growerp.mobile.CompanyPersonAndLoginGroup">
+                <econdition field-name="companyOwnerPartyId" from="ownerPartyId"
+                        ignore-if-empty="true"/>
+                <econdition field-name="ownerPartyId" from="ownerPartyId"
+                        ignore-if-empty="true"/>
                 <econdition field-name="userPartyId" ignore-if-empty="true"/>
                 <econditions combine="or">
                     <econdition field-name="userPartyId" operator="like"
@@ -350,12 +433,12 @@ along with this software (see the LICENSE.md file). If not, see
                         operator="like" from="search" ignore-if-empty="true"/>
                 </econditions>
                 <econdition field-name="userGroupId" operator="in"
-                    from="userGroupIds" ignore-if-empty="true"/>
+                        from="userGroupIds" ignore-if-empty="true"/>
                 <econdition field-name="companyDisabled" operator="equals"
-                            from="disabled" or-null="true" ignore-if-empty="true"/>
+                        from="disabled" or-null="true" ignore-if-empty="true"/>
                 <econdition field-name="userDisabled" operator="equals"
-                            from="disabled" or-null="true" ignore-if-empty="true"/>
-                <order-by field-name="lastName"/><order-by field-name="firstName"/>
+                        from="disabled" or-null="true" ignore-if-empty="true"/>
+                <order-by field-name="lastName^,firstName^"/>
             </entity-find>
             <iterate entry="userInfo" list="userInfos">
                 <if condition="filter != null">
@@ -389,6 +472,33 @@ along with this software (see the LICENSE.md file). If not, see
                         province: userInfo.stateProvince ? userInfo.stateProvince : userInfo.stateProvinceGeoId ? userInfo.stateProvinceGeoId.substring(4):'',
                         country: userInfo.country,
                         ]"/>
+                        <else>
+                            <set field="address" from="null"/>
+                        </else>
+                </if>
+                <!-- telephone -->
+                <entity-find entity-name="mantle.party.contact.PartyContactMechTelecomNumber" list="telNos">
+                    <econdition field-name="partyId" from="userInfo.userPartyId"/>
+                    <date-filter/>
+                </entity-find>
+                <!-- payment method: credit card -->
+                <entity-find entity-name="mantle.account.method.PaymentMethod" list="paymentMethods">
+                    <econdition field-name="ownerPartyId" from="userInfo.companyPartyId"/>
+                    <econdition field-name="paymentMethodTypeEnumId" value="PmtCreditCard"/>
+                    <date-filter/>
+                </entity-find>
+                <if condition="paymentMethods">
+                    <entity-find entity-name="mantle.account.method.CreditCard" list="cCards">
+                        <econdition field-name="paymentMethodId" from="paymentMethods[0].paymentMethodId"/>
+                    </entity-find>
+                    <set field="cardType" from="ec.entity.find('moqui.basic.Enumeration')
+                            .condition('enumId', cCards[0].creditCardTypeEnumId).one().description"/>
+                    <set field="nrLength" from="cCards[0].cardNumber.length()"/>
+                    <set field="cardNumberHidden" value="${cardType}**********${cCards[0].cardNumber.substring(nrLength-4,nrLength)} ${cCards[0].expireDate}"/>
+                    <set field="paymentMethod" from="[ccDescription: cardNumberHidden]"/>
+                    <else>
+                        <set field="paymentMethod" from="null"/>
+                    </else>
                 </if>
                 <set field="userOut" from="[
                     partyId: userInfo?.userPartyId,
@@ -405,8 +515,9 @@ along with this software (see the LICENSE.md file). If not, see
                     image: imageFile,
                     userId: userInfo?.userId,
                     locale: userInfo?.locale,
-                    externalId: userInfo?.externalId,
-                    companyAddress: address]"/>
+                    telephoneNr: telNos ? telNos[0].contactNumber : null,
+                    companyAddress: address,
+                    companyPaymentMethod: paymentMethod]"/>
                 <if condition="!userPartyId">
                     <script>users.add(userOut)</script>
                     <else>
@@ -542,8 +653,9 @@ along with this software (see the LICENSE.md file). If not, see
             <if condition="userIn.userGroupId == 'GROWERP_M_SUPPLIER'">
                 <set field="roleTypeId" value="Supplier"/></if>
 
-            <service-call out-map="relComp"
-                name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner"/>
+            <service-call
+                name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner"
+                out-map="relComp"/>
             <service-call name="mantle.party.PartyServices.create#Account" 
                 in-map="[roleTypeId: roleTypeId, loginAfterCreate: false,
                         firstName: userIn.firstName, lastName: userIn.lastName,
@@ -552,7 +664,7 @@ along with this software (see the LICENSE.md file). If not, see
                         newPasswordVerify: password, ownerPartyId: relComp.ownerPartyId]"
                 out-map="userAccount" />
             <set field="userPartyId" from="userAccount.partyId"/>
-            <!-- no need to create company for employee and admin -->
+            <!-- create company for NOT employee and admin -->
             <if condition="userIn.userGroupId != 'GROWERP_M_ADMIN' &amp;&amp; 
                             userIn.userGroupId != 'GROWERP_M_EMPLOYEE'">
                 <if condition="!userIn.companyName &amp;&amp; !userIn.companyPartyId">
@@ -560,12 +672,13 @@ along with this software (see the LICENSE.md file). If not, see
                         message="Existing or new company name required for new lead, customer or supplier"/>
                 </if>
                 <if condition="!userIn.companyPartyId &amp;&amp; userIn.companyName">
-                    <service-call out-map="comp"
+                    <service-call 
                         name="mantle.party.PartyServices.create#Organization"
+                        out-map="comp"
                         in-map="[organizationName: userIn.companyName,
                                 ownerPartyId: relComp.ownerPartyId, roleTypeId: roleTypeId,
                                 disabled: 'N']"/>
-                                <set field="companyPartyId" from="comp.partyId"/>
+                    <set field="companyPartyId" from="comp.partyId"/>
                     <else>
                         <set field="companyPartyId" from="userIn.companyPartyId"/>
                     </else>
@@ -584,27 +697,19 @@ along with this software (see the LICENSE.md file). If not, see
             <!-- add image -->
             <if condition="userIn.image">
                 <service-call name="growerp.100.ImageServices100.upload#Image"
-                    in-map="[type: 'user', id: userIn.partyId,
+                    in-map="[type: 'user', id: userPartyId,
                         base64: userIn.image]"/>
             </if>
-            <if condition="userIn.companyAddress">
-                <entity-find entity-name="moqui.basic.Geo" list="countries">
-                    <econdition field-name="geoName" from="userIn.companyAddress.country"/>
-                    <econdition field-name="geoTypeEnumId" value="GEOT_COUNTRY"/>
-                </entity-find>
+            <!-- address  and payment period only after creation -->
+            <!-- telephone -->
+            <if condition="userIn.telephoneNr">
                 <service-call
-                    name="mantle.party.ContactServices.create#PostalAddress"
-                    out-map="context"
+                    name="mantle.party.ContactServices.create#TelecomNumber"
                     in-map="[
-                        address1: userIn.companyAddress.address1,
-                        address2: userIn.companyAddress.address2,
-                        city: userIn.companyAddress.city,
-                        postalCode: userIn.companyAddress.postalCode,
-                        stateProvince: userIn.companyAddress.province,
-                        countryGeoId: countries[0].geoId,
-                        contactMechPurposeId: 'PostalPrimary',
-                        partyId: companyPartyId
-                        ]"/>
+                        contactNumber: userIn.telephoneNr,
+                        contactMechPurposeId: 'PhonePrimary',
+                        partyId: userPartyId,
+                            ]"/>
             </if>
             <service-call name="growerp.100.PartyServices100.get#User"
                 in-map="[userPartyId: userPartyId]" out-map="context"/>
@@ -625,6 +730,7 @@ along with this software (see the LICENSE.md file). If not, see
             <script> // convert JSON data
                 Object userIn = new groovy.json.JsonSlurper().parseText(user)
             </script>
+            <!-- get old values -->
             <service-call name="growerp.100.PartyServices100.get#User"
                 in-map="[userPartyId: userIn.partyId]" out-map="oldValue"/>
             <service-call name="update#mantle.party.Person" 
@@ -638,13 +744,13 @@ along with this software (see the LICENSE.md file). If not, see
                             locale: language
                         ]"/>
             <!--update user group -->
+            <service-call name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner" 
+                in-map="[userPartyId: userIn.partyId]" out-map="company"/>
             <if condition="!userIn.userGroupId">
                 <return error="true" message="userGroupId not supplied to update user"/></if>
             <if condition="userIn.userGroupId != oldValue.user.userGroupId">
                 <if condition="oldValue.user.userGroupId == 'GROWERP_M_ADMIN'">
                     <!-- check if only a single admin: cannot change -->
-                    <service-call name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner" 
-                        in-map="[userPartyId: userIn.partyId]" out-map="company"/>
                     <entity-find entity-name="growerp.mobile.CompanyPersonAndLoginGroup" list="admins">
                         <econdition field-name="userGroupId" value="GROWERP_M_ADMIN"/>
                         <econdition field-name="companyPartyId" from="company.companyPartyId" />
@@ -661,12 +767,6 @@ along with this software (see the LICENSE.md file). If not, see
                 <service-call name="create#moqui.security.UserGroupMember"
                     in-map="[userGroupId: userIn.userGroupId, userId: oldValue.user.userId, fromDate: ec.user.nowTimestamp]"/>
             </if>    
-            <!-- update external id for customer indentification -->
-            <entity-find-one value-field="party" entity-name="mantle.party.Party" for-update="true">
-                <field-map field-name="partyId" from="userIn.partyId"/></entity-find-one>
-            <if condition="userIn.externalId != party.externalId">
-                <set field="party.externalId" from="userIn.externalId"/>
-                <entity-update value-field="party"/></if>
             <!-- update image -->
             <if condition="userIn.image">
                 <service-call name="growerp.100.ImageServices100.upload#Image"
@@ -684,22 +784,25 @@ along with this software (see the LICENSE.md file). If not, see
                 <set field="roleTypeId" value="Supplier"/></if>
 
             <!-- company partyId is empty, name provided: means new company-->
-            <if condition="(!userIn.companyPartyId &amp;&amp; userIn.companyName) ||
-                    (userIn.companyPartyId != oldValue.user.companyPartyId) ">
+            <if condition="!userIn.companyPartyId">
+                <if condition="!userIn.companyName">
+                    <return error="true" message="Companyname required when companyPartyId is null in update user"/>
+                </if>
                 <service-call out-map="comp"
                     name="mantle.party.PartyServices.create#Organization"
                     in-map="[organizationName: userIn.companyName,
-                            ownerPartyId: ownerPartyId, roleTypeId: roleTypeId,
+                            ownerPartyId: company.ownerPartyId, roleTypeId: roleTypeId,
                             disabled: 'N']"/>
-                <set field="userIn.companyPartyId" from="comp.partyId"/>
-                <if condition="userIn.companyAddress">
-                    <set field="userIn.companyAddress.addressId" from="null"/><!-- new address -->
-                </if>
                 <set field="companyPartyId" from="comp.partyId"/>
+                <set field="userIn.companyAddress" from="null"/><!-- new address -->
+                <set field="userIn.companyPaymentMethod" from="null"/><!-- new paymentMethod -->
+                <else>
+                    <set field="companyPartyId" from="userIn.companyPartyId"/>
+                </else>
             </if>
-            <!-- company partyId changed, change to existing company -->
-            <if condition="userIn.companyPartyId != oldValue.user.companyPartyId">
-                <!-- disable current relationship -->
+            <!-- if no userIn.companyPartyId or companyPartyId different: remove relationship-->
+            <if condition="!userIn.companyPartyId &amp;&amp; userIn.companyName ||
+                    userIn.companyPartyId != oldValue.user.companyPartyId">
                 <entity-find entity-name="mantle.party.PartyRelationship" 
                         list="oldRel" limit="1">
                     <econdition field-name="fromPartyId" from="userIn.partyId"/>
@@ -717,58 +820,118 @@ along with this software (see the LICENSE.md file). If not, see
                 <service-call name="create#mantle.party.PartyRelationship"
                     in-map="[fromPartyId: userIn.partyId, fromRoleTypeId: 'Employee',
                         relationshipTypeEnumId: 'PrtEmployee', fromDate: ec.user.nowTimestamp,
-                        toPartyId: userIn.companyPartyId, toRoleTypeId: roleTypeId]" />
+                        toPartyId: companyPartyId, toRoleTypeId: roleTypeId]" />
             </if>
             <!-- update postal address -->
             <if condition="userIn.companyAddress">
-                <entity-find entity-name="moqui.basic.Geo" list="countries">
-                    <econdition field-name="geoName" from="userIn.companyAddress.country"/>
-                    <econdition field-name="geoTypeEnumId" value="GEOT_COUNTRY"/>
-                </entity-find>
-                <if condition="userIn.companyAddress.addressId">
-                    <entity-find list="addr"
-                        entity-name="mantle.party.contact.PartyContactMechPostalAddress">
-                        <econdition field-name="partyId" from="oldValue.user.companyPartyId"/>
-                        <econdition field-name="contactMechId" from="userIn.companyAddress.addressId"/>
+                <if condition="userIn.companyAddress.country">
+                    <entity-find entity-name="moqui.basic.Geo" list="countries">
+                        <econdition field-name="geoName" from="userIn.companyAddress.country"/>
+                        <econdition field-name="geoTypeEnumId" value="GEOT_COUNTRY"/>
                     </entity-find>
-                    <if condition="
-                        userIn.companyAddress.address1 != addr[0].address1 ||
-                        userIn.companyAddress.address2 != addr[0].address2 ||
-                        userIn.companyAddress.city != addr[0].city ||
-                        userIn.companyAddress.postalCode != addr[0].postalCode ||
-                        userIn.companyAddress.stateProvince != addr[0].province ||
-                        userIn.companyAddress.country != countries[0].geoName
-                        ">
-                        <entity-find-one for-update="true"
-                            entity-name="mantle.party.contact.ContactMech" value-field="cm">
-                            <field-map field-name="contactMechId" from="userIn.companyAddress.addressId"/>
-                        </entity-find-one>
-                        <script>
-                            cm.address1 = userIn.companyAddress.address1;
-                            cm.address2 = userIn.companyAddress.address2;
-                            cm.city = userIn.companyAddress.city;
-                            cm.potalCode = userIn.companyAddress.postalCode;
-                            cm.provinceState = userIn.companyAddress.province;
-                            cm.countryGeoId = countries[0].geoId;
-                        </script>
-                        <entity-update value-field="cm"/>
+                    <if condition="countries">
+                        <set field="countryGeoId" from="countries[0].geoId"/>
                     </if>
-                <else>
-                    <!-- create new postal address -->
-                    <service-call
-                        name="mantle.party.ContactServices.findOrCreate#PartyPostalAddress"
-                        in-map="[
-                            contactMechPurposeId: 'PostalPrimary',
-                            partyId: userIn.companyPartyId,
-                            address1: userIn.companyAddress.address1,
-                            address2: userIn.companyAddress.address2,
-                            city: userIn.companyAddress.city,
-                            countryGeoId: countries[0].geoId,
-                            postalCode: userIn.companyAddress.postalCode,
-                            stateProvince: userIn.companyAddress.province,
+                </if>
+                <if condition="userIn.companyAddress.province">
+                    <entity-find entity-name="moqui.basic.Geo" list="provinces">
+                        <econdition field-name="geoName" from="userIn.companyAddress.province"/>
+                        <econdition field-name="geoTypeEnumId" value="GEOT_STATE"/>
+                    </entity-find>
+                    <if condition="provinces">
+                        <set field="stateProvinceGeoId" from="provinces[0].geoId"/>
+                    </if>
+                </if>
+                <if condition="
+                        userIn.companyAddress.address1 != oldValue.address1 ||
+                        userIn.companyAddress.address2 != oldValue.address2 ||
+                        userIn.companyAddress.city != oldValue.city ||
+                        userIn.companyAddress.postalCode != oldValue.postalCode ||
+                        userIn.companyAddress.stateProvince != oldValue.province ||
+                        userIn.companyAddress.country != oldValue.country
+                        ">
+                    <!-- delete (set thruDate) all duplicates -->
+                    <entity-find entity-name="mantle.party.contact.PartyContactMech"
+                            for-update="true" list="partyContactMechs" >
+                        <econdition field-name="partyId" from="oldValue.user.companyPartyId"/>
+                        <econdition field-name="contactMechPurposeId" value="PostalPrimary"/>
+                        <econdition field-name="thruDate" operator="is-null"/>
+                    </entity-find>
+                    <iterate list="partyContactMechs" entry="contMech">    
+                        <set field="contMech.thruDate" from="ec.user.nowTimestamp"/>
+                        <entity-update value-field="contMech"/>
+                    </iterate>
+                    <!-- if possible find stateProvince geoId -->
+                    <!-- create new postall address -->
+                    <service-call name="mantle.party.ContactServices.create#PostalAddress"
+                        in-map="[partyId: oldValue.user.companyPartyId, contactMechPurposeId: 'PostalPrimary', 
+                                address1: userIn.companyAddress.address1,
+                                address2: userIn.companyAddress.address2,
+                                city: userIn.companyAddress.city,
+                                postalCode: userIn.companyAddress.postalCode,
+                                stateProvince: userIn.companyAddress.province,
+                                stateProvinceGeoId: stateProvinceGeoId, 
+                                countryGeoId: countryGeoId]"
+                        out-map="result"/>
+                </if>
+            </if>
+            <!-- telephone -->
+            <if condition="userIn.telephoneNr">
+                <entity-find entity-name="mantle.party.contact.PartyContactMechTelecomNumber" list="telNos">
+                    <econdition field-name="partyId" from="userIn.partyId"/>
+                    <date-filter/>
+                </entity-find>
+                <if condition="telNos">
+                    <if condition="telNos[0].contactNumber != userIn.telephoneNr">
+                        <service-call name="update#mantle.party.contact.TelecomNumber"
+                            in-map="[contactMechId: telNos[0].contactMechId,
+                                    contactNumber: userIn.telephoneNr]"/>
+                    </if>
+                    <else>
+                        <service-call name="mantle.party.ContactServices.create#TelecomNumber"
+                            in-map="[
+                                contactMechPurposeId: 'PhonePrimary',
+                                contactNumber: userIn.telephoneNr,
+                                partyId: userIn.partyId]"/>
+                    </else>
+                </if>
+            </if>
+            <!-- payment methods -->
+            <if condition="userIn.companyPaymentMethod">
+                <!-- credit card -->
+                <if condition="userIn.companyPaymentMethod.creditCardType">
+                    <set field="expireDate" value="${userIn.companyPaymentMethod.expireMonth}/${userIn.companyPaymentMethod.expireYear}"/>
+                    <set field="inMap" from="[
+                        ownerPartyId: userIn.companyPartyId,
+                        cardNumber: userIn.companyPaymentMethod.creditCardNumber,
+                        creditCardTypeEnumId: ec.entity.find('moqui.basic.Enumeration')
+                            .condition('description', userIn.companyPaymentMethod.creditCardType).one().enumId,
+                        expireDate: expireDate,
                         ]"/>
-                </else>
-            </if></if>    
+                    <entity-find entity-name="mantle.account.method.PaymentMethod" list="paymentMethods">
+                        <econdition field-name="ownerPartyId" from="userIn.companyPartyId"/>
+                        <econdition field-name="paymentMethodTypeEnumId" value="PmtCreditCard"/>
+                        <date-filter/>
+                    </entity-find>
+                    <if condition="!paymentMethods">
+                        <service-call
+                            name="mantle.account.PaymentMethodServices.create#CreditCard"
+                            in-map="inMap"/>
+                        <else>
+                            <entity-find-one entity-name="mantle.account.method.CreditCard" value-field="cc">
+                                <field-map field-name="paymentMethodId" from="paymentMethods[0].paymentMethodId"/>
+                            </entity-find-one>
+                            <if condition="inMap.cardNumber != cc.cardNumber ||
+                                            inMap.expireDate != cc.expireDate">
+                                <set field="inMap.paymentMethodId" from="paymentMethods[0].paymentMethodId"/>
+                                <service-call
+                                    name="mantle.account.PaymentMethodServices.update#CreditCard"
+                                    in-map="inMap"/>
+                            </if>
+                        </else>
+                    </if>
+                </if>
+            </if>
             <!-- return updated user -->
             <service-call name="growerp.100.PartyServices100.get#User"
                 in-map="[userPartyId: userIn.partyId]" out-map="context"/>

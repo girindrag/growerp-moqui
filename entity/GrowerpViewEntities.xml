@@ -441,7 +441,10 @@ along with this software (see the LICENSE.md file). If not, see
             </entity-condition></member-entity>
         <member-entity entity-alias="UG" entity-name="moqui.security.UserGroup"
                 join-from-alias="UGMEM" join-optional="true">
-            <key-map field-name="userGroupId"/></member-entity>
+            <key-map field-name="userGroupId"/>
+            <entity-condition>
+                <date-filter from-field-name="ugFromDate" thru-field-name="ugThruDate"/>
+            </entity-condition></member-entity>
         <member-entity entity-alias="PCM" entity-name="mantle.party.contact.PartyContactMech"
                 join-from-alias="ORG" join-optional="true"><key-map field-name="partyId"/>
             <entity-condition>
@@ -467,7 +470,6 @@ along with this software (see the LICENSE.md file). If not, see
         <alias name="thruDate" entity-alias="PR"/>
         <alias name="userRoleTypeId" field="fromRoleTypeId" entity-alias="PR"/>
         <alias name="userDisabled" field="disabled" entity-alias="PTYPERSON"/>
-        <alias name="externalId" entity-alias="PTYPERSON"/>
         <alias name="ownerPartyId" entity-alias="PTYPERSON"/>
         <alias name="userPartyId" field="partyId" entity-alias="PERSON"/>
         <alias name="firstName" entity-alias="PERSON"/>
