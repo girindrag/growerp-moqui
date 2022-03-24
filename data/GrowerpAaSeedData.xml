@@ -24,6 +24,7 @@ along with this software (see the LICENSE.md file). If not, see
     <moqui.basic.Enumeration description="Mobile App Name used by company" enumId="PcltMobileApp" enumTypeId="PartyClassificationType"/>
     <mantle.party.PartyClassification partyClassificationId="AppAdmin" classificationTypeEnumId="PcltMobileApp" description="Admin app to maintain backoffice data, products, categories, orders"/>
     <mantle.party.PartyClassification partyClassificationId="AppRestaurant" classificationTypeEnumId="PcltMobileApp" description="App for restaurant,cafe,bar"/>
+    <mantle.party.PartyClassification partyClassificationId="AppPOS" classificationTypeEnumId="PcltMobileApp" description="Point of sale APP"/>
     <mantle.party.PartyClassification partyClassificationId="AppEcommerceShop" classificationTypeEnumId="PcltMobileApp" description="App for Ecommerce and shop"/>
     <mantle.party.PartyClassification partyClassificationId="AppHospital" classificationTypeEnumId="PcltMobileApp" description="App for Hospital/Clinic/Dentist/Doctor/Beauty Shop"/>
     <mantle.party.PartyClassification partyClassificationId="AppService" classificationTypeEnumId="PcltMobileApp" description="App for Service company, freelancer, wfh"/>
