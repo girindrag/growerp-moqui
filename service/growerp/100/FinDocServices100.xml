@@ -320,9 +320,9 @@ along with this software (see the LICENSE.md file). If not, see
                     <set field="finDocItem" from="[
                         itemSeqId: item.orderItemSeqId,
                         productId: item.productId,
-                        itemTypeId: item.itemTypeEnumId,
+                        itemTypeId: item.itemTypeId,
                         itemTypeName: item.itemTypeName,
-                        description: item.itemDescription,
+                        description: item.escription,
                         quantity: item.quantity.toString(),
                         price: item.unitAmount.toString(),
                         assetId: item.assetId,
@@ -422,7 +422,7 @@ along with this software (see the LICENSE.md file). If not, see
                             sales: sales,
                             orderId: item.orderId,
                             invoiceId: item.invoiceId,
-                            description: item.itemDescription,
+                            description: item.invoiceName,
                             statusId: convertedStatusId,
                             creationDate: item.invoiceDate
                                 ? item.invoiceDate.toString().substring(0,19) + 'Z' : null,
@@ -435,8 +435,9 @@ along with this software (see the LICENSE.md file). If not, see
                     <set field="finDocItem" from="[
                         itemSeqId: item.invoiceItemSeqId,
                         productId: item.productId,
-                        itemTypeId: item.itemTypeEnumId,
-                        description: item.itemDescription,
+                        itemTypeId: item.itemTypeId,
+                        itemTypeName: item.itemTypeName,
+                        description: item.description,
                         quantity: item.quantity ? item.quantity.toString() : null,
                         price: item.amount ? item.amount.toString() : null,
                         ]"/>
@@ -738,13 +739,23 @@ along with this software (see the LICENSE.md file). If not, see
             <if condition="finDocIn.docType == 'Order'">
                 <service-call name="growerp.100.FinDocServices100.create#Order"
                     in-map="[order: finDocIn]" out-map="context"/>
-                <set field="inMap" from="[finDocId: orderId, docType: 'Order', sales: finDocIn.sales]"/>
+                <set field="finDocId" from="orderId"/>
+                <else-if condition="finDocIn.docType == 'Invoice'">
+                    <service-call name="growerp.100.FinDocServices100.create#Invoice"
+                        in-map="[invoice: finDocIn]" out-map="context"/>
+                    <set field="finDocId" from="invoiceId"/>
+                </else-if>
+                <else-if condition="finDocIn.docType == 'Payment'">
+                    <service-call name="growerp.100.FinDocServices100.create#Payment"
+                        in-map="[payment: finDocIn]" out-map="context"/>
+                    <set field="finDocId" from="paymentId"/>
+                </else-if>
                 <else>
                     <return error="true" message="Document ${finDocIn.docType} not supported yet...."/>
                 </else>
             </if>
-            <service-call name="growerp.100.FinDocServices100.get#FinDoc"
-                in-map="inMap" out-map="context"/>
+            <service-call name="growerp.100.FinDocServices100.get#FinDoc" out-map="context"
+                in-map="[finDocId: finDocId, docType: finDocIn.docType, sales: finDocIn.sales]"/>
         </actions>
     </service>
 
@@ -815,6 +826,102 @@ along with this software (see the LICENSE.md file). If not, see
         </actions>
     </service>
 
+    <service verb="create" noun="Invoice">
+        <description> Create an invoice for the users company</description>
+        <in-parameters>
+            <parameter name="invoice" required="true" type="Map"/></in-parameters>
+        <out-parameters>
+            <parameter name="invoiceId"/></out-parameters>
+        <actions>
+            <log message="=invoice inp: $invoice"/>
+            <service-call out-map="context" in-map="[wantOwner: true]"
+               name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner"/>
+            <if condition="invoice.sales == true"><!-- inside this invoice object this field is NOT a string -->
+                <set field="vendorPartyId" from="companyPartyId"/>
+                <set field="customerPartyId" from="invoice.otherUser.companyPartyId"/>
+                <set field="contactRole" value="CustomerContactPerson"/>
+                <else>
+                    <set field="customerPartyId" from="companyPartyId"/>
+                    <set field="vendorPartyId" from="invoice.otherUser.companyPartyId"/>
+                    <set field="contactRole" value="VendorContactPerson"/>
+                </else>
+            </if>
+            <!-- get currency -->
+            <entity-find entity-name="mantle.product.store.ProductStore" list="stores">
+                <econdition field-name="organizationPartyId" from="companyPartyId"/>
+                <econdition field-name="storeDomain" from="invoice.classificationId"/>
+            </entity-find>
+            <set field="productStoreId" from="stores[0].productStoreId"/>
+            <entity-find-one entity-name="mantle.ledger.config.PartyAcctgPreference"
+                    value-field="aPref">
+                <field-map field-name="organizationPartyId" from="companyPartyId"/>
+            </entity-find-one>
+            <set field="currencyUomId" from="aPref.baseCurrencyUomId"/>
+            <!-- create invoice -->
+            <if condition="invoice.sales == true">
+                <service-call name="mantle.account.InvoiceServices.create#Invoice"
+                    in-map="[productStoreId: productStoreId,
+                            fromPartyId: vendorPartyId,
+                            toPartyId: customerPartyId,
+                            description: invoice.description]" out-map="context"/>
+                <else>
+                    <service-call name="mantle.account.InvoiceServices.create#Invoice"
+                    in-map="[   toPartyId: vendorPartyId,
+                                fromPartyId: customerPartyId,
+                                productStoreId: productStoreId,
+                                description: invoice.description]" out-map="context"/>
+                </else>
+            </if>
+            <!-- add vendor/customer contact person as an extra party at invoicePartParty -->
+            <service-call name="create#mantle.account.invoice.InvoiceParty"
+                in-map="[invoiceId:invoiceId,
+                        partyId:invoice.otherUser.partyId, roleTypeId: contactRole]"/>
+            <!-- create items -->
+            <service-call name="growerp.100.FinDocServices100.replace#InvoiceItems"
+                    in-map="[invoiceId: invoiceId,
+                            invoiceItems: invoice.items]"/>
+            <!-- create payment from invoice -->
+            <service-call
+                name="mantle.account.PaymentServices.create#InvoicePayment"
+                in-map="[invoiceId: invoiceId, statusId: 'PmntProposed', effectiveDate: ec.user.nowTimestamp]"/>
+        </actions>
+    </service>
+
+    <service verb="create" noun="Payment">
+        <description> Create an payment for the users company</description>
+        <in-parameters>
+            <parameter name="payment" required="true" type="Map"/></in-parameters>
+        <out-parameters>
+            <parameter name="paymentId"/></out-parameters>
+        <actions>
+            <service-call out-map="context" in-map="[wantOwner: true]"
+               name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner"/>
+            <if condition="payment.sales == true"><!-- inside this payment object this field is NOT a string -->
+                <set field="vendorPartyId" from="companyPartyId"/>
+                <set field="customerPartyId" from="payment.otherUser.companyPartyId"/>
+                <set field="contactRole" value="CustomerContactPerson"/>
+                <else>
+                    <set field="customerPartyId" from="companyPartyId"/>
+                    <set field="vendorPartyId" from="payment.otherUser.companyPartyId"/>
+                    <set field="contactRole" value="VendorContactPerson"/>
+                </else>
+            </if>
+            <!-- create payment -->
+            <if condition="payment.sales == true">
+                <service-call name="mantle.account.paymentServices.create#Payment"
+                    in-map="[amount: payment.grandTotal,
+                            toPartyId: vendorPartyId,
+                            fromPartyId: customerPartyId]" out-map="context"/>
+                <else>
+                    <service-call name="mantle.account.paymentServices.create#Payment"
+                    in-map="[amount: payment.grandTotal,
+                            fromPartyId: vendorPartyId,
+                            toPartyId: customerPartyId]" out-map="context"/>
+                </else>
+            </if>
+        </actions>
+    </service>
+
     <service verb="replace" noun="OrderItems">
         <description>first delete any orderitems(if any) and create new ones.</description>
         <in-parameters>
@@ -855,7 +962,7 @@ along with this software (see the LICENSE.md file). If not, see
                 </else-if>
                 <else>
                     <service-call name="mantle.order.OrderServices.create#OrderItem"
-                        in-map="context + [itemTypeId: item.itemTypeId,
+                        in-map="context + [itemTypeEnumId: item.itemTypeId,
                                             itemDescription: item.description,
                                             quantity: item.quantity,
                                             unitAmount: item.price]"
@@ -863,6 +970,28 @@ along with this software (see the LICENSE.md file). If not, see
                 </else></if>
             </iterate>
 
+        </actions>
+    </service>
+
+    <service verb="replace" noun="InvoiceItems">
+        <description>first delete any invoiceitems(if any) and create new ones.</description>
+        <in-parameters>
+            <parameter name="invoiceId" required="true" type="String"/>
+            <parameter name="invoiceItems" required="true" type="List"/>
+        </in-parameters>
+        <actions>
+            <entity-delete-by-condition entity-name="mantle.account.invoice.InvoiceItem">
+                <econdition field-name="invoiceId"/></entity-delete-by-condition>
+            <iterate  list="invoiceItems" entry="item">
+                <service-call
+                    name="mantle.account.InvoiceServices.create#InvoiceItem"
+                    in-map="context + [ itemTypeEnumId: item.itemTypeId,
+                                        productId: item.productId,
+                                        quantity: item.quantity,
+                                        description: item.description,
+                                        amount: item.price]"
+                    out-map="context"/>
+            </iterate>
         </actions>
     </service>
 
@@ -904,8 +1033,8 @@ along with this software (see the LICENSE.md file). If not, see
                     </econditions>
                 </entity-find>
                 <if condition="!check"><return message="Invoice not found!"/></if>
-                <service-call name="update#mantle.account.invoice.Invoice"
-                    in-map="[invoiceId: finDocIn.invoiceId, statusId: finDocIn.statusId]" out-map="context"/>
+                <service-call name="growerp.100.FinDocServices100.update#Invoice"
+                    in-map="[invoice: finDocIn]"/>
                 <set field="inMap" from="[finDocId: finDocIn.invoiceId,
                             docType: 'Invoice', sales: finDocIn.sales]"/>
                 </else-if>
@@ -1097,7 +1226,6 @@ along with this software (see the LICENSE.md file). If not, see
             -->
             <service-call out-map="context"
                 name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner"/>
-            <if condition="singleCompany"><set field="companyCompany" from="singleCompany"/></if>
             <set field="orderId" from="order.orderId"/>
             <entity-find entity-name="OrderHeaderPartItemPartiesAndReservation" list="items">
                 <econdition field-name="orderId"/>
@@ -1273,7 +1401,147 @@ along with this software (see the LICENSE.md file). If not, see
         </actions>
     </service>
 
-    <service verb="receive" noun="Shipment">
+    <service verb="update" noun="Invoice">
+        <description> Update the invoice only in the 'InvoiceInProcess' status'.</description>
+    <in-parameters>
+        <!-- invoice has model of client -->
+        <parameter name="invoice" required="true" type="Map"/></in-parameters>
+    <actions>
+        <!-- status sequence:
+        sls    InvoiceInProcess -> InvoiceFinalized -> InvoiceSent -> InvoicePmtRecvd
+        pur    InvoiceIncoming -> Invoicereceived -> InvoiceApproved -> -> InvoicePmtSent
+        -->
+        <service-call out-map="context"
+            name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner"/>
+        <set field="invoiceId" from="invoice.invoiceId"/>
+          <entity-find entity-name="InvoiceItemsAndParties" list="items">
+                <econdition field-name="invoiceId"/>
+                <econditions combine="or">
+                    <econdition field-name="fromPartyId" from="companyPartyId"/>
+                    <econdition field-name="toPartyId" from="companyPartyId"/>
+                </econditions>
+                <order-by field-name="orderItemSeqId"/>
+            </entity-find>      <!-- invoiceheader -->
+        <if condition="invoice.description &amp;&amp; items[0].invoiceName != invoice.description">
+            <entity-find-one entity-name="mantle.invoice.invoiceHeader" value-field="invoiceHeader">
+                <field-map field-name="invoiceId" from="invoice.invoiceId"/>
+            </entity-find-one>
+            <set field="invoiceHeader.invoiceName" from="invoice.description"/>
+            <entity-update value-field="invoiceHeader"/>
+        </if>
+        <!-- handle status changes -->
+        <if condition="order.statusId &amp;&amp; order.statusId != items[0].statusId">
+            <if condition="order.statusId == 'OrderPlaced'">
+                <service-call in-map="context" out-map="context"
+                    name="mantle.order.OrderServices.place#Order"/>
+                <!-- assign asset when rental order (one item per order only)-->
+                <if condition="items[0].rentalFromDate &amp;&amp;
+                                    items[0].rentalThruDate">
+                    <service-call
+                        name="growerp.100.FinDocServices100.get#AssetsAvailableForProduct"
+                        in-map="productId: items[0].productId,
+                                fromDate: items[0].rentalFromDate,
+                                thruDate: items[0].rentalThruDate"
+                        out-map="context"/>
+                    <if condition="availableAssetIds.size() &lt; items.size()">
+                        <return error="true" message="not enough assets available for this date: required ${items.size()} available: ${availableAssetIds.size()}"/>
+                    </if>
+                    <set field="index" value="0" type="Integer"/>
+                    <iterate list="items" entry="item">
+                        <!-- when items replaced assetRentalId not available -->
+                        <entity-find-one entity-name="growerp.product.AssetRental" value-field="assetRental">
+                            <field-map field-name="orderId" from="order.orderId"/>
+                            <field-map field-name="orderItemSeqId" from="item.orderItemSeqId"/>
+                        </entity-find-one>
+                        <set field="assetRental.assetId" from="availableAssetIds[index++]"/>
+                        <entity-update value-field="assetRental"/>
+                    </iterate>
+                </if>
+            </if>
+            <if condition="order.statusId == 'OrderApproved'">
+                <!-- when sales order: set shipping address and method -->
+                <!-- Simplescreens orderDetail.xml line 1138 -->
+                <if  condition="order.sales == true">
+                    <service-call name="mantle.party.ContactServices.get#PartyContactInfoList"
+                            out-map="customerShippingInfo"
+                        in-map="[partyId: order.otherUser.companyPartyId,
+                                postalContactMechPurposeId:'PostalShippingDest']"/>
+                    <if condition="customerShippingInfo.postalAddressList == null">
+                        <return error="true" message="Customer does not have a shipping address!"/>
+                    </if>
+                    <set field="postalAddress" from="customerShippingInfo.postalAddressList[0]"/>
+                    <service-call name="mantle.order.OrderServices.set#OrderBillingShippingInfo"
+                        in-map="[orderId: order.orderId, orderPartSeqId: orderPartSeqId,
+                        shippingPostalContactMechId: postalAddress.postalContactMechId,
+                        carrierAndShipmentMethod: '_NA_:ShMthPickUp']"/><!-- carrierPartyId:shipmentMethodEnumId -->
+                </if>
+                <service-call name="mantle.order.OrderServices.approve#Order"
+                    in-map="[orderId: order.orderId]"/>
+                <!-- create invoice -->
+                <if condition="order.sales == true">
+                    <set field="invStatusId" value="InvoiceFinalized"/>
+                    <else>
+                        <set field="invStatusId" value="InvoiceReceived"/>
+                    </else>
+                </if>
+                <service-call in-map="context + [statusId: invStatusId]" out-map="context"
+                    name="mantle.account.InvoiceServices.create#EntireOrderPartInvoice"/>
+                <!-- create payment -->
+                <set field="effectiveDate" from="ec.user.nowTimestamp"/>
+                <service-call in-map="context" out-map="context"
+                    name="mantle.order.OrderServices.add#OrderPartPayment"/>
+                <entity-find-one entity-name="mantle.account.payment.Payment"
+                    value-field="payment" for-update="true"/>
+                <set field="payment.statusId" value="PmntAuthorized"/>
+                <service-call
+                    name="update#mantle.account.payment.Payment" in-map="payment"/>
+                <!-- create shipment  -->
+                <entity-find entity-name="mantle.facility.Facility" list="facilities" limit="1">
+                    <econdition field-name="ownerPartyId" from="companyPartyId"/>
+                </entity-find>
+                <service-call in-map="[orderId: order.orderId, facilityId: facilities[0].facilityId,
+                            orderPartSeqId: orderPartSeqId]" out-map="context"
+                    name="mantle.shipment.ShipmentServices.create#OrderPartShipment"/>
+                <if condition="shipmentId != null">
+                    <service-call name="update#mantle.shipment.Shipment" out-map="context"
+                        in-map="[shipmentId: shipmentId, statusId: order.sales == true ? 'ShipScheduled' : 'ShipPacked']"/>
+                    <else><!-- no shipable items so complete order alreade here -->
+                        <service-call name="mantle.order.OrderServices.complete#Order"
+                            in-map="[orderId: order.orderId]"/>
+                    </else>
+                </if>
+            </if>
+            <if condition="order.statusId == 'OrderCompleted'">
+                <service-call name="mantle.order.OrderServices.complete#Order"
+                    in-map="context"/>
+                <entity-find-one entity-name="mantle.account.invoice.Invoice"
+                    value-field="invoice" for-update="true"/>
+                <if condition="sales == true">
+                    <set field="invoice.statusId" value="InvoiceSent"/>
+                    <else>
+                        <set field="invoice.statusId" value="InvoiceReceived"/>
+                    </else>
+                </if>
+                <service-call name="update#mantle.account.invoice.Invoice" in-map="invoice"/>
+            </if>
+            <if condition="order.statusId == 'OrderCancelled'">
+                <service-call name="mantle.order.OrderServices.cancel#Order"
+                    in-map="context"/>
+            </if>
+            <else><!-- only update items when no status changes -->
+                <!-- delete and recreate all orderitems -->
+                <if condition="order.items &amp;&amp; order.items.size() &gt; 0">
+                    <service-call name="growerp.100.FinDocServices100.replace#OrderItems"
+                            in-map="[orderId: orderId,
+                                     orderPartSeqId: orderPartSeqId,
+                                     orderItems: order.items]"/>
+                </if>
+            </else>
+        </if>
+    </actions>
+</service>
+
+<service verb="receive" noun="Shipment">
             <description> Receive an incoming shipment either purchase or return.
                         copied from receive#EntireShipment and then modified"
             </description>

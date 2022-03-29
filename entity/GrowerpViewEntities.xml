@@ -95,10 +95,10 @@ along with this software (see the LICENSE.md file). If not, see
         <alias name="customerEmail" field="emailAddress" entity-alias="CACCOUNT"/>
 
         <alias name="orderItemSeqId" entity-alias="OITEM"/>
-        <alias name="itemTypeEnumId" entity-alias="OITEM"/>
+        <alias name="itemTypeId"  field="itemTypeEnumId" entity-alias="OITEM"/>
         <alias name="itemTypeName" field="description" entity-alias="ITEMTYPE"/>
         <alias name="productId" entity-alias="OITEM"/>
-        <alias name="itemDescription" entity-alias="OITEM"/>
+        <alias name="description" field="itemDescription" entity-alias="OITEM"/>
         <alias name="quantity" entity-alias="OITEM"/>
         <alias name="unitAmount" entity-alias="OITEM"/>
         <alias name="rentalFromDate" entity-alias="RESERV"/>
@@ -255,9 +255,12 @@ along with this software (see the LICENSE.md file). If not, see
         <member-entity entity-alias="INV" entity-name="mantle.account.invoice.Invoice"/>
         <member-entity entity-alias="ITEM" entity-name="mantle.account.invoice.InvoiceItem" join-from-alias="INV">
             <key-map field-name="invoiceId"/></member-entity>
-        <member-entity entity-alias="OIB" entity-name="mantle.order.OrderItemBilling"
+            <member-entity entity-alias="OIB" entity-name="mantle.order.OrderItemBilling"
             join-from-alias="ITEM" join-optional="true"><key-map field-name="invoiceId"/>
             <key-map field-name="invoiceItemSeqId"/></member-entity>
+        <member-entity entity-alias="ITEMTYPE" entity-name="moqui.basic.Enumeration"
+            join-from-alias="ITEM"  join-optional="true">
+            <key-map field-name="itemTypeEnumId" related="enumId"/></member-entity>
         <!--member-entity entity-alias="PAY" entity-name="mantle.account.payment.Payment"
             join-from-alias="OIB" join-optional="true">
             <key-map field-name="orderId"/></member-entity-->
@@ -295,15 +298,17 @@ along with this software (see the LICENSE.md file). If not, see
         <alias name="invoiceId" entity-alias="INV"/>
         <alias name="fromPartyId" entity-alias="INV"/>
         <alias name="toPartyId" entity-alias="INV"/>
+        <alias name="invoiceName" field="description" entity-alias="INV"/>
         <alias name="statusId" entity-alias="INV"/>
         <alias name="invoiceDate" entity-alias="INV"/>
         <alias name="invoiceTotal" entity-alias="INV"/>
         <alias name="invoiceItemSeqId" entity-alias="ITEM"/>
         <alias name="productId" entity-alias="ITEM"/>
-        <alias name="itemTypeEnumId" entity-alias="ITEM"/>
+        <alias name="itemTypeId" field="itemTypeEnumId" entity-alias="ITEM"/>
+        <alias name="itemTypeName" field="description" entity-alias="ITEMTYPE"/>
         <alias name="quantity" entity-alias="ITEM"/>
         <alias name="amount" entity-alias="ITEM"/>
-        <alias name="itemDescription" field="description" entity-alias="ITEM"></alias>
+        <alias name="description" entity-alias="ITEM"></alias>
         <alias name="orderId" entity-alias="OIB"/>
         <alias name="shipmentId" entity-alias="OIB"/>
         <!--alias name="paymentId" entity-alias="PAY"/-->
