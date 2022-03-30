@@ -440,7 +440,28 @@ along with this software (see the LICENSE.md file). If not, see
                         from="disabled" or-null="true" ignore-if-empty="true"/>
                 <order-by field-name="lastName^,firstName^"/>
             </entity-find>
+            <set field="paymentMethod" from="null"/>
             <iterate entry="userInfo" list="userInfos">
+                <!-- payment methods -->
+                <entity-find entity-name="mantle.account.method.PaymentMethod" list="paymentMethods">
+                    <econdition field-name="ownerPartyId" from="userInfo.companyPartyId"/>
+                    <econdition field-name="paymentMethodTypeEnumId" value="PmtCreditCard"/>
+                    <date-filter/>
+                </entity-find>
+                <iterate list="paymentMethods" entry="paymentMethod">
+                    <if condition="paymentMethod.paymentMethodTypeEnumId == 'PmtCreditCard'">
+                        <entity-find entity-name="mantle.account.method.CreditCard" list="cCards">
+                            <econdition field-name="paymentMethodId" from="paymentMethods[0].paymentMethodId"/>
+                        </entity-find>
+                        <set field="cardType" from="ec.entity.find('moqui.basic.Enumeration')
+                                .condition('enumId', cCards[0].creditCardTypeEnumId).one().description"/>
+                        <set field="nrLength" from="cCards[0].cardNumber.length()"/>
+                        <set field="cardNumberHidden" value="${cardType}**********${cCards[0].cardNumber.substring(nrLength-4,nrLength)} ${cCards[0].expireDate}"/>
+                        <set field="paymentMethod"
+                            from="[ccPaymentMethodId: paymentMethod.paymentMethodId,
+                                                      ccDescription: cardNumberHidden]"/>
+                    </if>
+                </iterate>
                 <if condition="filter != null">
                     <script>
                         users.add([
@@ -448,7 +469,8 @@ along with this software (see the LICENSE.md file). If not, see
                             firstName: userInfo?.firstName,
                             lastName: userInfo?.lastName,
                             companyPartyId: userInfo.companyPartyId,
-                            companyName: userInfo.companyName         
+                            companyName: userInfo.companyName,
+                            companyPaymentMethod: paymentMethod        
                             ])
                     </script>
                     <continue/>
@@ -481,25 +503,6 @@ along with this software (see the LICENSE.md file). If not, see
                     <econdition field-name="partyId" from="userInfo.userPartyId"/>
                     <date-filter/>
                 </entity-find>
-                <!-- payment method: credit card -->
-                <entity-find entity-name="mantle.account.method.PaymentMethod" list="paymentMethods">
-                    <econdition field-name="ownerPartyId" from="userInfo.companyPartyId"/>
-                    <econdition field-name="paymentMethodTypeEnumId" value="PmtCreditCard"/>
-                    <date-filter/>
-                </entity-find>
-                <if condition="paymentMethods">
-                    <entity-find entity-name="mantle.account.method.CreditCard" list="cCards">
-                        <econdition field-name="paymentMethodId" from="paymentMethods[0].paymentMethodId"/>
-                    </entity-find>
-                    <set field="cardType" from="ec.entity.find('moqui.basic.Enumeration')
-                            .condition('enumId', cCards[0].creditCardTypeEnumId).one().description"/>
-                    <set field="nrLength" from="cCards[0].cardNumber.length()"/>
-                    <set field="cardNumberHidden" value="${cardType}**********${cCards[0].cardNumber.substring(nrLength-4,nrLength)} ${cCards[0].expireDate}"/>
-                    <set field="paymentMethod" from="[ccDescription: cardNumberHidden]"/>
-                    <else>
-                        <set field="paymentMethod" from="null"/>
-                    </else>
-                </if>
                 <set field="userOut" from="[
                     partyId: userInfo?.userPartyId,
                     email: userInfo?.emailAddress,

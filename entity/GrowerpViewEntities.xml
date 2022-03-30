@@ -350,6 +350,9 @@ along with this software (see the LICENSE.md file). If not, see
         <member-entity entity-alias="VACCOUNT" entity-name="moqui.security.UserAccount"
             join-from-alias="VPERSON" join-optional="true">
             <key-map field-name="partyId"/></member-entity>
+        <member-entity entity-alias="VPAY" entity-name="mantle.account.method.PaymentMethod"
+            join-from-alias="VORG" join-optional="true">
+            <key-map field-name="partyId" related="ownerPartyId"/></member-entity>
         <!-- customer data -->
         <member-entity entity-alias="CORG" entity-name="mantle.party.Organization"
             join-from-alias="PAY" join-optional="true">
@@ -366,6 +369,9 @@ along with this software (see the LICENSE.md file). If not, see
         <member-entity entity-alias="CACCOUNT" entity-name="moqui.security.UserAccount"
             join-from-alias="CPERSON" join-optional="true">
             <key-map field-name="partyId"/></member-entity>
+        <member-entity entity-alias="CPAY" entity-name="mantle.account.method.PaymentMethod"
+            join-from-alias="CORG" join-optional="true">
+            <key-map field-name="partyId" related="ownerPartyId"/></member-entity>
 
         <alias name="paymentId" entity-alias="PAY"/>
         <alias name="fromPartyId" entity-alias="PAY"/>
@@ -383,6 +389,8 @@ along with this software (see the LICENSE.md file). If not, see
         <alias name="vendorFirstName" field="firstName" entity-alias="VPERSON"/>
         <alias name="vendorLastName" field="lastName" entity-alias="VPERSON"/>
         <alias name="vendorEmail" field="emailAddress" entity-alias="VACCOUNT"/>
+        <alias name="vendorPaymentMethodId" field="paymentMethodId" entity-alias="VPAY"/>
+        <alias name="vendorPaymentMethodTypeId" field="paymentMethodTypeEnumId" entity-alias="VPAY"/>
 
         <alias name="customerPartyId" field="partyId" entity-alias="CORG"/>
         <alias name="customerCompanyName" field="organizationName" entity-alias="CORG"/>
@@ -391,6 +399,8 @@ along with this software (see the LICENSE.md file). If not, see
         <alias name="customerFirstName" field="firstName" entity-alias="CPERSON"/>
         <alias name="customerLastName" field="lastName" entity-alias="CPERSON"/>
         <alias name="customerEmail" field="emailAddress" entity-alias="CACCOUNT"/>
+        <alias name="customerPaymentMethodId" field="paymentMethodId" entity-alias="CPAY"/>
+        <alias name="customerPaymentMethodTypeId" field="paymentMethodTypeEnumId" entity-alias="CPAY"/>
     </view-entity>
 
     <view-entity entity-name="AcctgTransAndEntryAndCompany" package="growerp.account">
