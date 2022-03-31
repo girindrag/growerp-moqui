@@ -440,7 +440,6 @@ along with this software (see the LICENSE.md file). If not, see
                         from="disabled" or-null="true" ignore-if-empty="true"/>
                 <order-by field-name="lastName^,firstName^"/>
             </entity-find>
-            <set field="paymentMethod" from="null"/>
             <iterate entry="userInfo" list="userInfos">
                 <!-- payment methods -->
                 <entity-find entity-name="mantle.account.method.PaymentMethod" list="paymentMethods">
@@ -448,6 +447,7 @@ along with this software (see the LICENSE.md file). If not, see
                     <econdition field-name="paymentMethodTypeEnumId" value="PmtCreditCard"/>
                     <date-filter/>
                 </entity-find>
+                <set field="paymentMethod" from="null"/>
                 <iterate list="paymentMethods" entry="paymentMethod">
                     <if condition="paymentMethod.paymentMethodTypeEnumId == 'PmtCreditCard'">
                         <entity-find entity-name="mantle.account.method.CreditCard" list="cCards">
