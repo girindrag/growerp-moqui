@@ -321,12 +321,22 @@ along with this software (see the LICENSE.md file). If not, see
                 <!-- credit card -->
                 <if condition="compIn.paymentMethod.creditCardType">
                     <set field="expireDate" value="${compIn.paymentMethod.expireMonth}/${compIn.paymentMethod.expireYear}"/>
+                    <entity-find entity-name="mantle.party.contact.PartyContactMech"
+                            list="partyContactMechs" >
+                        <econdition field-name="partyId" from="oldValue.company.partyId"/>
+                        <econdition field-name="contactMechPurposeId" value="PostalPrimary"/>
+                        <date-filter/>
+                    </entity-find>
+                    <if condition="!partyContactMechs">
+                        <return error="true" message="Need postal address for creditcard"/>
+                    </if>
                     <set field="inMap" from="[
                         ownerPartyId: oldValue.company.partyId,
                         cardNumber: compIn.paymentMethod.creditCardNumber,
                         creditCardTypeEnumId: ec.entity.find('moqui.basic.Enumeration')
                             .condition('description', compIn.paymentMethod.creditCardType).one().enumId,
                         expireDate: expireDate,
+                        postalContactMechId: partyContactMechs[0].contactMechId,
                         ]"/>
                     <entity-find entity-name="mantle.account.method.PaymentMethod" list="paymentMethods">
                         <econdition field-name="ownerPartyId" from="oldValue.company.partyId"/>
@@ -902,14 +912,22 @@ along with this software (see the LICENSE.md file). If not, see
             <!-- payment methods -->
             <if condition="userIn.companyPaymentMethod">
                 <!-- credit card -->
-                <if condition="userIn.companyPaymentMethod.creditCardType">
-                    <set field="expireDate" value="${userIn.companyPaymentMethod.expireMonth}/${userIn.companyPaymentMethod.expireYear}"/>
+                <set field="expireDate" value="${userIn.companyPaymentMethod.expireMonth}/${userIn.companyPaymentMethod.expireYear}"/>
+                    <if condition="userIn.companyPaymentMethod.creditCardType">
+                        <entity-find entity-name="mantle.party.contact.PartyContactMech"
+                            list="partyContactMechs" >
+                        <econdition field-name="partyId" from="userIn.companyPartyId"/>
+                        <econdition field-name="contactMechPurposeId" value="PostalPrimary"/>
+                        <date-filter/>
+                    </entity-find>
+                    <if condition="!partyContactMechs"><return error="true" message="Need postal address for creditcard"/></if>
                     <set field="inMap" from="[
                         ownerPartyId: userIn.companyPartyId,
                         cardNumber: userIn.companyPaymentMethod.creditCardNumber,
                         creditCardTypeEnumId: ec.entity.find('moqui.basic.Enumeration')
                             .condition('description', userIn.companyPaymentMethod.creditCardType).one().enumId,
                         expireDate: expireDate,
+                        postalContactMechId: partyContactMechs[0].contactMechId,
                         ]"/>
                     <entity-find entity-name="mantle.account.method.PaymentMethod" list="paymentMethods">
                         <econdition field-name="ownerPartyId" from="userIn.companyPartyId"/>

@@ -273,11 +273,13 @@ along with this software (see the LICENSE.md file). If not, see
                 </if>
                 <set field="lastItem" from="null"/>
                 <iterate entry="item" list="items">
+                    <!-- new orderId, so add last order to the list-->
                     <if condition="lastItem &amp;&amp; lastItem.orderId != item.orderId">
                         <set field="finDocOut.items" from="finDocItems"/> 
                         <script>finDocs.add(finDocOut)</script>
                         <if condition="current++ == limit"><break/></if>
                     </if>
+                    <!-- first order -->
                     <if condition="!lastItem || lastItem.orderId != item.orderId">
                         <if condition="!sales">
                             <set field="userOut" from="[
@@ -493,13 +495,22 @@ along with this software (see the LICENSE.md file). If not, see
                         </entity-find>
                     </else>
                 </if>
+                <!-- check if sales or purchase -->
+                <set field="sales" value="false" type="Boolean"/>
+                <if condition="items &amp;&amp; items[0].toPartyId == companyPartyId">
+                    <set field="sales" value="true" type="Boolean"/>
+                </if>
+                <!-- Iterate thru item list -->
                 <set field="lastItem" from="null"/>
+                <set field="paymentMethod" from="[:]"/>
                 <iterate entry="item" list="items">
+                    <!-- new paymentId, so add last payment to the list-->
                     <if condition="lastItem &amp;&amp; lastItem.paymentId != item.paymentId">
-                        <set field="finDocOut.otherParty.companyPaymentMethod" from="paymentMethod"/> 
+                        <set field="finDocOut.otherUser.companyPaymentMethod" from="paymentMethod"/>
                         <script>finDocs.add(finDocOut)</script>
-                        <if condition="current++ == limit"><break/></if>
+                        <set field="paymentMethod" from="[:]"/>
                     </if>
+                    <!-- first payment record -->
                     <if condition="!lastItem || lastItem.paymentId != item.paymentId">
                         <if condition="sales">
                             <set field="userOut" from="[
@@ -509,7 +520,7 @@ along with this software (see the LICENSE.md file). If not, see
                                             firstName: item.vendorFirstName,
                                             lastName: item.vendorLastName,
                                             email: item.vendorEmail,
-                                            paymentMethod: paymentMethod,
+                                            companyPaymentMethod: paymentMethod,
                                         ]"/>
                             <else>
                                 <set field="userOut" from="[
@@ -519,11 +530,10 @@ along with this software (see the LICENSE.md file). If not, see
                                             firstName: item.customerFirstName,
                                             lastName: item.customerLastName,
                                             email: item.customerEmail,
-                                            paymentMethod: paymentMethod,
+                                            companyPaymentMethod: paymentMethod,
                                         ]"/>
                             </else>
                         </if>
-                        <set field="paymentMethod" from="null"/>
                         <service-call name="growerp.100.FinDocServices100.convert#StatusId"
                             in-map="[sales: sales, docType: docType, statusId: item.statusId]" out-map="context"/>
                         <set field="finDocOut" from="[
@@ -537,12 +547,8 @@ along with this software (see the LICENSE.md file). If not, see
                             otherUser: userOut,
                             grandTotal: item.amount ? item.amount.toString() : null,
                             ]"/>
-                        <script>finDocs.add(finDocOut)</script>
                     </if>
-                    <set field="sales" value="false" type="Boolean"/>
-                    <if condition="item.toPartyId == companyPartyId">
-                        <set field="sales" value="true" type="Boolean"/>
-                    </if>
+                    <!-- payment method of 'otherParty' -->
                     <if condition="sales &amp;&amp; item.customerPaymentMethodId">
                         <set field="paymentMethodId" from="item.customerPaymentMethodId"/>
                         <set field="paymentMethodTypeId" from="item.customerPaymentMethodTypeId"/>
@@ -551,21 +557,24 @@ along with this software (see the LICENSE.md file). If not, see
                         <set field="paymentMethodId" from="item.vendorPaymentMethodId"/>
                         <set field="paymentMethodTypeId" from="item.vendorPaymentMethodTypeId"/>
                     </if>
-                    <!-- check if credit card, then credit card info -->
-                    <if condition="paymentMethodId &amp;&amp; paymentMethodType == 'PmtCreditCard'">
-                        <set field="paymentMethod.ccPaymentMethodId" from="paymentMethodId"/>
-                        <entity-find entity-name="mantle.account.method.CreditCard" list="cCards">
-                            <econdition field-name="paymentMethodId" from="paymentMethod.paymentMethodId"/>
-                        </entity-find>
-                        <set field="paymentMethod.cardType" from="ec.entity.find('moqui.basic.Enumeration')
-                            .condition('enumId', cCards[0].creditCardTypeEnumId).one().description"/>
-                        <set field="nrLength" from="cCards[0].cardNumber.length()"/>
-                        <set field="cardNumberHidden" value="${cardType}**********${cCards[0].cardNumber.substring(nrLength-4,nrLength)} ${cCards[0].expireDate}"/>
-                        <set field="paymentMethod.ccDescription" from="cardNumberHidden"/>
+                    <!-- check if credit card, then credit card info (other types to be added)-->
+                    <if condition="paymentMethodId">
+                        <if condition="paymentMethodTypeId == 'PmtCreditCard'">
+                            <set field="paymentMethod.ccPaymentMethodId" from="paymentMethodId"/>
+                            <entity-find entity-name="mantle.account.method.CreditCard" list="cCards">
+                                <econdition field-name="paymentMethodId" from="paymentMethodId"/>
+                            </entity-find>
+                            <set field="paymentMethod.cardType" from="ec.entity.find('moqui.basic.Enumeration')
+                                .condition('enumId', cCards[0].creditCardTypeEnumId).one().description"/>
+                            <set field="nrLength" from="cCards[0].cardNumber.length()"/>
+                            <set field="cardNumberHidden" value="${cardType}**********${cCards[0].cardNumber.substring(nrLength-4,nrLength)} ${cCards[0].expireDate}"/>
+                            <set field="paymentMethod.ccDescription" from="cardNumberHidden"/>
+                        </if>
                     </if>
+                    <set field="lastItem" from="item"/>
                 </iterate>
                 <if condition="lastItem">
-                    <set field="finDocOut.companyPaymentMethod" from="paymentMethod"/>
+                    <set field="finDocOut.otherUser.companyPaymentMethod" from="paymentMethod"/>
                     <script>finDocs.add(finDocOut)</script>
                 </if>
             </if>
@@ -949,6 +958,7 @@ along with this software (see the LICENSE.md file). If not, see
             <service-call name="mantle.account.PaymentServices.create#Payment"
                 in-map="[amount: payment.grandTotal,
                         effectiveDate: ec.user.nowTimestamp,
+                        fromPaymentMethodId: fromPaymentMethodId,
                         toPartyId: toPartyId,
                         fromPartyId: fromPartyId]" out-map="context"/>
         </actions>
