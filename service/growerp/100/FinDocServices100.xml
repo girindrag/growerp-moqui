@@ -938,7 +938,7 @@ along with this software (see the LICENSE.md file). If not, see
 
             <if condition="payment.otherUser.companyPaymentMethod?.ccPaymentMethodId">
                 <set field="fromPaymentMethodId" from="payment.otherUser.companyPaymentMethod.ccPaymentMethodId"/>
-                <set field="paymentGatewayConfigId" value="StripeDemo"/>
+                <set field="paymentGatewayConfigId" from="System.getProperty('paymentGatewayConfigId')"/>
             </if>
             <!-- create payment -->
             <set field="instrument" from="'Pi' + payment.paymentInstrument"/>
@@ -1480,8 +1480,9 @@ along with this software (see the LICENSE.md file). If not, see
                     out-map="context"/>
             </if>
             <else><!-- only update items when no status changes -->
-                <if condition="items[0].statusId != 'InvoiceInProcess'">
-                    <return message="invoice status wrong: ${item[0].statusId}, cannot update"/>
+                <if condition="items[0].statusId != 'InvoiceInProcess' &amp;&amp;
+                        items[0].statusId != 'InvoiceIncoming'">
+                    <return message="invoice status wrong: ${items[0].statusId}, cannot update"/>
                 </if>
                 <!-- delete and recreate all invoice items -->
                 <if condition="invoice.items &amp;&amp; invoice.items.size() &gt; 0">
