@@ -107,7 +107,10 @@ along with this software (see the LICENSE.md file). If not, see
                 <method type="get"><service name="growerp.100.FinDocServices100.get#RentalOccupancy"/></method></resource>
         <!-- itemTypes -->
         <resource name="ItemTypes">
-            <method type="get"><service name="growerp.100.GeneralServices100.get#ItemTypes"/></method></resource>
+            <method type="get"><service name="growerp.100.AccountingServices100.get#ItemTypes"/></method></resource>
+        <!-- paymentTypes -->
+        <resource name="PaymentTypes">
+            <method type="get"><service name="growerp.100.AccountingServices100.get#PaymentTypes"/></method></resource>
         <!-- crm -->
         <resource name="Crm">
             <method type="get"><service name="growerp.100.CrmServices100.get#Crm"/></method></resource>

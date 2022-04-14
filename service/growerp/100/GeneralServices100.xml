@@ -430,27 +430,4 @@ along with this software (see the LICENSE.md file). If not, see
         </actions>
     </service>
 
-    <service verb="get" noun="ItemTypes">
-        <description>itemtypes for orderItem and invoiceItem either sales ord purchase</description>
-        <in-parameters>
-            <parameter name="sales" type="Boolean" default="true"/>
-        </in-parameters>
-        <out-parameters>
-            <parameter name="itemTypes" type="List"/>
-        </out-parameters>
-        <actions>
-            <set field="itemTypes" from="[]"/>
-            <set field="enumGroups" from="['EngItemsSales']" type="List"/>
-            <if condition="sales == false">
-                <set field="enumGroups" from="['EngItemsPurchase','EngItemsProduct']" type="List"/></if>
-            <entity-find entity-name="moqui.basic.EnumAndGroup" list="itemTypeList">
-                <econdition field-name="enumGroupEnumId" operator="in" from="enumGroups"/>
-                <order-by field-name="description"/></entity-find>
-            <iterate list="itemTypeList" entry="itemType">
-                <set field="itemTypeOut" from="[itemTypeId: itemType.enumId, itemTypeName: itemType.description]"/>
-                <script>itemTypes.add(itemTypeOut)</script>
-            </iterate>
-        </actions>
-    </service>
-
 </services>
