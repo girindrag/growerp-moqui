@@ -524,10 +524,10 @@ along with this software (see the LICENSE.md file). If not, see
                             </else>
                         </if>
                         <!-- glAccountId -> itemType -->
-                        <if condition="item.externalSecret">
+                        <if condition="item.itemTypeGlAccountId">
                             <entity-find entity-name="mantle.ledger.config.ItemTypeAndGlAccount" list="glAccounts">
                                 <econdition field-name="organizationPartyId" from="companyPartyId"/>
-                                <econdition field-name="glAccountId" from="item.externalSecret" />
+                                <econdition field-name="glAccountId" from="item.itemTypeGlAccountId" />
                             </entity-find>
                             <if condition="glAccounts">
                                 <set field="items"
@@ -960,7 +960,7 @@ along with this software (see the LICENSE.md file). If not, see
                     <econdition field-name="itemTypeEnumId" from="payment.items[0].itemTypeId" />
                 </entity-find>
                 <if condition="glAccounts">
-                    <set field="externalSecret" from="glAccounts[0].glAccountId"/>
+                    <set field="itemTypeGlAccountId" from="glAccounts[0].glAccountId"/>
                 </if>
             </if>
             <!-- create payment -->
@@ -975,7 +975,7 @@ along with this software (see the LICENSE.md file). If not, see
                         paymentMethodId: fromPaymentMethodId,
                         paymentGatewayConfigId: paymentGatewayConfigId,
                         toPartyId: toPartyId,
-                        externalSecret: externalSecret,
+                        itemTypeGlAccountId: itemTypeGlAccountId,
                         fromPartyId: fromPartyId]" out-map="context"/>
         </actions>
     </service>
@@ -1540,8 +1540,8 @@ along with this software (see the LICENSE.md file). If not, see
                 <econdition field-name="organizationPartyId" from="companyPartyId"/>
                 <econdition field-name="itemTypeEnumId" from="payment.items[0].itemTypeId" />
             </entity-find>
-            <if condition="glaccounts &amp;&amp; glAccounts[0].glAccountId != paymentOld.externalSecret">
-                <set field="paymentOld.externalSecret" from="glAccounts[0].glAccountId"/>
+            <if condition="glaccounts &amp;&amp; glAccounts[0].glAccountId != paymentOld.itemTypeGlAccountId">
+                <set field="paymentOld.itemTypeGlAccountId" from="glAccounts[0].glAccountId"/>
             </if>
         </if>
         <!-- payment instrument -->
@@ -1576,7 +1576,7 @@ along with this software (see the LICENSE.md file). If not, see
                     <service-call name="update#mantle.ledger.transaction.AcctgTransEntry"
                         in-map="[acctgTransId: entry.acctgTransId,
                             acctgTransEntrySeqId: entry.acctgTransEntrySeqId,
-                            glAccountId: paymentOld.externalSecret]"/>
+                            glAccountId: paymentOld.itemTypeGlAccountId]"/>
                 </if>
             </iterate>
             <service-call name="mantle.ledger.LedgerServices.post#AcctgTrans"

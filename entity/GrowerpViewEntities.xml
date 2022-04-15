@@ -382,7 +382,7 @@ along with this software (see the LICENSE.md file). If not, see
         <alias name="effectiveDate" entity-alias="PAY"/>
         <alias name="amount" entity-alias="PAY"/>
         <alias name="paymentInstrumentId" field="paymentInstrumentEnumId" entity-alias="PAY"/>
-        <alias name="externalSecret" entity-alias="PAY"/><!-- used for glAccountId-->
+        <alias name="itemTypeGlAccountId" entity-alias="PAY"/><!-- used for glAccountId-->
 
         <alias name="vendorPartyId" field="partyId" entity-alias="VORG"/>
         <alias name="vendorCompanyName" field="organizationName" entity-alias="VORG"/>
