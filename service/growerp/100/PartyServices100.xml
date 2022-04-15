@@ -139,16 +139,21 @@ along with this software (see the LICENSE.md file). If not, see
                 <econdition field-name="paymentMethodTypeEnumId" value="PmtCreditCard"/>
                 <date-filter/>
             </entity-find>
-            <if condition="paymentMethods">
-                <entity-find entity-name="mantle.account.method.CreditCard" list="cCards">
-                    <econdition field-name="paymentMethodId" from="paymentMethods[0].paymentMethodId"/>
-                </entity-find>
-                <set field="cardType" from="ec.entity.find('moqui.basic.Enumeration')
-                        .condition('enumId', cCards[0].creditCardTypeEnumId).one().description"/>
-                <set field="nrLength" from="cCards[0].cardNumber.length()"/>
-                <set field="cardNumberHidden" value="${cardType}**********${cCards[0].cardNumber.substring(nrLength-4,nrLength)} ${cCards[0].expireDate}"/>
-                <set field="paymentMethod" from="[ccDescription: cardNumberHidden]"/>
-            </if>
+            <set field="paymentMethod" from="null"/>
+            <iterate list="paymentMethods" entry="paymentMethod">
+                <if condition="paymentMethod.paymentMethodTypeEnumId == 'PmtCreditCard'">
+                    <entity-find entity-name="mantle.account.method.CreditCard" list="cCards">
+                        <econdition field-name="paymentMethodId" from="paymentMethods[0].paymentMethodId"/>
+                    </entity-find>
+                    <set field="cardType" from="ec.entity.find('moqui.basic.Enumeration')
+                            .condition('enumId', cCards[0].creditCardTypeEnumId).one().description"/>
+                    <set field="nrLength" from="cCards[0].cardNumber.length()"/>
+                    <set field="cardNumberHidden" value="${cardType}**********${cCards[0].cardNumber.substring(nrLength-4,nrLength)} ${cCards[0].expireDate}"/>
+                    <set field="paymentMethod"
+                        from="[ccPaymentMethodId: paymentMethod.paymentMethodId,
+                                                  ccDescription: cardNumberHidden]"/>
+                </if>
+            </iterate>
             <!-- telephone -->
             <entity-find entity-name="mantle.party.contact.PartyContactMechTelecomNumber" list="telNos">
                 <econdition field-name="partyId" from="companyPartyId"/>
