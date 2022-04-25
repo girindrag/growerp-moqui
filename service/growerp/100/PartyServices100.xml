@@ -422,7 +422,7 @@ along with this software (see the LICENSE.md file). If not, see
                 <service-call out-map="relatedLogin"
                     name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner"/>
                 <set field="ownerPartyId" from="relatedLogin.ownerPartyId"/></if>
-            <if condition="!userPartyId &amp;&amp; !search">
+            <if condition="!userPartyId">
                 <set field="users" from="[]"/>
                 <set field="disabled" value="N"/></if>
             <entity-find offset="start" limit="limit" list="userInfos"
@@ -446,6 +446,8 @@ along with this software (see the LICENSE.md file). If not, see
                     <econdition field-name="userPartyId" ignore-case="true"
                         operator="like" from="search" ignore-if-empty="true"/>
                     <econdition field-name="userFullName" ignore-case="true"
+                        operator="like" from="search" ignore-if-empty="true"/>
+                    <econdition field-name="companyName" ignore-case="true"
                         operator="like" from="search" ignore-if-empty="true"/>
                     <econdition field-name="emailAddress" ignore-case="true"
                         operator="like" from="search" ignore-if-empty="true"/>

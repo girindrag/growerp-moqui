@@ -152,7 +152,6 @@ along with this software (see the LICENSE.md file). If not, see
                     </else>
                 </if>
             </iterate>
-            <log message="=======$products"/>
         </actions>
     </service>
 
@@ -622,7 +621,6 @@ along with this software (see the LICENSE.md file). If not, see
                 <script>categories.sort{a, b -> 
                     a.categoryName.compareToIgnoreCase(b.categoryName) } </script>
             </if>
-            <log message="====category output $categories 1: $category"/>
         </actions>
     </service>
 
