@@ -26,7 +26,8 @@ along with this software (see the LICENSE.md file). If not, see
             <description>The telephone number to use for forgot password chats and other system messages.</description></field>
     </extend-entity>
 
-    <extend-entity entity-name="Payment" package="mantle.account.payment">
+    <extend-entity entity-name="Payment" package="mantle.account.payment"
+            sequence-primary-prefix="pay">
         <field name="itemTypeGlAccountId" type="id"><description>Is used for posting this payment without invoice</description></field>
         <relationship type="one" title="ItemType" related="mantle.ledger.account.GlAccount" short-alias="itemTypeGlAccount">
             <key-map field-name="itemTypeGlAccountId"/></relationship>
@@ -38,13 +39,27 @@ along with this software (see the LICENSE.md file). If not, see
         <relationship type="one" title="Owner" related="mantle.party.Party" short-alias="owner">
             <key-map field-name="ownerPartyId"/></relationship>
     </extend-entity>
+
     <extend-entity entity-name="Party" package="mantle.party">
         <field name="vatPerc" type="number-decimal"/>
         <field name="salesPerc" type="number-decimal"/>
     </extend-entity>
+
     <extend-entity entity-name="PostalAddress" package="mantle.party.contact">
         <field name="stateProvince" type="text-medium"></field>
     </extend-entity>
+
+    <extend-entity entity-name="OrderHeader" package="mantle.order"
+        sequence-primary-prefix="ord"/>
+
+    <extend-entity entity-name="Invoice" package="mantle.account.invoice"
+        sequence-primary-prefix="inv"/>
+
+    <extend-entity entity-name="Shipment" package="mantle.shipment"
+        sequence-primary-prefix="shp"/>
+
+    <extend-entity entity-name="AcctgTrans" package="mantle.ledger.transaction"
+        sequence-primary-prefix="trn"/>
 
     <entity entity-name="AssetRental" package="growerp.product">
         <field name="assetRentalId" type="id" is-pk="true"/>
@@ -92,7 +107,6 @@ along with this software (see the LICENSE.md file). If not, see
         <field name="content" type="text-medium"/>
         <field name="chatRoomId" type="id"/>
         <field name="fromUserId" type="id"/>
-
         <relationship type="one" title="From" related="moqui.security.UserAccount">
             <key-map field-name="fromUserId"/></relationship>
         <relationship type="one" related="growerp.general.ChatRoom">
@@ -104,7 +118,6 @@ along with this software (see the LICENSE.md file). If not, see
         <field name="chatRoomName" type="text-medium"/>
         <field name="isPrivate" type="text-indicator"/>
         <field name="ownerPartyId" type="id"/>
-
         <relationship type="one" title="Owner" related="mantle.party.Party">
             <key-map field-name="ownerPartyId"/></relationship>
     </entity>

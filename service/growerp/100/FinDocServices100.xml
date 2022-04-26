@@ -698,6 +698,8 @@ along with this software (see the LICENSE.md file). If not, see
                                 entity-name="growerp.account.AcctgTransAndEntryAndCompany">
                             <econdition field-name="ownerPartyId" from="companyPartyId"/>
                             <econditions combine="or">
+                                <econdition field-name="shipmentId" ignore-case="true"
+                                    operator="like" from="search" ignore-if-empty="true"/>
                                 <econdition field-name="invoiceId" ignore-case="true"
                                     operator="like" from="search" ignore-if-empty="true"/>
                                 <econdition field-name="paymentId" ignore-case="true"
