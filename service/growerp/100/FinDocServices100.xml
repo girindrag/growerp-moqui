@@ -1555,18 +1555,36 @@ along with this software (see the LICENSE.md file). If not, see
                 limit="1" list="invoices">
             <econdition field-name="orderId" from="payment.orderId"/>
         </entity-find>
-        <if condition="invoices">
+        <if condition="invoices"><then>
             <service-call
                 name="mantle.account.PaymentServices.send#PromisedPayment"
                 in-map="[invoiceId: invoices[0].invoiceId,
-                                    paymentId: payment.paymentId]"/>
-            <else>
-                <!--other status go to next one -->
-                <service-call name="update#mantle.account.payment.Payment"
+                                    paymentId: payment.paymentId]"/></then>
+        <else>
+            <!-- payment gateway -->
+            <!--if condition="payment.statusId == 'PmntAuthorized'">
+                <service-call name="mantle.account.PaymentServices.authorize#SinglePayment"
                     in-map="[paymentId: payment.paymentId,
-                            statusId: payment.statusId]"/>
-            </else>
-        </if>
+                        paymentGatewayConfigId: System.getProperty('paymentGatewayConfigId')]"
+                    out-map="context"/>
+                <if condition="paymentGatewayResponse.resultError == 'Y'">
+                    <return error="true" message="payment authorize failed: ${paymentGatewayResponse.reasonMessage}"/>
+                </if>
+            </if-->
+            <if condition="payment.statusId == 'PmntDelivered' &amp;&amp; System.getProperty('paymentGatewayConfigId') == 'StripeDemo'">
+                <!--service-call name="mantle.account.PaymentServices.authorize#SinglePayment" -->
+                <service-call name="Stripe.StripePaymentServices.authorizeAndCapture#Payment"
+                    in-map="[paymentId: payment.paymentId,paymentGatewayConfigId: System.getProperty('paymentGatewayConfigId')]"
+                    out-map="context"/>
+                <!--if condition="paymentGatewayResponse.resultError == 'Y'">
+                    <return error="true" message="payment capture failed: ${paymentGatewayResponse.reasonMessage}"/>
+                </if-->
+            </if>
+            <!--other status go to next one -->
+            <service-call name="update#mantle.account.payment.Payment"
+                in-map="[paymentId: payment.paymentId,
+                        statusId: payment.statusId]"/>
+        </else></if>
         <entity-find 
             entity-name="mantle.ledger.transaction.AcctgTransAndEntry"
             list="entries">
