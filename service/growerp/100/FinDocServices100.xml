@@ -1562,23 +1562,25 @@ along with this software (see the LICENSE.md file). If not, see
                                     paymentId: payment.paymentId]"/></then>
         <else>
             <!-- payment gateway -->
-            <!--if condition="payment.statusId == 'PmntAuthorized'">
+            <if condition="payment.statusId == 'PmntAuthorized'">
                 <service-call name="mantle.account.PaymentServices.authorize#SinglePayment"
                     in-map="[paymentId: payment.paymentId,
                         paymentGatewayConfigId: System.getProperty('paymentGatewayConfigId')]"
                     out-map="context"/>
-                <if condition="paymentGatewayResponse.resultError == 'Y'">
+                <if condition="paymentGatewayResponse?.resultSuccess != 'Y'">
                     <return error="true" message="payment authorize failed: ${paymentGatewayResponse.reasonMessage}"/>
                 </if>
-            </if-->
+            </if>
+            <log message="====payment==status: ${payment.statusId}"/>
             <if condition="payment.statusId == 'PmntDelivered' &amp;&amp; System.getProperty('paymentGatewayConfigId') == 'StripeDemo'">
-                <!--service-call name="mantle.account.PaymentServices.authorize#SinglePayment" -->
-                <service-call name="Stripe.StripePaymentServices.authorizeAndCapture#Payment"
-                    in-map="[paymentId: payment.paymentId,paymentGatewayConfigId: System.getProperty('paymentGatewayConfigId')]"
+                <!--service-call name="Stripe.StripePaymentServices.authorizeAndCapture#Payment" -->
+                <log message="=====capture payment: ${payment.paymentId}"/>
+                <service-call name="mantle.account.PaymentServices.capture#SinglePayment"
+                    in-map="[paymentId: payment.paymentId]"
                     out-map="context"/>
-                <!--if condition="paymentGatewayResponse.resultError == 'Y'">
+                <if condition="paymentGatewayResponse?.resultSuccess != 'Y'">
                     <return error="true" message="payment capture failed: ${paymentGatewayResponse.reasonMessage}"/>
-                </if-->
+                </if>
             </if>
             <!--other status go to next one -->
             <service-call name="update#mantle.account.payment.Payment"
