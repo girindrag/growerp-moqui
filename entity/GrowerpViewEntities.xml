@@ -335,9 +335,10 @@ along with this software (see the LICENSE.md file). If not, see
         <member-entity entity-alias="APPL" entity-name="mantle.account.payment.PaymentApplication"
                 join-from-alias="PAY" join-optional="true">
             <key-map field-name="paymentId"/></member-entity>
+        <!-- supplier/vendor info (required?)-->
         <member-entity entity-alias="VORG" entity-name="mantle.party.Organization"
                  join-from-alias="PAY" join-optional="true">
-            <key-map field-name="fromPartyId" related="partyId"/></member-entity>
+            <key-map field-name="toPartyId" related="partyId"/></member-entity>
         <member-entity entity-alias="VOPP" entity-name="mantle.order.OrderPartParty"
             join-from-alias="PAY" join-optional="true">
             <key-map field-name="orderId"/><entity-condition>
@@ -355,7 +356,7 @@ along with this software (see the LICENSE.md file). If not, see
         <!-- customer data -->
         <member-entity entity-alias="CORG" entity-name="mantle.party.Organization"
             join-from-alias="PAY" join-optional="true">
-            <key-map field-name="toPartyId" related="partyId"/></member-entity>
+            <key-map field-name="fromPartyId" related="partyId"/></member-entity>
         <member-entity entity-alias="COPP" entity-name="mantle.order.OrderPartParty"
             join-from-alias="PAY" join-optional="true">
             <key-map field-name="orderId"/>

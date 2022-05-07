@@ -499,7 +499,7 @@ along with this software (see the LICENSE.md file). If not, see
                         <script>finDocs.add(finDocOut)</script>
                         <set field="paymentMethod" from="[:]"/>
                     </if>
-                    <!-- first payment record -->
+                    <!-- first/new payment record -->
                     <if condition="!lastItem || lastItem.paymentId != item.paymentId">
                         <if condition="sales">
                             <set field="userOut" from="[
@@ -551,7 +551,7 @@ along with this software (see the LICENSE.md file). If not, see
                             items: items ? items : [],
                             ]"/>
                     </if>
-                    <!-- payment method of 'otherParty' -->
+                    <!-- payment method of 'otherParty' (in future can have more than one?)-->
                     <if condition="sales &amp;&amp; item.customerPaymentMethodId">
                         <set field="paymentMethodId" from="item.customerPaymentMethodId"/>
                         <set field="paymentMethodTypeId" from="item.customerPaymentMethodTypeId"/>
