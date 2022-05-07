@@ -940,20 +940,32 @@ along with this software (see the LICENSE.md file). If not, see
         <actions>
             <service-call out-map="context" in-map="[wantOwner: true]"
                name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner"/>
-            <if condition="payment.sales == true"><!-- inside this payment object this field is NOT a string -->
-                <set field="toPartyId" from="companyPartyId"/>
-                <set field="fromPartyId" from="payment.otherUser.companyPartyId"/>
-                <set field="contactRole" value="CustomerContactPerson"/>
-                <else>
+            <if condition="payment.sales == true">
+                <then>
+                    <set field="fromPartyId" from="payment.otherUser.companyPartyId"/>
+                    <set field="toPartyId" from="companyPartyId"/>
+                    <set field="contactRole" value="CustomerContactPerson"/>
+                    <if condition="payment.paymentInstrument == 'CreditCard' &amp;&amp; 
+                                    payment.otherUser.companyPaymentMethod?.ccPaymentMethodId">
+                        <set field="paymentMethodId" from="payment.otherUser.companyPaymentMethod.ccPaymentMethodId"/>
+                        <set field="paymentGatewayConfigId" from="System.getProperty('paymentGatewayConfigId')"/>
+                    </if>
+                </then>
+                <else><!-- outgoing purchase payment -->
                     <set field="fromPartyId" from="companyPartyId"/>
                     <set field="toPartyId" from="payment.otherUser.companyPartyId"/>
                     <set field="contactRole" value="VendorContactPerson"/>
+                    <if condition="payment.paymentInstrument == 'CreditCard'">
+                        <entity-find entity-name="mantle.account.method.PaymentMethod" limit="1" list="pms">
+                            <econdition field-name="ownerPartyId" from="companyPartyId"/>
+                            <econdition field-name="paymentMethodTypeEnumId" value="PmtCreditCard"/>
+                        </entity-find>
+                        <if condition="pms">
+                            <set field="paymentMethodId" from="pms[0].paymentMethodId"/>
+                            <set field="paymentGatewayConfigId" from="System.getProperty('paymentGatewayConfigId')"/>
+                        </if>
+                    </if>
                 </else>
-            </if>
-
-            <if condition="payment.otherUser.companyPaymentMethod?.ccPaymentMethodId">
-                <set field="fromPaymentMethodId" from="payment.otherUser.companyPaymentMethod.ccPaymentMethodId"/>
-                <set field="paymentGatewayConfigId" from="System.getProperty('paymentGatewayConfigId')"/>
             </if>
             <!-- itemtype -->
             <if condition="payment.items">
@@ -974,7 +986,7 @@ along with this software (see the LICENSE.md file). If not, see
                         amount: payment.grandTotal,
                         paymentInstrumentEnumId: instrument,
                         effectiveDate: ec.user.nowTimestamp,
-                        paymentMethodId: fromPaymentMethodId,
+                        paymentMethodId: paymentMethodId,
                         paymentGatewayConfigId: paymentGatewayConfigId,
                         toPartyId: toPartyId,
                         itemTypeGlAccountId: itemTypeGlAccountId,
@@ -1526,15 +1538,19 @@ along with this software (see the LICENSE.md file). If not, see
         <parameter name="payment" required="true" type="Map"/>
     </in-parameters>
     <actions>
+        <service-call out-map="context" in-map="[wantOwner: true]"
+            name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner"/>
         <entity-find-one entity-name="mantle.account.payment.Payment"
                 value-field="paymentOld" for-update="true">
             <field-map field-name="paymentId" from="payment.paymentId"/>
         </entity-find-one>
-        <if condition="payment.sales &amp;&amp; payment.otherUser.companyPartyId != paymentOld.fromPartyId">
-            <set field="paymentOld.fromPartyId" from="payment.otherUser.companyPartyId"/>
-        </if>
-        <if condition="!payment.sales &amp;&amp; payment.otherUser.companyPartyId != paymentOld.toPartyId">
-            <set field="paymentOld.toPartyId" from="payment.otherUser.companyPartyId"/>
+        <if condition="payment.sales">
+            <then>
+                <set field="paymentOld.fromPartyId" from="payment.otherUser.companyPartyId"/>
+            </then>
+            <else>
+                <set field="paymentOld.toPartyId" from="payment.otherUser.companyPartyId"/>
+            </else>
         </if>
         <set field="paymentOld.amount" from="payment.grandTotal"/>
         <if condition="payment.items">
@@ -1546,8 +1562,38 @@ along with this software (see the LICENSE.md file). If not, see
                 <set field="paymentOld.itemTypeGlAccountId" from="glAccounts[0].glAccountId"/>
             </if>
         </if>
-        <!-- payment instrument -->
-        <set field="paymentOld.paymentInstrumentEnumId" from="'Pi' + payment.paymentInstrument"/>
+        <!-- payment instrument changed? -->
+        <if condition="paymentOld.paymentInstrumentEnumId != 'Pi${payment.paymentInstrument}'">
+            <!-- credit card removed -->
+            <if condition="paymentOld.paymentInstrumentEnumId == 'PiCreditCard'">
+                <set field="paymentOld.paymentMethodId" from="null"/>
+                <set field="paymentOld.paymentGatewayConfigId" from="null"/>
+            </if>
+            <!-- credit card added -->
+            <if condition="payment.paymentInstrument == 'CreditCard'">
+                <if condition="payment.sales">
+                    <then>
+                        <set field="paymentOld.paymentMethodId"
+                            from="payment.otherUser.companyPaymentMethod.ccPaymentMethodId"/>
+                        <set field="paymentOld.paymentGatewayConfigId"
+                            from="System.getProperty('paymentGatewayConfigId')"/>
+                    </then>
+                    <else>
+                        <entity-find entity-name="mantle.account.method.PaymentMethod" limit="1" list="pms">
+                            <econdition field-name="ownerPartyId" from="companyPartyId"/>
+                            <econdition field-name="paymentMethodTypeEnumId" value="PmtCreditCard"/>
+                        </entity-find>
+                        <if condition="pms">
+                            <set field="paymentOld.paymentMethodId"
+                                from="pms[0].paymentMethodId"/>
+                            <set field="paymentOld.paymentGatewayConfigId"
+                                from="System.getProperty('paymentGatewayConfigId')"/>
+                        </if>
+                    </else>
+                </if>
+            </if>
+            <set field="paymentOld.paymentInstrumentEnumId" from="'Pi' + payment.paymentInstrument"/>
+        </if>
         <!-- finally update -->
         <entity-update value-field="paymentOld"/>
         <!-- status updates -->
@@ -1562,27 +1608,26 @@ along with this software (see the LICENSE.md file). If not, see
                                     paymentId: payment.paymentId]"/></then>
         <else>
             <!-- payment gateway -->
-            <if condition="payment.statusId == 'PmntAuthorized'">
-                <service-call name="mantle.account.PaymentServices.authorize#SinglePayment"
-                    in-map="[paymentId: payment.paymentId,
-                        paymentGatewayConfigId: System.getProperty('paymentGatewayConfigId')]"
-                    out-map="context"/>
-                <if condition="paymentGatewayResponse?.resultSuccess != 'Y'">
-                    <return error="true" message="payment authorize failed: ${paymentGatewayResponse.reasonMessage}"/>
+            <if condition="paymentOld.paymentGatewayConfigId">
+                <if condition="payment.statusId == 'PmntAuthorized'">
+                    <service-call name="mantle.account.PaymentServices.authorize#SinglePayment"
+                        in-map="[paymentId: payment.paymentId,
+                            paymentGatewayConfigId: paymentOld.paymentGatewayConfigId]"
+                        out-map="context"/>
+                    <if condition="paymentGatewayResponse?.resultSuccess != 'Y'">
+                        <return error="true" message="payment authorize failed: ${paymentGatewayResponse.reasonMessage}"/>
+                    </if>
+                </if>
+                <if condition="payment.statusId == 'PmntDelivered'">
+                    <service-call name="mantle.account.PaymentServices.capture#SinglePayment"
+                        in-map="[paymentId: payment.paymentId]"
+                        out-map="context"/>
+                    <if condition="paymentGatewayResponse?.resultSuccess != 'Y'">
+                        <return error="true" message="payment capture failed: ${paymentGatewayResponse.reasonMessage}"/>
+                    </if>
                 </if>
             </if>
-            <log message="====payment==status: ${payment.statusId}"/>
-            <if condition="payment.statusId == 'PmntDelivered' &amp;&amp; System.getProperty('paymentGatewayConfigId') == 'StripeDemo'">
-                <!--service-call name="Stripe.StripePaymentServices.authorizeAndCapture#Payment" -->
-                <log message="=====capture payment: ${payment.paymentId}"/>
-                <service-call name="mantle.account.PaymentServices.capture#SinglePayment"
-                    in-map="[paymentId: payment.paymentId]"
-                    out-map="context"/>
-                <if condition="paymentGatewayResponse?.resultSuccess != 'Y'">
-                    <return error="true" message="payment capture failed: ${paymentGatewayResponse.reasonMessage}"/>
-                </if>
-            </if>
-            <!--other status go to next one -->
+            <!--status go to next one -->
             <service-call name="update#mantle.account.payment.Payment"
                 in-map="[paymentId: payment.paymentId,
                         statusId: payment.statusId]"/>
