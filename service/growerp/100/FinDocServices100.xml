@@ -501,7 +501,7 @@ along with this software (see the LICENSE.md file). If not, see
                     </if>
                     <!-- first/new payment record -->
                     <if condition="!lastItem || lastItem.paymentId != item.paymentId">
-                        <if condition="sales">
+                        <if condition="!sales">
                             <set field="userOut" from="[
                                             companyPartyId: item.vendorPartyId,
                                             companyName: item.vendorCompanyName,
@@ -567,10 +567,11 @@ along with this software (see the LICENSE.md file). If not, see
                             <entity-find entity-name="mantle.account.method.CreditCard" list="cCards">
                                 <econdition field-name="paymentMethodId" from="paymentMethodId"/>
                             </entity-find>
-                            <set field="paymentMethod.cardType" from="ec.entity.find('moqui.basic.Enumeration')
+                            <set field="cardType" from="ec.entity.find('moqui.basic.Enumeration')
                                 .condition('enumId', cCards[0].creditCardTypeEnumId).one().description"/>
                             <set field="nrLength" from="cCards[0].cardNumber.length()"/>
-                            <set field="cardNumberHidden" value="${cardType}**********${cCards[0].cardNumber.substring(nrLength-4,nrLength)} ${cCards[0].expireDate}"/>
+                            <set field="cardNumberHidden"
+                                value="${cardType}**********${cCards[0].cardNumber.substring(nrLength-4,nrLength)} ${cCards[0].expireDate}"/>
                             <set field="paymentMethod.ccDescription" from="cardNumberHidden"/>
                         </if>
                     </if>
