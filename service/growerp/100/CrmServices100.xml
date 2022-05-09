@@ -143,7 +143,7 @@ along with this software (see the LICENSE.md file). If not, see
                 <econdition field-name="ownerPartyId" ignore-if-empty="true"/></entity-find>
             <set field="oldValue" from="opps[0]"/>
             <if condition="!oldValue"><return error="true"
-                    message="opportunity ${opportunityIn.opportunityId} not found!}"/></if>
+                    message="opportunity ${opportunityIn?.opportunityId} not found!"/></if>
             <set field="update" value="false"/>
             <if condition="oldValue.opportunityName != opportunityIn.opportunityName">
                 <set field="oldValue.opportunityName" from="opportunityIn.opportunityName"/>
