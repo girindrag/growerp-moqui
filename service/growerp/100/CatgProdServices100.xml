@@ -349,7 +349,7 @@ along with this software (see the LICENSE.md file). If not, see
                <set field="filter" value="%${filter}%"/></if>
             <if condition="search != null">
                 <set field="search" value="%${search}%"/></if>
-            <if condition="!assetId"><!--single asset always show, list only active assets-->
+            <if condition="!assetId &amp;&amp; !search"><!--single asset and search always show, list only active assets-->
                 <set field="activated" value="AstDeactivated"/></if>
             <service-call name="growerp.100.FinDocServices100.convert#StatusId"
                 in-map="[docType: 'asset', statusId: assetClassId]" out-map="assetClass"/>
