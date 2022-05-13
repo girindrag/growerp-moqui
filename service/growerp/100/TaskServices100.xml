@@ -16,7 +16,20 @@ along with this software (see the LICENSE.md file). If not, see
 
     <service verb="get" noun="ProjectTree">
         <out-parameters>
-            <parameter name="workEffortList"/>
+            <parameter name="workEffortList" type="List">
+                <parameter name="workEffort" type="Map">
+                    <parameter name="id"/>
+                    <parameter name="name"/>
+                    <parameter name="dependents" type="List">
+                        <parameter name="dependent" type="Map">
+                            <parameter name="workEffort" type="Map">
+                                <parameter name="id"/>
+                                <parameter name="name"/>
+                            </parameter>            
+                        </parameter>
+                    </parameter>
+                </parameter>
+            </parameter>
         </out-parameters>
         <actions>
             <service-call out-map="context" 
@@ -66,8 +79,48 @@ along with this software (see the LICENSE.md file). If not, see
             <parameter name="search" default="null"/>
         </in-parameters>
         <out-parameters>
-            <parameter name="task" type="Map"/>
-            <parameter name="taskList" type="List"/>
+            <parameter name="task" type="Map">
+                <parameter name="taskId"/>
+                <parameter name="parentTaskId"/>
+                <parameter name="name"/>
+                <parameter name="status"/>
+                <parameter name="description"/>
+                <parameter name="startDate"/>
+                <parameter name="endDate"/>
+                <parameter name="unInvoicedHours"/>
+                <parameter name="timeEntries" type="List">
+                    <parameter name="timeEntry" type="Map">
+                        <parameter name="timeEntryId"/>
+                        <parameter name="taskId"/>
+                        <parameter name="partyId"/>
+                        <parameter name="hours"/>
+                        <parameter name="date"/>
+                        <parameter name="comments"/>
+                    </parameter>
+                </parameter>
+            </parameter>
+            <parameter name="taskList" type="List">
+                <parameter name="task" type="Map">
+                    <parameter name="taskId"/>
+                    <parameter name="parentTaskId"/>
+                    <parameter name="name"/>
+                    <parameter name="status"/>
+                    <parameter name="description"/>
+                    <parameter name="startDate"/>
+                    <parameter name="endDate"/>
+                    <parameter name="unInvoicedHours"/>
+                    <parameter name="timeEntries" type="List">
+                        <parameter name="timeEntry" type="Map">
+                            <parameter name="timeEntryId"/>
+                            <parameter name="taskId"/>
+                            <parameter name="partyId"/>
+                            <parameter name="hours"/>
+                            <parameter name="date"/>
+                            <parameter name="comments"/>
+                        </parameter>
+                    </parameter>
+                </parameter>
+            </parameter>
         </out-parameters>
         <actions>
             <service-call  out-map="context"
@@ -149,35 +202,60 @@ along with this software (see the LICENSE.md file). If not, see
     <service verb="create" noun="Task">
         <description> Create a task within a project</description>
         <in-parameters>
-            <parameter name="task" required="true"/>
+            <parameter name="task" type="Map" required="true">
+                <parameter name="parentTaskId"/>
+                <parameter name="name"/>
+                <parameter name="status"/>
+                <parameter name="description"/>
+                <parameter name="startDate"/>
+                <parameter name="endDate"/>
+                <parameter name="unInvoicedHours"/>
+            </parameter>
         </in-parameters>
         <out-parameters>
-            <parameter name="task"/>
+            <parameter name="task" type="Map">
+                <parameter name="taskId"/>
+                <parameter name="parentTaskId"/>
+                <parameter name="name"/>
+                <parameter name="status"/>
+                <parameter name="description"/>
+                <parameter name="startDate"/>
+                <parameter name="endDate"/>
+                <parameter name="unInvoicedHours"/>
+                <parameter name="timeEntries" type="List">
+                    <parameter name="timeEntry" type="Map">
+                        <parameter name="timeEntryId"/>
+                        <parameter name="taskId"/>
+                        <parameter name="partyId"/>
+                        <parameter name="hours"/>
+                        <parameter name="date"/>
+                        <parameter name="comments"/>
+                    </parameter>
+                </parameter>
+            </parameter>
         </out-parameters>
         <actions>
-            <script> // convert JSON data
-                Object taskIn = new groovy.json.JsonSlurper().parseText(task)</script>
             <service-call  out-map="context"
                     name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner"/>
             <if condition="singleCompany"><set field="ownerCompany" from="singleCompany"/></if>
             <!-- create task -->
-            <if condition="!taskIn.status">
-                <set field="taskIn.status" value="In Planning"/>
+            <if condition="!task.status">
+                <set field="task.status" value="In Planning"/>
             </if>
             <service-call name="growerp.100.FinDocServices100.convert#StatusId"
-                in-map="[docType: 'task', statusId: taskIn.status]" out-map="context"/>
+                in-map="[docType: 'task', statusId: task.status]" out-map="context"/>
             <service-call name="create#mantle.work.effort.WorkEffort" in-map="[
-                    workEffortId: taskIn.taskId,
-                    parentWorkEffortId: taskIn.parentTaskId,
+                    workEffortId: task.taskId,
+                    parentWorkEffortId: task.parentTaskId,
                     workTypeEnumId: 'WetTask',
-                    workEffortName: taskIn.taskName,
+                    workEffortName: task.taskName,
                     statusId: convertedStatusId,
-                    description: taskIn.description,
+                    description: task.description,
                     ownerPartyId: companyPartyId,
-                    actualStartDate: taskIn.startDate ?
-                        taskIn.startDate.substring(0,18) : null,
-                    actualCompletionDate: taskIn.endDate ?
-                        taskIn.endDate.substring(0,18) : null
+                    actualStartDate: task.startDate ?
+                        task.startDate.substring(0,18) : null,
+                    actualCompletionDate: task.endDate ?
+                        task.endDate.substring(0,18) : null
                  ]" out-map="context"/>
             <!-- employee owner -->
             <service-call name="create#mantle.work.effort.WorkEffortParty" in-map="[
@@ -186,20 +264,20 @@ along with this software (see the LICENSE.md file). If not, see
                     roleTypeId: 'Owner',
                     statusId: 'WeptAssigned'
                 ]"/>
-            <if condition="taskIn.customerUser">
+            <if condition="task.customerUser">
                 <set field="userRoleTypeid" value="CustomerContactPerson"/>
                 <set field="companyRoleTypeid" value="Customer"/>
-                <set field="companyPartyid" from="taskIn.customerUser.companyPartyId"/>
-                <set field="userPartyId" from="taskIn.customerUser.partyId"/>
+                <set field="companyPartyid" from="task.customerUser.companyPartyId"/>
+                <set field="userPartyId" from="task.customerUser.partyId"/>
             </if>
-            <if condition="taskIn.vendorUser">
+            <if condition="task.vendorUser">
                 <set field="userRoleTypeid" value="VendorContactPerson"/>
                 <set field="companyRoleTypeid" value="Vendor"/>
-                <set field="companyPartyid" from="taskIn.vendorUser.companyPartyId"/>
-                <set field="userPartyId" from="taskIn.vendorUser.partyId"/>
+                <set field="companyPartyid" from="task.vendorUser.companyPartyId"/>
+                <set field="userPartyId" from="task.vendorUser.partyId"/>
             </if>
             <!-- create cust/suppl company -->
-            <if condition="taskIn.customerUser || taskIn.vendorUser">
+            <if condition="task.customerUser || task.vendorUser">
                 <service-call name="create#mantle.work.effort.WorkEffortParty"
                     in-map="[
                         workEffortId: workEffortId,
@@ -223,40 +301,65 @@ along with this software (see the LICENSE.md file). If not, see
     <service verb="update" noun="Task">
         <description> Update a task within a project</description>
         <in-parameters>
-            <parameter name="task" required="true"/>
+            <parameter name="task" type="Map" required="true">
+                <parameter name="parentTaskId"/>
+                <parameter name="name"/>
+                <parameter name="status"/>
+                <parameter name="description"/>
+                <parameter name="startDate"/>
+                <parameter name="endDate"/>
+                <parameter name="unInvoicedHours"/>
+            </parameter>
         </in-parameters>
         <out-parameters>
-            <parameter name="task"/>
+            <parameter name="task" type="Map">
+                <parameter name="taskId"/>
+                <parameter name="parentTaskId"/>
+                <parameter name="name"/>
+                <parameter name="status"/>
+                <parameter name="description"/>
+                <parameter name="startDate"/>
+                <parameter name="endDate"/>
+                <parameter name="unInvoicedHours"/>
+                <parameter name="timeEntries" type="List">
+                    <parameter name="timeEntry" type="Map">
+                        <parameter name="timeEntryId"/>
+                        <parameter name="taskId"/>
+                        <parameter name="partyId"/>
+                        <parameter name="hours"/>
+                        <parameter name="date"/>
+                        <parameter name="comments"/>
+                    </parameter>
+                </parameter>
+            </parameter>
         </out-parameters>
         <actions>
-            <script> // convert JSON data
-                Object taskIn = new groovy.json.JsonSlurper().parseText(task)</script>
             <service-call name="growerp.100.TaskServices100.get#Task"
-                in-map="[taskId: taskIn.taskId]" out-map="oldTask"/><!-- owner checked here -->
-            <if condition="!oldTask"><return error="true" message="Task ${taskIn.taskId} not found"/></if>
+                in-map="[taskId: task.taskId]" out-map="oldTask"/><!-- owner checked here -->
+            <if condition="!oldTask"><return error="true" message="Task ${task.taskId} not found"/></if>
             <service-call name="growerp.100.FinDocServices100.convert#StatusId"
-                in-map="[docType: 'task', statusId: taskIn.status]" out-map="context"/>
+                in-map="[docType: 'task', statusId: task.status]" out-map="context"/>
             <if condition="
-                oldTask.taskName != taskIn.taskName ||
-                oldTask.description != taskIn.description ||
-                oldTask.status != taskIn.status ||
-                oldTask.parentTaskId != taskIn.parentTaskId ||
-                oldTask.startDate != taskIn.startDate ||
-                oldTask.endDate != taskIn.endDate">
+                oldTask.taskName != task.taskName ||
+                oldTask.description != task.description ||
+                oldTask.status != task.status ||
+                oldTask.parentTaskId != task.parentTaskId ||
+                oldTask.startDate != task.startDate ||
+                oldTask.endDate != task.endDate">
                 <service-call name="update#mantle.work.effort.WorkEffort" in-map="[
-                        workEffortId: taskIn.taskId,
-                        parentWorkEffortId: taskIn.parentTask,
-                        workEffortName: taskIn.taskName,
+                        workEffortId: task.taskId,
+                        parentWorkEffortId: task.parentTask,
+                        workEffortName: task.taskName,
                         statusId: convertedStatusId,
-                        description: taskIn.description,
-                        actualStartDate: taskIn.startDate ? taskIn.startDate.substring(0,18) : null,
-                        actualCompletionDate: taskIn.endDate ? taskIn.endDate.substring(0,18) : null
+                        description: task.description,
+                        actualStartDate: task.startDate ? task.startDate.substring(0,18) : null,
+                        actualCompletionDate: task.endDate ? task.endDate.substring(0,18) : null
                     ]"/>
             </if>
 
-            <if condition="taskIn.customerUser &amp;&amp; oldTask.customerUser.companyPartyId != taskIn.customerUser.companyPartyId">
+            <if condition="task.customerUser &amp;&amp; oldTask.customerUser.companyPartyId != task.customerUser.companyPartyId">
                 <entity-find entity-name="mantle.work.effort.WorkEffortParty" list="customers">
-                    <econdition field-name="workEffortId" from="taskIn.taskId"/>
+                    <econdition field-name="workEffortId" from="task.taskId"/>
                     <econdition field-name="roleTypeId" value="Customer"/>
                 </entity-find>
                 <if condition="customers">
@@ -264,15 +367,15 @@ along with this software (see the LICENSE.md file). If not, see
                     <entity-update value-field="customers[0]"/>
                 </if>
                 <service-call name="create#mantle.work.effort.WorkEffortParty" in-map="[
-                        workEffortId: taskIn.taskId,
-                        partyId: taskIn.customerUser.companyPartyId,
+                        workEffortId: task.taskId,
+                        partyId: task.customerUser.companyPartyId,
                         roleTypeId: 'Customer',
                         statusId: 'WeptAssigned'
                     ]"/>
             </if>
-            <if condition="taskIn.customerUser &amp;&amp; oldTask.customerUser.partyId !=taskIn.customerUser.partyId">
+            <if condition="task.customerUser &amp;&amp; oldTask.customerUser.partyId !=task.customerUser.partyId">
                 <entity-find entity-name="mantle.work.effort.WorkEffortParty" list="customers">
-                    <econdition field-name="workEffortId" from="taskIn.taskId"/>
+                    <econdition field-name="workEffortId" from="task.taskId"/>
                     <econdition field-name="roleTypeId" value="Company"/>
                 </entity-find>
                 <if condition="customers">
@@ -280,15 +383,15 @@ along with this software (see the LICENSE.md file). If not, see
                     <entity-update value-field="customers[0]"/>
                 </if>
                 <service-call name="create#mantle.work.effort.WorkEffortParty" in-map="[
-                    workEffortId: taskIn.taskId,
-                    partyId: taskIn.customerUser.partyId,
+                    workEffortId: task.taskId,
+                    partyId: task.customerUser.partyId,
                     roleTypeId: 'CustomerContactPerson',
                     statusId: 'WeptAssigned'
             ]"/>
             </if>
-            <if condition="taskIn.vendorUser &amp;&amp; oldTask.vendorUser.companyPartyId !=taskIn.vendorUser.companyPartyId">
+            <if condition="task.vendorUser &amp;&amp; oldTask.vendorUser.companyPartyId !=task.vendorUser.companyPartyId">
                 <entity-find entity-name="mantle.work.effort.WorkEffortParty" list="vendors">
-                    <econdition field-name="workEffortId" from="taskIn.taskId"/>
+                    <econdition field-name="workEffortId" from="task.taskId"/>
                     <econdition field-name="roleTypeId" value="Company"/>
                 </entity-find>
                 <if condition="vendors">
@@ -296,15 +399,15 @@ along with this software (see the LICENSE.md file). If not, see
                     <entity-update value-field="vendors[0]"/>
                 </if>
                 <service-call name="create#mantle.work.effort.WorkEffortParty" in-map="[
-                        workEffortId: taskIn.taskId,
-                        partyId: taskIn.vendorUser.companyPartyId,
+                        workEffortId: task.taskId,
+                        partyId: task.vendorUser.companyPartyId,
                         roleTypeId: 'Vendor',
                         statusId: 'WeptAssigned'
                     ]"/>
             </if>
-            <if condition="taskIn.vendorUser &amp;&amp; oldTask.vendorUser.partyId !=taskIn.vendorUser.partyId">
+            <if condition="task.vendorUser &amp;&amp; oldTask.vendorUser.partyId !=task.vendorUser.partyId">
                 <entity-find entity-name="mantle.work.effort.WorkEffortParty" list="vendors">
-                    <econdition field-name="workEffortId" from="taskIn.taskId"/>
+                    <econdition field-name="workEffortId" from="task.taskId"/>
                     <econdition field-name="roleTypeId" value="Company"/>
                 </entity-find>
                 <if condition="vendors">
@@ -312,24 +415,31 @@ along with this software (see the LICENSE.md file). If not, see
                     <entity-update value-field="vendors[0]"/>
                 </if>
                 <service-call name="create#mantle.work.effort.WorkEffortParty" in-map="[
-                        workEffortId: taskIn.taskId,
-                        partyId: taskIn.vendorUser.partyId,
+                        workEffortId: task.taskId,
+                        partyId: task.vendorUser.partyId,
                         roleTypeId: 'VendorContactPerson',
                         statusId: 'WeptAssigned'
                     ]"/>
             </if>
             <service-call name="growerp.100.TaskServices100.get#Task"
-                in-map="[taskId: taskIn.taskId]" out-map="context"/>
+                in-map="[taskId: task.taskId]" out-map="context"/>
         </actions>
     </service>
 
     <service verb="get" noun="TimeEntry">
         <description>get hours worked just used internally, no owner check here</description>
         <in-parameters>
-            <parameter name="timeEntryId" required="true"/>
+            <parameter name="timeEntryId" type="Map" required="true"/>
         </in-parameters>
         <out-parameters>
-            <parameter name="timeEntry"/>
+            <parameter name="timeEntry" type="Map">
+                <parameter name="timeEntryId"/>
+                <parameter name="taskId"/>
+                <parameter name="partyId"/>
+                <parameter name="hours"/>
+                <parameter name="comments"/>
+                <parameter name="date"/>
+            </parameter>
         </out-parameters>
         <actions>
             <entity-find-one entity-name="mantle.work.time.TimeEntry" value-field="te"/>
@@ -347,15 +457,25 @@ along with this software (see the LICENSE.md file). If not, see
     <service verb="create" noun="TimeEntry">
         <description>enter hours worked</description>
         <in-parameters>
-            <parameter name="timeEntry" required="true"/>
+            <parameter name="timeEntry" type="Map" required="true">
+                <parameter name="taskId"/>
+                <parameter name="partyId"/>
+                <parameter name="hours"/>
+                <parameter name="comments"/>
+                <parameter name="date"/>
+            </parameter>
         </in-parameters>
         <out-parameters>
-            <parameter name="timeEntry"/>
+            <parameter name="timeEntry" type="Map">
+                <parameter name="timeEntryId"/>
+                <parameter name="taskId"/>
+                <parameter name="partyId"/>
+                <parameter name="hours"/>
+                <parameter name="comments"/>
+                <parameter name="date"/>
+            </parameter>
         </out-parameters>
         <actions>
-            <script> // convert JSON data
-                Object timeEntryIn = new groovy.json.JsonSlurper()
-                    .parseText(timeEntry)</script>
             <service-call  out-map="context"
                     name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner"/>
             <if condition="singleCompany"><set field="ownerCompany" from="singleCompany"/></if>
@@ -384,19 +504,52 @@ along with this software (see the LICENSE.md file). If not, see
                 in-map="[timeEntryId: timeEntryId]" out-map="context"/>
             </actions>
     </service>
-    
+
+    <service verb="update" noun="TimeEntry">
+        <description>enter hours worked</description>
+        <in-parameters>
+            <parameter name="timeEntry" type="Map" required="true">
+                <parameter name="timeEntryId"/>
+                <parameter name="taskId"/>
+                <parameter name="partyId"/>
+                <parameter name="hours"/>
+                <parameter name="comments"/>
+                <parameter name="date"/>
+            </parameter>
+        </in-parameters>
+        <out-parameters>
+            <parameter name="timeEntry" type="Map">
+                <parameter name="timeEntryId"/>
+                <parameter name="taskId"/>
+                <parameter name="partyId"/>
+                <parameter name="hours"/>
+                <parameter name="comments"/>
+                <parameter name="date"/>
+            </parameter>
+        </out-parameters>
+        <actions>
+        </actions>
+    </service>
+
     <service verb="delete" noun="TimeEntry">
         <description>remove not yet billed hours</description>
         <in-parameters>
-            <parameter name="timeEntry" required="true"/>
+            <parameter name="timeEntry" type="Map" required="true">
+                <parameter name="taskId"/>
+                <parameter name="timeEntryId"/>
+            </parameter>
         </in-parameters>
         <out-parameters>
-            <parameter name="timeEntry"/>
+            <parameter name="timeEntry" type="Map">
+                <parameter name="timeEntryId"/>
+                <parameter name="taskId"/>
+                <parameter name="partyId"/>
+                <parameter name="hours"/>
+                <parameter name="comments"/>
+                <parameter name="date"/>
+            </parameter>
         </out-parameters>
         <actions>
-            <script> // convert JSON data
-                Object timeEntryIn = new groovy.json.JsonSlurper()
-                    .parseText(timeEntry)</script>
             <service-call  out-map="context"
                     name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner"/>
             <if condition="singleCompany"><set field="ownerCompany" from="singleCompany"/></if>

@@ -165,10 +165,11 @@ along with this software (see the LICENSE.md file). If not, see
 
     <service verb="get" noun="FinDoc">
         <description>
-            Get order information by order, item and party
+            Get financial document which can be Order, Shipment, Invoice, Payment, Transactionon by order
         </description>
         <in-parameters>
-            <parameter name="finDocId"/><!-- depending on type can be invoice/payment/order -->
+            <parameter name="finDocId">
+                <description>depending on type can be invoice/payment/order</description></parameter>
             <parameter name="sales" type="Boolean" required="true"/>
             <parameter name="docType" required="true"/>
             <parameter name="open" type="Boolean" default-value="true"/>
@@ -179,8 +180,96 @@ along with this software (see the LICENSE.md file). If not, see
             <parameter name="customerCompanyPartyId"/>
         </in-parameters>
         <out-parameters>
-            <parameter name="finDocs" type="List" default="[]"/>
-            <parameter name="finDoc" type="Map" default="[:]"/>
+            <parameter name="finDocs" type="List">
+                <parameter name="finDoc" type="Map">
+                    <parameter name="docType"/>
+                    <parameter name="sales" type="Boolean"/>
+                    <parameter name="orderId"/>
+                    <parameter name="shipmentId"/>
+                    <parameter name="invoiceId"/>
+                    <parameter name="paymentId"/>
+                    <parameter name="transactionId"/>
+                    <parameter name="paymentInstrument"/>
+                    <parameter name="statusId"/>
+                    <parameter name="creationDate"/>
+                    <parameter name="placedDate"/>
+                    <parameter name="description"/>
+                    <parameter name="otherUser" type="Map">
+                        <parameter name="companyPartyId"/>
+                        <parameter name="companyName"/>
+                        <parameter name="partyId"/>
+                        <parameter name="firstName"/>
+                        <parameter name="lastName"/>
+                        <parameter name="email"/>
+                    </parameter>
+                    <parameter name="grandTotal"/>
+                    <parameter name="classificationId"/>
+                    <parameter name="items" type="List">
+                        <parameter name="item" type="Map">
+                            <parameter name="itemSeqId"/>
+                            <parameter name="itemTypeId"/>
+                            <parameter name="itemTypeName"/>
+                            <parameter name="productId"/>
+                            <parameter name="description"/>
+                            <parameter name="quantity"/>
+                            <parameter name="price"/>
+                            <parameter name="glAccountId"/>
+                            <parameter name="assetId"/>
+                            <parameter name="assetName"/>
+                            <parameter name="location" type="Map">
+                                <parameter name="locationId"/>
+                                <parameter name="locationName"/>
+                            </parameter>
+                            <parameter name="rentalFromDate"/>
+                            <parameter name="rentalThruDate"/>
+                        </parameter>
+                    </parameter>
+                </parameter>
+            </parameter>    
+            <parameter name="finDoc" type="Map">
+                <parameter name="docType"/>
+                <parameter name="sales" type="Boolean"/>
+                <parameter name="orderId"/>
+                <parameter name="shipmentId"/>
+                <parameter name="invoiceId"/>
+                <parameter name="paymentId"/>
+                <parameter name="transactionId"/>
+                <parameter name="paymentInstrument"/>
+                <parameter name="statusId"/>
+                <parameter name="creationDate"/>
+                <parameter name="placedDate"/>
+                <parameter name="description"/>
+                <parameter name="otherUser" type="Map">
+                    <parameter name="companyPartyId"/>
+                    <parameter name="companyName"/>
+                    <parameter name="partyId"/>
+                    <parameter name="firstName"/>
+                    <parameter name="lastName"/>
+                    <parameter name="email"/>
+                </parameter>
+                <parameter name="grandTotal"/>
+                <parameter name="classificationId"/>
+                <parameter name="items" type="List">
+                    <parameter name="item" type="Map">
+                        <parameter name="itemSeqId"/>
+                        <parameter name="itemTypeId"/>
+                        <parameter name="itemTypeName"/>
+                        <parameter name="productId"/>
+                        <parameter name="description"/>
+                        <parameter name="quantity"/>
+                        <parameter name="price"/>
+                        <parameter name="glAccountId"/>
+                        <parameter name="assetId"/>
+                        <parameter name="assetName"/>
+                        <parameter name="location" type="Map">
+                            <parameter name="locationId"/>
+                            <parameter name="locationName"/>
+                        </parameter>
+                        <parameter name="rentalFromDate"/>
+                        <parameter name="rentalThruDate"/>
+                    </parameter>
+                </parameter>
+            </parameter>
         </out-parameters>
         <actions>
             <service-call out-map="context"
@@ -770,42 +859,113 @@ along with this software (see the LICENSE.md file). If not, see
     <service verb="create" noun="FinDoc">
         <description>Create a financial document either order, invoice or payment</description>
         <in-parameters>
-            <parameter name="finDoc" type="String"/>
+            <parameter name="finDoc" type="Map">
+                <parameter name="docType"/>
+                <parameter name="sales" type="Boolean"/>
+                <parameter name="statusId"/>
+                <parameter name="paymentInstrument"/>
+                <parameter name="description"/>
+                <parameter name="otherUser" type="Map">
+                    <parameter name="companyPartyId"/>
+                    <parameter name="partyId"/>
+                </parameter>
+                <parameter name="grandTotal"/>
+                <parameter name="classificationId"/>
+                <parameter name="items" type="List">
+                    <parameter name="item" type="Map">
+                        <parameter name="itemSeqId"/>
+                        <parameter name="itemTypeId"/>
+                        <parameter name="itemTypeName"/>
+                        <parameter name="productId"/>
+                        <parameter name="description"/>
+                        <parameter name="quantity"/>
+                        <parameter name="price"/>
+                        <parameter name="glAccountId"/>
+                        <parameter name="assetId"/>
+                        <parameter name="location" type="Map">
+                            <parameter name="locationId"/>
+                        </parameter>
+                        <parameter name="rentalFromDate"/>
+                        <parameter name="rentalThruDate"/>
+                    </parameter>
+                </parameter>
+            </parameter>
         </in-parameters>
         <out-parameters>
-            <parameter name="finDoc" type="Map"></parameter>
+            <parameter name="finDoc" type="Map">
+                <parameter name="docType"/>
+                <parameter name="sales" type="Boolean"/>
+                <parameter name="orderId"/>
+                <parameter name="shipmentId"/>
+                <parameter name="invoiceId"/>
+                <parameter name="paymentId"/>
+                <parameter name="transactionId"/>
+                <parameter name="paymentInstrument"/>
+                <parameter name="statusId"/>
+                <parameter name="creationDate"/>
+                <parameter name="placedDate"/>
+                <parameter name="description"/>
+                <parameter name="otherUser" type="Map">
+                    <parameter name="companyPartyId"/>
+                    <parameter name="companyName"/>
+                    <parameter name="partyId"/>
+                    <parameter name="firstName"/>
+                    <parameter name="lastName"/>
+                    <parameter name="email"/>
+                </parameter>
+                <parameter name="grandTotal"/>
+                <parameter name="classificationId"/>
+                <parameter name="items" type="List">
+                    <parameter name="item" type="Map">
+                        <parameter name="itemSeqId"/>
+                        <parameter name="itemTypeId"/>
+                        <parameter name="itemTypeName"/>
+                        <parameter name="productId"/>
+                        <parameter name="description"/>
+                        <parameter name="quantity"/>
+                        <parameter name="price"/>
+                        <parameter name="glAccountId"/>
+                        <parameter name="assetId"/>
+                        <parameter name="assetName"/>
+                        <parameter name="location" type="Map">
+                            <parameter name="locationId"/>
+                            <parameter name="locationName"/>
+                        </parameter>
+                        <parameter name="rentalFromDate"/>
+                        <parameter name="rentalThruDate"/>
+                    </parameter>
+                </parameter>
+            </parameter>
         </out-parameters>
         <actions>
-            <script>Object finDocIn = new groovy.json.JsonSlurper().parseText(finDoc)</script>
-            <set field="finDoc" from="[:]"/>
             <service-call out-map="context"
                 name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner"/>
-            <if condition="!finDocIn.otherUser || !finDocIn.otherUser.companyPartyId">
+            <if condition="!finDoc.otherUser || !finDoc.otherUser.companyPartyId">
                 <return error="true" message="Other user required with valid companyPartyId"/>
             </if>
             <service-call name="growerp.100.FinDocServices100.convert#StatusId"  out-map="context"
-                in-map="[sales: finDocIn?.sales, docType: finDocIn.docType, statusId: finDocIn.statusId]"/>
-            <set field="finDocIn.statusId" from="convertedStatusId"/>
-            <if condition="finDocIn.docType == 'Order'">
+                in-map="[sales: finDoc?.sales, docType: finDoc.docType, statusId: finDoc.statusId]"/>
+            <set field="finDoc.statusId" from="convertedStatusId"/>
+            <if condition="finDoc.docType == 'Order'">
                 <service-call name="growerp.100.FinDocServices100.create#Order"
-                    in-map="[order: finDocIn]" out-map="context"/>
+                    in-map="[order: finDoc]" out-map="context"/>
                 <set field="finDocId" from="orderId"/>
-                <else-if condition="finDocIn.docType == 'Invoice'">
+                <else-if condition="finDoc.docType == 'Invoice'">
                     <service-call name="growerp.100.FinDocServices100.create#Invoice"
-                        in-map="[invoice: finDocIn]" out-map="context"/>
+                        in-map="[invoice: finDoc]" out-map="context"/>
                     <set field="finDocId" from="invoiceId"/>
                 </else-if>
-                <else-if condition="finDocIn.docType == 'Payment'">
+                <else-if condition="finDoc.docType == 'Payment'">
                     <service-call name="growerp.100.FinDocServices100.create#Payment"
-                        in-map="[payment: finDocIn]" out-map="context"/>
+                        in-map="[payment: finDoc]" out-map="context"/>
                     <set field="finDocId" from="paymentId"/>
                 </else-if>
                 <else>
-                    <return error="true" message="Document ${finDocIn.docType} not supported yet...."/>
+                    <return error="true" message="Document ${finDoc.docType} not supported yet...."/>
                 </else>
             </if>
             <service-call name="growerp.100.FinDocServices100.get#FinDoc" out-map="context"
-                in-map="[finDocId: finDocId, docType: finDocIn.docType, sales: finDocIn.sales]"/>
+                in-map="[finDocId: finDocId, docType: finDoc.docType, sales: finDoc.sales]"/>
         </actions>
     </service>
 
@@ -1071,75 +1231,156 @@ along with this software (see the LICENSE.md file). If not, see
     <service verb="update" noun="FinDoc">
         <description>Update a financial document either order, invoice or payment</description>
         <in-parameters>
-            <parameter name="finDoc" type="String"/>
+            <parameter name="finDoc" type="Map" required="true">
+                <parameter name="docType"/>
+                <parameter name="sales" type="Boolean"/>
+                <parameter name="orderId"/>
+                <parameter name="shipmentId"/>
+                <parameter name="invoiceId"/>
+                <parameter name="paymentId"/>
+                <parameter name="transactionId"/>
+                <parameter name="paymentInstrument"/>
+                <parameter name="statusId"/>
+                <parameter name="description"/>
+                <parameter name="otherUser" type="Map">
+                    <parameter name="companyPartyId"/>
+                    <parameter name="companyName"/>
+                    <parameter name="partyId"/>
+                    <parameter name="companyPaymentMethod" type="Map">
+                        <parameter name="creditCardType"/>
+                        <parameter name="creditCardNumber"/>
+                        <parameter name="expireMonth"/>
+                        <parameter name="expireYear"/>
+                    </parameter>
+                </parameter>
+                <parameter name="grandTotal"/>
+                <parameter name="classificationId"/>
+                <parameter name="items" type="List">
+                    <parameter name="item" type="Map">
+                        <parameter name="itemSeqId"/>
+                        <parameter name="itemTypeId"/>
+                        <parameter name="itemTypeName"/>
+                        <parameter name="productId"/>
+                        <parameter name="description"/>
+                        <parameter name="quantity"/>
+                        <parameter name="price"/>
+                        <parameter name="glAccountId"/>
+                        <parameter name="assetId"/>
+                        <parameter name="assetName"/>
+                        <parameter name="rentalFromDate"/>
+                        <parameter name="rentalThruDate"/>
+                    </parameter>
+                </parameter>
+            </parameter>
         </in-parameters>
         <out-parameters>
-            <parameter name="finDoc" type="Map"/>
+            <parameter name="finDoc" type="Map">
+                <parameter name="docType"/>
+                <parameter name="sales" type="Boolean"/>
+                <parameter name="orderId"/>
+                <parameter name="shipmentId"/>
+                <parameter name="invoiceId"/>
+                <parameter name="paymentId"/>
+                <parameter name="transactionId"/>
+                <parameter name="paymentInstrument"/>
+                <parameter name="statusId"/>
+                <parameter name="creationDate"/>
+                <parameter name="placedDate"/>
+                <parameter name="description"/>
+                <parameter name="otherUser" type="Map">
+                    <parameter name="companyPartyId"/>
+                    <parameter name="companyName"/>
+                    <parameter name="partyId"/>
+                    <parameter name="firstName"/>
+                    <parameter name="lastName"/>
+                    <parameter name="email"/>
+                </parameter>
+                <parameter name="grandTotal"/>
+                <parameter name="classificationId"/>
+                <parameter name="items" type="List">
+                    <parameter name="item" type="Map">
+                        <parameter name="itemSeqId"/>
+                        <parameter name="itemTypeId"/>
+                        <parameter name="itemTypeName"/>
+                        <parameter name="productId"/>
+                        <parameter name="description"/>
+                        <parameter name="quantity"/>
+                        <parameter name="price"/>
+                        <parameter name="glAccountId"/>
+                        <parameter name="assetId"/>
+                        <parameter name="assetName"/>
+                        <parameter name="location" type="Map">
+                            <parameter name="locationId"/>
+                            <parameter name="locationName"/>
+                        </parameter>
+                        <parameter name="rentalFromDate"/>
+                        <parameter name="rentalThruDate"/>
+                    </parameter>
+                </parameter>
+            </parameter>
         </out-parameters>
         <actions>
-            <script>Object finDocIn = new groovy.json.JsonSlurper().parseText(finDoc)</script>
-            <set field="finDoc" from="[:]"/>
             <service-call out-map="context"
                 name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner"/>
             <service-call name="growerp.100.FinDocServices100.convert#StatusId"  out-map="context"
-                in-map="[sales: finDocIn?.sales, docType: finDocIn.docType, statusId: finDocIn.statusId]"/>
-            <set field="finDocIn.statusId" from="convertedStatusId"/>
+                in-map="[sales: finDoc?.sales, docType: finDoc.docType, statusId: finDoc.statusId]"/>
+            <set field="finDoc.statusId" from="convertedStatusId"/>
             <!-- order -->
-            <if condition="finDocIn.docType == 'Order'">
+            <if condition="finDoc.docType == 'Order'">
                 <entity-find entity-name="mantle.order.OrderHeaderAndPart" list="check" limit="1">
-                    <econdition field-name="orderId" from="finDocIn.orderId"/>
+                    <econdition field-name="orderId" from="finDoc.orderId"/>
                     <econditions combine="or">
                         <econdition field-name="vendorPartyId" from="companyPartyId"/>
                         <econdition field-name="customerPartyId" from="companyPartyId"/>
                     </econditions>
                 </entity-find>
-                <if condition="!check"><return message="Update Order ${finDocIn.orderId} not found!"/></if>
+                <if condition="!check"><return message="Update Order ${finDoc.orderId} not found!"/></if>
                 <service-call name="growerp.100.FinDocServices100.update#Order"
-                    in-map="[order: finDocIn]"/>
-                <set field="inMap" from="[finDocId: finDocIn.orderId, 
-                                            docType: 'Order', sales: finDocIn.sales]"/>
+                    in-map="[order: finDoc]"/>
+                <set field="inMap" from="[finDocId: finDoc.orderId, 
+                                            docType: 'Order', sales: finDoc.sales]"/>
             <!-- invoice -->
-            <else-if condition="finDocIn.docType == 'Invoice'">
+            <else-if condition="finDoc.docType == 'Invoice'">
                 <entity-find entity-name="mantle.account.invoice.Invoice" list="check" limit="1">
-                    <econdition field-name="invoiceId" from="finDocIn.invoiceId"/>
+                    <econdition field-name="invoiceId" from="finDoc.invoiceId"/>
                     <econditions combine="or">
                         <econdition field-name="fromPartyId" from="companyPartyId"/>
                         <econdition field-name="toPartyId" from="companyPartyId"/>
                     </econditions>
                 </entity-find>
-                <if condition="!check"><return message="Update Invoice ${finDocIn.invoiceId} not found!"/></if>
+                <if condition="!check"><return message="Update Invoice ${finDoc.invoiceId} not found!"/></if>
                 <service-call name="growerp.100.FinDocServices100.update#Invoice"
-                    in-map="[invoice: finDocIn]"/>
-                <set field="inMap" from="[finDocId: finDocIn.invoiceId,
-                            docType: 'Invoice', sales: finDocIn.sales]"/>
+                    in-map="[invoice: finDoc]"/>
+                <set field="inMap" from="[finDocId: finDoc.invoiceId,
+                            docType: 'Invoice', sales: finDoc.sales]"/>
             </else-if>
             <!-- payment -->
-            <else-if condition="finDocIn.docType == 'Payment'">
+            <else-if condition="finDoc.docType == 'Payment'">
                 <entity-find entity-name="mantle.account.payment.Payment" list="check" limit="1">
-                    <econdition field-name="paymentId" from="finDocIn.paymentId"/>
+                    <econdition field-name="paymentId" from="finDoc.paymentId"/>
                     <econditions combine="or">
                         <econdition field-name="fromPartyId" from="companyPartyId"/>
                         <econdition field-name="toPartyId" from="companyPartyId"/>
                     </econditions>
                 </entity-find>
-                <if condition="!check"><return message="Update Payment $finDocIn.paymentId} not found!"/></if>
+                <if condition="!check"><return message="Update Payment $finDoc.paymentId} not found!"/></if>
                 <service-call name="growerp.100.FinDocServices100.update#Payment"
-                    in-map="[payment: finDocIn]"/>
-                <set field="inMap" from="[finDocId: finDocIn.paymentId,
-                        docType: 'Payment', sales: finDocIn.sales]"/>
+                    in-map="[payment: finDoc]"/>
+                <set field="inMap" from="[finDocId: finDoc.paymentId,
+                        docType: 'Payment', sales: finDoc.sales]"/>
                 </else-if>
-            <else-if condition="finDocIn.docType == 'Shipment'">
+            <else-if condition="finDoc.docType == 'Shipment'">
                 <entity-find entity-name="mantle.shipment.Shipment" list="check" limit="1">
-                    <econdition field-name="shipmentId" from="finDocIn.shipmentId"/>
+                    <econdition field-name="shipmentId" from="finDoc.shipmentId"/>
                     <econditions combine="or">
                         <econdition field-name="fromPartyId" from="companyPartyId"/>
                         <econdition field-name="toPartyId" from="companyPartyId"/>
                     </econditions>
                 </entity-find>
                 <if condition="!check"><return message="Shipment not found!"/></if>
-                <if condition="finDocIn.sales == true &amp;&amp; finDocIn.statusId == 'ShipPacked'">
+                <if condition="finDoc.sales == true &amp;&amp; finDoc.statusId == 'ShipPacked'">
                     <entity-find entity-name="mantle.shipment.ShipmentItemSource" list="shipmentItemSourceList">
-                        <econdition field-name="shipmentId" from="finDocIn.shipmentId"/>
+                        <econdition field-name="shipmentId" from="finDoc.shipmentId"/>
                     </entity-find>
                     <iterate list="shipmentItemSourceList" entry="itemSource">
                         <service-call name="mantle.shipment.ShipmentServices.pack#ShipmentItemSource"
@@ -1158,12 +1399,12 @@ along with this software (see the LICENSE.md file). If not, see
                     </iterate>
                 </if>
                 <service-call name="update#mantle.shipment.Shipment" out-map="context"
-                    in-map="[shipmentId: finDocIn.shipmentId, statusId: finDocIn.statusId]"/>
-                <set field="inMap" from="[finDocId: finDocIn.shipmentId,
-                                    docType: 'Shipment', sales: finDocIn.sales]"/>
+                    in-map="[shipmentId: finDoc.shipmentId, statusId: finDoc.statusId]"/>
+                <set field="inMap" from="[finDocId: finDoc.shipmentId,
+                                    docType: 'Shipment', sales: finDoc.sales]"/>
                 </else-if>
             <else>
-                <return error="true" message="doctype finDocIn.docType not supported!"/>
+                <return error="true" message="doctype finDoc.docType not supported!"/>
                 </else>
             </if>
             <service-call name="growerp.100.FinDocServices100.get#FinDoc"
@@ -1178,7 +1419,8 @@ along with this software (see the LICENSE.md file). If not, see
             <!--parameter name="nbrOfRequiredAssets" default-value="1" type="Integer"/--><!-- TODO implement -->
         </in-parameters>
         <out-parameters>
-            <parameter name="rentalFullDates" type="List"/>
+            <parameter name="rentalFullDates" type="List">
+                <parameter name="rentalFullDate"/></parameter>
         </out-parameters>
         <actions>
             <service-call out-map="context"
@@ -1662,16 +1904,29 @@ along with this software (see the LICENSE.md file). If not, see
         <in-parameters>
             <parameter name="finDoc" format="String"/></in-parameters>
         <out-parameters>
-            <parameter name="finDoc" type="Map"/></out-parameters>
+            <parameter name="finDoc" type="Map">
+                <parameter name="docType"/>
+                <parameter name="sales" type="Boolean"/>
+                <parameter name="orderId"/>
+                <parameter name="shipmentId"/>
+                <parameter name="invoiceId"/>
+                <parameter name="paymentId"/>
+                <parameter name="transactionId"/>
+                <parameter name="items" type="List">
+                    <parameter name="item" type="Map">
+                        <parameter name="productId"/>
+                        <parameter name="quantity"/>
+                    </parameter>
+                </parameter>
+            </parameter>
+        </out-parameters>
         <actions>
             <set field="nowDate" from="ec.user.nowTimestamp.toString().substring(0,10)"/>
-            <script>Object finDocIn = new groovy.json.JsonSlurper().parseText(finDoc)</script>
-            <set field="finDoc" from="[:]"/>
             <service-call out-map="context" in-map="[wantOwner: true]"
                 name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner"/>
             <entity-find list="shipmentItemDetailList"
                 entity-name="mantle.shipment.ShipmentItemDetail">
-                <econdition field-name="shipmentId" from="finDocIn.shipmentId"/>
+                <econdition field-name="shipmentId" from="finDoc.shipmentId"/>
                 <econdition field-name="ownerPartyId" ignore-if-empty="true"/>
                 <order-by field-name="productId"/>
             </entity-find>
@@ -1683,7 +1938,7 @@ along with this software (see the LICENSE.md file). If not, see
                 <set field="quantityRemaining"
                     from="sid.quantity - (sid.quantityAcceptedTotal ?: 0) - (sid.quantityRejectedTotal ?: 0)"/>
                 <set field="finDocItem"
-                    from="finDocIn.items.find {element -> element.productId == sid.productId}"/>
+                    from="finDoc.items.find {element -> element.productId == sid.productId}"/>
                 <if condition="!finDocItem.location.locationSeqId"><!-- if empty create new location -->
                     <service-call name="create#mantle.facility.FacilityLocation"
                         in-map="[description: finDocItem.location.locationName ?: '${sid.pseudoId}(${nowDate})',
@@ -1691,16 +1946,16 @@ along with this software (see the LICENSE.md file). If not, see
                     <set field="finDocItem.location.locationSeqId" from="locationSeqId"/>
                 </if>
                 <service-call name="mantle.shipment.ShipmentServices.receive#ShipmentProduct"
-                    in-map="[shipmentId:finDocIn.shipmentId, productId:sid.productId, statusId:'AstAvailable',
+                    in-map="[shipmentId:finDoc.shipmentId, productId:sid.productId, statusId:'AstAvailable',
                             quantityAccepted:quantityRemaining, facilityId: facilityId,
                             ownerPartyId: ownerPartyId,
                             locationSeqId: finDocItem.location.locationSeqId]"/>
             </iterate>
-            <service-call out-map="context" in-map="[shipmentId:finDocIn.shipmentId]"
+            <service-call out-map="context" in-map="[shipmentId:finDoc.shipmentId]"
                 name="mantle.shipment.ShipmentServices.deliver#Shipment"/>
             <service-call name="growerp.100.FinDocServices100.get#FinDoc"
-                in-map="[finDocId: finDocIn.shipmentId, docType: 'Shipment',
-                                sales: finDocIn.sales]"
+                in-map="[finDocId: finDoc.shipmentId, docType: 'Shipment',
+                                sales: finDoc.sales]"
                 out-map="context"/>
         </actions>
     </service>

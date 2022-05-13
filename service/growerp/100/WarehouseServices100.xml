@@ -25,13 +25,50 @@ along with this software (see the LICENSE.md file). If not, see
             <parameter name="search" default="null"/>
         </in-parameters>
         <out-parameters>
-            <parameter name="location" type="Map"/>
-            <parameter name="locations" type="List"/>
+            <parameter name="location" type="Map">
+                <parameter name="locationId"/>
+                <parameter name="locationName"/>
+                <parameter name="assets" type="List">
+                    <parameter name="asset" type="Map">
+                        <parameter name="assetId"/>
+                        <parameter name="statusId"/>
+                        <parameter name="assetName"/>
+                        <parameter name="product">
+                            <parameter name="productId"/>
+                            <parameter name="pseudoId"/>
+                            <parameter name="productName"/>
+                        </parameter>
+                        <parameter name="quantityOnHand"/>
+                        <parameter name="availableToPromise"/>
+                        <parameter name="acquireShipmentId"/>
+                    </parameter>
+                </parameter>
+            </parameter>
+            <parameter name="locations" type="List">
+                <parameter name="location" type="Map">
+                    <parameter name="locationId"/>
+                    <parameter name="locationName"/>
+                    <parameter name="assets" type="List">
+                        <parameter name="asset" type="Map">
+                            <parameter name="assetId"/>
+                            <parameter name="statusId"/>
+                            <parameter name="assetName"/>
+                            <parameter name="product">
+                                <parameter name="productId"/>
+                                <parameter name="pseudoId"/>
+                                <parameter name="productName"/>
+                            </parameter>
+                            <parameter name="quantityOnHand"/>
+                            <parameter name="availableToPromise"/>
+                            <parameter name="acquireShipmentId"/>
+                        </parameter>
+                    </parameter>
+                </parameter>
+            </parameter>
         </out-parameters>
         <actions>
             <if condition="search != null">
                 <set field="search" value="%${search}%"/></if>
-
             <service-call out-map="context" 
                 name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner"/>
             <entity-find offset="start" limit="limit" list="locationsRead"
@@ -96,14 +133,17 @@ along with this software (see the LICENSE.md file). If not, see
     <service verb="create" noun="Location" authenticate="false">
         <description> get a single, or all warehouse locations</description>
         <in-parameters>
-            <parameter name="location"/>
+            <parameter name="location" type="Map" required="true">
+                <parameter name="locationName"/>
+            </parameter>
         </in-parameters>
         <out-parameters>
-            <parameter name="location" type="Map"/>
+            <parameter name="location" type="Map">
+                <parameter name="locationId"/>
+                <parameter name="locationName"/>
+            </parameter>
         </out-parameters>
         <actions>
-            <script> // convert JSON data
-                Object locationIn = new groovy.json.JsonSlurper().parseText(location)</script>
             <service-call out-map="context" in-map="[wantOwner: true]"
                 name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner"/>
             <entity-find entity-name="mantle.facility.Facility" list="facilities">
@@ -114,7 +154,7 @@ along with this software (see the LICENSE.md file). If not, see
             </entity-find>
             <service-call name="create#mantle.facility.FacilityLocation"
                 in-map="[facilityId: facilities[0].facilityId,
-                    description: locationIn.locationName]" out-map="context"/>
+                    description: location.locationName]" out-map="context"/>
             <service-call name="growerp.100.WarehouseServices100.get#Location"
                     in-map="[facilityId: facilities[0].facilityId,
                              locationId: locationSeqId]" out-map="context"/>
@@ -124,14 +164,33 @@ along with this software (see the LICENSE.md file). If not, see
     <service verb="update" noun="Location" authenticate="false">
         <description> get a single, or all warehouse locations</description>
         <in-parameters>
-            <parameter name="location"/>
+            <parameter name="location" type="Map">
+                <parameter name="locationId"/>
+                <parameter name="locationName"/>
+            </parameter>
         </in-parameters>
         <out-parameters>
-            <parameter name="location" type="Map"/>
+            <parameter name="location" type="Map">
+                <parameter name="locationId"/>
+                <parameter name="locationName"/>
+                <parameter name="assets" type="List">
+                    <parameter name="asset" type="Map">
+                        <parameter name="assetId"/>
+                        <parameter name="statusId"/>
+                        <parameter name="assetName"/>
+                        <parameter name="product">
+                            <parameter name="productId"/>
+                            <parameter name="pseudoId"/>
+                            <parameter name="productName"/>
+                        </parameter>
+                        <parameter name="quantityOnHand"/>
+                        <parameter name="availableToPromise"/>
+                        <parameter name="acquireShipmentId"/>
+                    </parameter>
+                </parameter>
+            </parameter>
         </out-parameters>
         <actions>
-            <script> // convert JSON data
-                Object locationIn = new groovy.json.JsonSlurper().parseText(location)</script>
             <service-call out-map="context" in-map="[wantOwner: true]"
                 name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner"/>
             <entity-find entity-name="mantle.facility.Facility" list="facilities">
@@ -140,29 +199,47 @@ along with this software (see the LICENSE.md file). If not, see
             <entity-find entity-name="mantle.facility.FacilityLocation" list="locations"
                 for-update="true" limit="1">
                 <econdition field-name="facilityId" from="facilities[0].facilityId"/>
-                <econdition field-name="locationSeqId" from="locationIn.locationId"/>
+                <econdition field-name="locationSeqId" from="location.locationId"/>
             </entity-find>
-            <if condition="locations[0].description != locationIn.locationName">
-                <set field="locations[0].description" from="locationIn.locationName"/>
+            <if condition="locations[0].description != location.locationName">
+                <set field="locations[0].description" from="location.locationName"/>
                 <entity-update value-field="locations[0]"/>
             </if>
             <service-call name="growerp.100.WarehouseServices100.get#Location"
                     in-map="[facilityId: facilities[0].facilityId,
-                             locationId: locationIn.locationId]" out-map="context"/>
+                             locationId: location.locationId]" out-map="context"/>
         </actions>
     </service>
 
     <service verb="delete" noun="Location" authenticate="false">
         <description> get a single, or all warehouse locations</description>
         <in-parameters>
-            <parameter name="location"/>
+            <parameter name="location" type="Map" required="true">
+                <parameter name="locationId"/>
+            </parameter>
         </in-parameters>
         <out-parameters>
-            <parameter name="location" type="Map"/>
+            <parameter name="location" type="Map">
+                <parameter name="locationId"/>
+                <parameter name="locationName"/>
+                <parameter name="assets" type="List">
+                    <parameter name="asset" type="Map">
+                        <parameter name="assetId"/>
+                        <parameter name="statusId"/>
+                        <parameter name="assetName"/>
+                        <parameter name="product">
+                            <parameter name="productId"/>
+                            <parameter name="pseudoId"/>
+                            <parameter name="productName"/>
+                        </parameter>
+                        <parameter name="quantityOnHand"/>
+                        <parameter name="availableToPromise"/>
+                        <parameter name="acquireShipmentId"/>
+                    </parameter>
+                </parameter>
+            </parameter>
         </out-parameters>
         <actions>
-            <script> // convert JSON data
-                Object locationIn = new groovy.json.JsonSlurper().parseText(location)</script>
             <service-call out-map="context" in-map="[wantOwner: true]"
                 name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner"/>
             <entity-find entity-name="mantle.facility.Facility" list="facilities">
@@ -171,11 +248,11 @@ along with this software (see the LICENSE.md file). If not, see
             <entity-find entity-name="mantle.facility.FacilityLocation" list="locations"
                 for-update="true" limit="1">
                 <econdition field-name="facilityId" from="facilities[0].facilityId"/>
-                <econdition field-name="locationSeqId" from="locationIn.locationId"/>
+                <econdition field-name="locationSeqId" from="location.locationId"/>
             </entity-find>
             <service-call name="growerp.100.WarehouseServices100.get#Location"
                     in-map="[facilityId: facilities[0].facilityId,
-                             locationId: locationIn.locationId]" out-map="context"/>
+                             locationId: location.locationId]" out-map="context"/>
             <entity-delete value-field="locations[0]"/>
         </actions>
     </service>

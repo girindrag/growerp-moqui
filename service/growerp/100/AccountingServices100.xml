@@ -254,7 +254,8 @@ along with this software (see the LICENSE.md file). If not, see
             <parameter name="sales" type="Boolean" default="true"/>
         </in-parameters>
         <out-parameters>
-            <parameter name="itemTypes" type="List"/>
+            <parameter name="itemTypes" type="List">
+                <parameter name="itemType"/></parameter>
         </out-parameters>
         <actions>
             <set field="itemTypes" from="[]"/>
@@ -274,7 +275,8 @@ along with this software (see the LICENSE.md file). If not, see
     <service verb="get" noun="PaymentTypes">
         <description>payment types for payment</description>
         <out-parameters>
-            <parameter name="paymentTypes" type="List"/>
+            <parameter name="paymentTypes" type="List">
+                <parameter name="paymentType"/></parameter>
         </out-parameters>
         <actions>
             <set field="paymentTypes" from="[]"/>

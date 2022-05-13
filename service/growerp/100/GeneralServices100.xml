@@ -264,14 +264,101 @@ along with this software (see the LICENSE.md file). If not, see
         </actions>
     </service>
 
-    <service verb="check" noun="Ping" authenticate="anonymous-all">
-        <out-parameters><parameter name="ok"/></out-parameters>
+    <service verb="check" noun="Ping" authenticate="anonymous-all" displayName="General Ping" >
+        <description>This service will return &quot;ok&quot; when the system is running, no login required</description>
+        <out-parameters>
+            <parameter name="ok"/>
+        </out-parameters>
         <actions><set field="ok" value="ok"/></actions>
     </service>
 
-    <service verb="get" noun="Authenticate"><!-- will end successfully when apiKey ok -->
+    <service verb="get" noun="Authenticate">
+        <description>Get userlogin information when a proper Apikey is provided in the header</description>
         <out-parameters>
-            <parameter name="authenticate" type="Map"/>
+            <parameter name="authenticate" type="Map">
+                <parameter name="user" type="Map">
+                    <parameter name="partyId"/>
+                    <parameter name="email"/>
+                    <parameter name="firstName"/>
+                    <parameter name="lastName"/>
+                    <parameter name="loginDisabled" type="bool"/>
+                    <parameter name="loginName"/>
+                    <parameter name="userGroupId"/>
+                    <parameter name="groupDescription"/>
+                    <parameter name="language"/>
+                    <parameter name="companyPartyId"/>
+                    <parameter name="companyName"/>
+                    <parameter name="image"/>
+                    <parameter name="userId"/>
+                    <parameter name="locale"/>
+                    <parameter name="telephoneNr"/>
+                    <parameter name="companyAddress" type="Map">
+                        <parameter name="addressId"/>
+                        <parameter name="address1"/>
+                        <parameter name="address2"/>
+                        <parameter name="city"/>
+                        <parameter name="postalCode"/>
+                        <parameter name="province"/>
+                        <parameter name="country"/>
+                    </parameter>
+                    <parameter name="companyPaymentMethod" type="Map">
+                        <parameter name="ccPaymentMethodId"/>
+                        <parameter name="ccDescription"/>
+                    </parameter>
+                </parameter>    
+                <parameter name="company" type="Map">
+                    <parameter name="partyId"/>
+                    <parameter name="companyName"/>
+                    <parameter name="currencyId"/>
+                    <parameter name="currencyName"/>
+                    <parameter name="vatPerc">
+                        <description>Percentage used for VAT if applicable</description></parameter>
+                    <parameter name="salesPerc">
+                        <description>Percentage used for sales tax</description></parameter>
+                    <parameter name="address" type="Map">
+                        <parameter name="addressId"/>
+                        <parameter name="address1"/>
+                        <parameter name="address2"/>
+                        <parameter name="city"/>
+                        <parameter name="postalCode"/>
+                        <parameter name="province"/>
+                        <parameter name="provinceId"/>
+                        <parameter name="country"/>
+                        <parameter name="countryId"/>
+                    </parameter>
+                    <parameter name="image"/>
+                    <parameter name="paymentMethod">
+                        <parameter name="ccPaymentMethodId"/>
+                        <parameter name="ccDescription"/>
+                    </parameter>
+                    <parameter name="telephoneNr"/>
+                </parameter>
+                <parameter name="apiKey"/>
+                <parameter name="sessionToken"/>
+                <parameter name="statistics" type="Map">
+                    <parameter name="admins"/>
+                    <parameter name="employees"/>
+                    <parameter name="suppliers"/>
+                    <parameter name="leads"/>
+                    <parameter name="customers"/>
+                    <parameter name="openSlsOrders"/>
+                    <parameter name="openPurOrders"/>
+                    <parameter name="opportunities"/>
+                    <parameter name="myOpportunities"/>
+                    <parameter name="categories"/>
+                    <parameter name="products"/>
+                    <parameter name="assets"/>
+                    <parameter name="salesInvoicesNotPaidCount"/>
+                    <parameter name="salesInvoicesNotPaidAmount"/>
+                    <parameter name="purchInvoicesNotPaidCount"/>
+                    <parameter name="purchInvoicesNotPaidAmount"/>
+                    <parameter name="allTasks"/>
+                    <parameter name="notInvoicedHours"/>
+                    <parameter name="outgoingShipments"/>
+                    <parameter name="incomngShipments"/>
+                    <parameter name="whLocations"/>
+                </parameter>
+            </parameter>
         </out-parameters>
         <actions>
             <set field="authenticate" from="[:]"/>
@@ -293,7 +380,10 @@ along with this software (see the LICENSE.md file). If not, see
             Get currency list for registration.
         </description>
         <out-parameters>
-            <parameter name="currencyList" type="List"/>
+            <parameter name="currencyList" type="List">
+                <parameter name="description"/>
+                <parameter name="abbreviation"></parameter>
+            </parameter>
         </out-parameters>
         <actions>
             <entity-find entity-name="moqui.basic.Uom" list="allCurrencyList">
@@ -311,7 +401,10 @@ along with this software (see the LICENSE.md file). If not, see
             Get country list for registration.
         </description>
         <out-parameters>
-            <parameter name="countryList" type="List"/>
+            <parameter name="countryList" type="List">
+                <parameter name="geoId"/>
+                <parameter name="geoName"/>
+            </parameter>
         </out-parameters>
         <actions>
             <entity-find entity-name="moqui.basic.Geo" list="allCountryList">
@@ -319,13 +412,13 @@ along with this software (see the LICENSE.md file). If not, see
             </entity-find>
             <set field="countryList" from="[]"/>
             <iterate entry="country" list="allCountryList">
-                <script>currencyList.add("${country.geoId.} [${country.geoName}]")</script>
+                <script>countryList.add("${country.geoName} [${country.geoId}]")</script>
             </iterate>
         </actions>
     </service>
 
     <service verb="logout" noun="User" authenticate="anonymous-all">
-        <description>service to return an apikey if user/password ok, when not check for a reset password</description>
+        <description>logout of the system</description>
         <actions>
             <service-call out-map="context"
                 name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner"/>
@@ -339,16 +432,100 @@ along with this software (see the LICENSE.md file). If not, see
     </service>
 
     <service verb="login" noun="User" authenticate="anonymous-all">
-        <description>service to return an apikey if user/password ok, when not check for a reset password</description>
+        <description>service to return an apikey and user information if user/password ok, when not check for a reset password</description>
         <in-parameters>
-            <parameter name="username" required="true"/>
-            <parameter name="password" required="true"/>
-            <parameter name="classificationId" required="true"/>
+            <parameter name="username" required="true">
+                <description>any name, can also be the entered email address</description></parameter>
+            <parameter name="password" required="true">
+                <description>A password which contains at least a numeric and special character</description></parameter>
         </in-parameters>
         <out-parameters>
-            <parameter name="authenticate"/>
-            <parameter name="passwordChange" default="false"/>
-            <parameter name="classification"/>
+            <parameter name="authenticate" type="Map">
+                <parameter name="user" type="Map">
+                    <parameter name="partyId"/>
+                    <parameter name="email"/>
+                    <parameter name="firstName"/>
+                    <parameter name="lastName"/>
+                    <parameter name="loginDisabled" type="bool"/>
+                    <parameter name="loginName"/>
+                    <parameter name="userGroupId"/>
+                    <parameter name="groupDescription"/>
+                    <parameter name="language"/>
+                    <parameter name="companyPartyId"/>
+                    <parameter name="companyName"/>
+                    <parameter name="image"/>
+                    <parameter name="userId"/>
+                    <parameter name="locale"/>
+                    <parameter name="telephoneNr"/>
+                    <parameter name="companyAddress" type="Map">
+                        <parameter name="addressId"/>
+                        <parameter name="address1"/>
+                        <parameter name="address2"/>
+                        <parameter name="city"/>
+                        <parameter name="postalCode"/>
+                        <parameter name="province"/>
+                        <parameter name="country"/>
+                    </parameter>
+                    <parameter name="companyPaymentMethod" type="Map">
+                        <parameter name="ccPaymentMethodId"/>
+                        <parameter name="ccDescription"/>
+                    </parameter>
+                </parameter>    
+                <parameter name="company" type="Map">
+                    <parameter name="partyId"/>
+                    <parameter name="companyName"/>
+                    <parameter name="currencyId"/>
+                    <parameter name="currencyName"/>
+                    <parameter name="vatPerc">
+                        <description>Percentage used for VAT if applicable</description></parameter>
+                    <parameter name="salesPerc">
+                        <description>Percentage used for sales tax</description></parameter>
+                    <parameter name="address" type="Map">
+                        <parameter name="addressId"/>
+                        <parameter name="address1"/>
+                        <parameter name="address2"/>
+                        <parameter name="city"/>
+                        <parameter name="postalCode"/>
+                        <parameter name="province"/>
+                        <parameter name="provinceId"/>
+                        <parameter name="country"/>
+                        <parameter name="countryId"/>
+                    </parameter>
+                    <parameter name="image"/>
+                    <parameter name="paymentMethod">
+                        <parameter name="ccPaymentMethodId"/>
+                        <parameter name="ccDescription"/>
+                    </parameter>
+                    <parameter name="telephoneNr"/>
+                </parameter>
+                <parameter name="apiKey"/>
+                <parameter name="sessionToken"/>
+                <parameter name="statistics" type="Map">
+                    <parameter name="admins"/>
+                    <parameter name="employees"/>
+                    <parameter name="suppliers"/>
+                    <parameter name="leads"/>
+                    <parameter name="customers"/>
+                    <parameter name="openSlsOrders"/>
+                    <parameter name="openPurOrders"/>
+                    <parameter name="opportunities"/>
+                    <parameter name="myOpportunities"/>
+                    <parameter name="categories"/>
+                    <parameter name="products"/>
+                    <parameter name="assets"/>
+                    <parameter name="salesInvoicesNotPaidCount"/>
+                    <parameter name="salesInvoicesNotPaidAmount"/>
+                    <parameter name="purchInvoicesNotPaidCount"/>
+                    <parameter name="purchInvoicesNotPaidAmount"/>
+                    <parameter name="allTasks"/>
+                    <parameter name="notInvoicedHours"/>
+                    <parameter name="outgoingShipments"/>
+                    <parameter name="incomngShipments"/>
+                    <parameter name="whLocations"/>
+                </parameter>
+            </parameter>
+            <parameter name="passwordChange" default="false">
+                <description>'true' when a password chanmge was requested</description></parameter>
         </out-parameters>
         <actions>
             <entity-find-one entity-name="moqui.security.UserAccount" 
@@ -394,6 +571,7 @@ along with this software (see the LICENSE.md file). If not, see
     </service>
 
     <service verb="reset" noun="Password" authenticate="anonymous-all">
+        <description>will send a new password by email and will initiate a change password at login time</description>
         <in-parameters>
             <parameter name="username"/>
         </in-parameters>
@@ -403,11 +581,12 @@ along with this software (see the LICENSE.md file). If not, see
         </actions>
     </service>
 
-     <service verb="update" noun="Password"><description>Change the password of an account and re-enable also used with reset password logged off</description>
+     <service verb="update" noun="Password">
+         <description>Change the password of an account and re-enable also used with reset password logged off</description>
         <in-parameters>
             <parameter name="username" required="true"/>
             <parameter name="newPassword" required="true"/>
-            <parameter name="oldPassword" default-value="dummy"/>
+            <parameter name="oldPassword"/>
         </in-parameters>
         <actions>
             <if condition="ec.user.userAccount"><!-- only possible with a loggedin user -->

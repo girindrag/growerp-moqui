@@ -27,8 +27,55 @@ along with this software (see the LICENSE.md file). If not, see
             <parameter name="isPrivate" default="null"/>
         </in-parameters>
         <out-parameters>
-            <parameter name="chatRooms" type="List"/>
-            <parameter name="chatRoom" type="Map"/>
+            <parameter name="chatRooms" type="List">
+                <parameter name="chatRoom" type="Map">
+                    <parameter name="chatRoomId"/>
+                    <parameter name="chatRoomName"/>
+                    <parameter name="hasRead" type="Boolean"/>
+                    <parameter name="isPrivate" type="Boolean"/>
+                    <parameter name="members" type="List">
+                        <parameter name="member" type="Map"><!-- user -->
+                            <parameter name="partyId"/>
+                            <parameter name="email"/>
+                            <parameter name="firstName"/>
+                            <parameter name="lastName"/>
+                            <parameter name="loginDisabled" type="bool"/>
+                            <parameter name="loginName"/>
+                            <parameter name="userGroupId"/>
+                            <parameter name="groupDescription"/>
+                            <parameter name="language"/>
+                            <parameter name="companyPartyId"/>
+                            <parameter name="companyName"/>
+                            <parameter name="image"/>
+                            <parameter name="userId"/>
+                            <parameter name="locale"/>
+                            <parameter name="telephoneNr"/>
+                            <parameter name="hasRead" type="Boolean"/>
+                            <parameter name="isActive" type="Boolean"/>
+                        </parameter>
+                    </parameter>
+                </parameter>
+            </parameter>
+            <parameter name="chatRoom" type="Map">
+                <parameter name="chatRoomId"/>
+                <parameter name="chatRoomName"/>
+                <parameter name="hasRead" type="Boolean"/>
+                <parameter name="isPrivate" type="Boolean"/>
+                <parameter name="members" type="List">
+                    <parameter name="member" type="Map"><!-- user -->
+                        <parameter name="partyId"/>
+                        <parameter name="firstName"/>
+                        <parameter name="lastName"/>
+                        <parameter name="userId"/>
+                        <parameter name="companyPaymentMethod" type="Map">
+                            <parameter name="ccPaymentMethodId"/>
+                            <parameter name="ccDescription"/>
+                        </parameter>
+                        <parameter name="hasRead" type="Boolean"/>
+                        <parameter name="isActive" type="Boolean"/>
+                    </parameter>
+                </parameter>
+            </parameter>
         </out-parameters>
         <actions>
             <service-call out-map="context"
@@ -88,7 +135,9 @@ along with this software (see the LICENSE.md file). If not, see
                                 </if>
                                 <else>
                                     <set field="user" from="[partyId: chatRoomMember.partyId,
-                                                            userId: chatRoomMember.userId]"/>
+                                                            userId: chatRoomMember.userId,
+                                                            firstName: chatRoomMember.firstName,
+                                                            lastName: chatRoomMember.lastName]"/>
                                     <set field="hasRead" from="chatRoomMember.hasRead == 'Y' ? true : false"/>
                                 </else>
                             </if>
@@ -117,23 +166,74 @@ along with this software (see the LICENSE.md file). If not, see
 
     <service verb="create" noun="ChatRoom">
         <in-parameters>
-            <parameter name="chatRoom"/>
+            <parameter name="chatRoom" type="Map" required="true">
+                <parameter name="chatRoomId"/>
+                <parameter name="chatRoomName"/>
+                <parameter name="hasRead" type="Boolean"/>
+                <parameter name="isPrivate" type="Boolean"/>
+                <parameter name="members" type="List">
+                    <parameter name="member" type="Map">
+                        <parameter name="member" type="Map">
+                            <parameter name="userId"/>
+                        </parameter> 
+                        <parameter name="hasRead" type="Boolean"/>
+                        <parameter name="isActive" type="Boolean"/>
+                    </parameter>
+                </parameter>
+            </parameter>
         </in-parameters>
         <out-parameters>
-            <parameter name="chatRoom"/>
+            <parameter name="chatRoom" type="Map">
+                <parameter name="chatRoomId"/>
+                <parameter name="chatRoomName"/>
+                <parameter name="hasRead" type="Boolean"/>
+                <parameter name="isPrivate" type="Boolean"/>
+                <parameter name="members" type="List">
+                    <parameter name="member" type="Map"><!-- user -->
+                        <parameter name="partyId"/>
+                        <parameter name="email"/>
+                        <parameter name="firstName"/>
+                        <parameter name="lastName"/>
+                        <parameter name="loginDisabled" type="bool"/>
+                        <parameter name="loginName"/>
+                        <parameter name="userGroupId"/>
+                        <parameter name="groupDescription"/>
+                        <parameter name="language"/>
+                        <parameter name="companyPartyId"/>
+                        <parameter name="companyName"/>
+                        <parameter name="image"/>
+                        <parameter name="userId"/>
+                        <parameter name="locale"/>
+                        <parameter name="telephoneNr"/>
+                        <parameter name="companyAddress" type="Map">
+                            <parameter name="addressId"/>
+                            <parameter name="address1"/>
+                            <parameter name="address2"/>
+                            <parameter name="city"/>
+                            <parameter name="postalCode"/>
+                            <parameter name="province"/>
+                            <parameter name="country"/>
+                        </parameter>
+                        <parameter name="companyPaymentMethod" type="Map">
+                            <parameter name="ccPaymentMethodId"/>
+                            <parameter name="ccDescription"/>
+                        </parameter>
+                        <parameter name="hasRead" type="Boolean"/>
+                        <parameter name="isActive" type="Boolean"/>
+                    </parameter>
+                </parameter>
+            </parameter>
         </out-parameters>
         <actions>
-            <script> // convert JSON data
-                Object chatRoomIn = new groovy.json.JsonSlurper().parseText(chatRoom)</script>
             <service-call out-map="context" in-map="[wantOwner: true]"
                 name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner"/>
             <!-- add chat room -->
             <service-call name="create#growerp.general.ChatRoom" out-map="context"
-                 in-map="[chatRoomName: chatRoomIn.chatRoomName,
+                 in-map="[chatRoomName: chatRoom.chatRoomName,
                             ownerPartyId: ownerPartyId,
-                    isPrivate: chatRoomIn.isPrivate == true ? 'Y' : 'N']"/>
+                    isPrivate: chatRoom.isPrivate == true ? 'Y' : 'N']"/>
             <!-- add 'other' members -->
-            <iterate list="chatRoomIn.members" entry="memberIn">
+            <iterate list="chatRoom.members" entry="memberIn">
                 <if condition="memberIn.member.userId != ec.user.userAccount.userId">
                     <service-call name="create#growerp.general.ChatRoomMember"
                         in-map="[chatRoomId: chatRoomId,
@@ -156,41 +256,90 @@ along with this software (see the LICENSE.md file). If not, see
 
     <service verb="update" noun="ChatRoom">
         <in-parameters>
-            <parameter name="chatRoom"/>
+            <parameter name="chatRoom" type="Map" required="true">
+                <parameter name="chatRoomId"/>
+                <parameter name="chatRoomName"/>
+                <parameter name="hasRead" type="Boolean"/>
+                <parameter name="isPrivate" type="Boolean"/>
+                <parameter name="members" type="List">
+                    <parameter name="member" type="Map"><!-- user -->
+                        <parameter name="partyId"/>
+                        <parameter name="hasRead" type="Boolean"/>
+                        <parameter name="isActive" type="Boolean"/>
+                    </parameter>
+                </parameter>
+            </parameter>
         </in-parameters>
         <out-parameters>
-            <parameter name="chatRoom"/>
+            <parameter name="chatRoom" type="Map">
+                <parameter name="chatRoomId"/>
+                <parameter name="chatRoomName"/>
+                <parameter name="hasRead" type="Boolean"/>
+                <parameter name="isPrivate" type="Boolean"/>
+                <parameter name="members" type="List">
+                    <parameter name="member" type="Map"><!-- user -->
+                        <parameter name="partyId"/>
+                        <parameter name="email"/>
+                        <parameter name="firstName"/>
+                        <parameter name="lastName"/>
+                        <parameter name="loginDisabled" type="bool"/>
+                        <parameter name="loginName"/>
+                        <parameter name="userGroupId"/>
+                        <parameter name="groupDescription"/>
+                        <parameter name="language"/>
+                        <parameter name="companyPartyId"/>
+                        <parameter name="companyName"/>
+                        <parameter name="image"/>
+                        <parameter name="userId"/>
+                        <parameter name="locale"/>
+                        <parameter name="telephoneNr"/>
+                        <parameter name="companyAddress" type="Map">
+                            <parameter name="addressId"/>
+                            <parameter name="address1"/>
+                            <parameter name="address2"/>
+                            <parameter name="city"/>
+                            <parameter name="postalCode"/>
+                            <parameter name="province"/>
+                            <parameter name="country"/>
+                        </parameter>
+                        <parameter name="companyPaymentMethod" type="Map">
+                            <parameter name="ccPaymentMethodId"/>
+                            <parameter name="ccDescription"/>
+                        </parameter>
+                        <parameter name="hasRead" type="Boolean"/>
+                        <parameter name="isActive" type="Boolean"/>
+                    </parameter>
+                </parameter>
+            </parameter>
         </out-parameters>
         <actions>
-            <script> // convert JSON data
-                Object chatRoomIn = new groovy.json.JsonSlurper().parseText(chatRoom)</script>
             <service-call out-map="context"
                  name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner"/>
             <service-call name="growerp.100.ChatServices100.get#ChatRoom"
-                 in-map="[chatRoomId: chatRoomIn.chatRoomId]" out-map="context"/>
-            <set field="oldChatRoom" from="chatRoom"/>
-            <if condition="oldChatRoom.chatRoomName != chatRoomIn.chatRoomName || 
-                                    oldChatRoom.isPrivate != chatRoomIn.isPrivate">
+                 in-map="[chatRoomId: chatRoom.chatRoomId]" out-map="old"/>
+            <set field="oldChatRoom" from="old.chatRoom"/>
+            <if condition="oldChatRoom.chatRoomName != chatRoom.chatRoomName || 
+                                    oldChatRoom.isPrivate != chatRoom.isPrivate">
                 <service-call name="update#growerp.general.ChatRoom"
-                    in-map="[chatRoomId: chatRoomIn.chatRoomId,
-                            chatRoomName: chatRoomIn.chatRoomName,
-                            isPrivate: chatRoomIn.isPrivate == true ? 'Y' : 'N']"/>
+                    in-map="[chatRoomId: chatRoom.chatRoomId,
+                            chatRoomName: chatRoom.chatRoomName,
+                            isPrivate: chatRoom.isPrivate == true ? 'Y' : 'N']"/>
             </if>
             <!-- replace all members by chatRoom in members -->
             <!-- delete existing -->
             <entity-delete-by-condition entity-name="growerp.general.ChatRoomMember">
-                <econdition field-name="chatRoomId" from="chatRoomIn.chatRoomId"/>
+                <econdition field-name="chatRoomId" from="chatRoom.chatRoomId"/>
             </entity-delete-by-condition>
             <!-- add new -->
-            <iterate list="chatRoomIn.members" entry="member">
+            <iterate list="chatRoom.members" entry="member">
                 <service-call name="create#growerp.general.ChatRoomMember"
-                    in-map="[chatRoomId: chatRoomIn.chatRoomId,
+                    in-map="[chatRoomId: chatRoom.chatRoomId,
                             isActive: member.isActive == true ? 'Y' : 'N',
                             hasRead: member.hasRead == true ? 'Y' : 'N',
                             userId: member.member.userId]"/>
             </iterate>
             <service-call name="growerp.100.ChatServices100.get#ChatRoom"
-                in-map="[chatRoomId: chatRoomIn.chatRoomId]" out-map="context"/>
+                in-map="[chatRoomId: chatRoom.chatRoomId]" out-map="context"/>
         </actions>
     </service>
 
@@ -199,9 +348,65 @@ along with this software (see the LICENSE.md file). If not, see
             <parameter name="chatRoomId" required="true"/>
         </in-parameters>
         <out-parameters>
-            <parameter name="chatRoomId"/>
+            <parameter name="chatRoom" type="Map">
+                <parameter name="chatRoomId"/>
+                <parameter name="chatRoomName"/>
+                <parameter name="hasRead" type="Boolean"/>
+                <parameter name="isPrivate" type="Boolean"/>
+                <parameter name="members" type="List">
+                    <parameter name="member" type="Map"><!-- user -->
+                        <parameter name="partyId"/>
+                        <parameter name="email"/>
+                        <parameter name="firstName"/>
+                        <parameter name="lastName"/>
+                        <parameter name="loginDisabled" type="bool"/>
+                        <parameter name="loginName"/>
+                        <parameter name="userGroupId"/>
+                        <parameter name="groupDescription"/>
+                        <parameter name="language"/>
+                        <parameter name="companyPartyId"/>
+                        <parameter name="companyName"/>
+                        <parameter name="image"/>
+                        <parameter name="userId"/>
+                        <parameter name="locale"/>
+                        <parameter name="telephoneNr"/>
+                        <parameter name="companyAddress" type="Map">
+                            <parameter name="addressId"/>
+                            <parameter name="address1"/>
+                            <parameter name="address2"/>
+                            <parameter name="city"/>
+                            <parameter name="postalCode"/>
+                            <parameter name="province"/>
+                            <parameter name="country"/>
+                        </parameter>
+                        <parameter name="companyPaymentMethod" type="Map">
+                            <parameter name="ccPaymentMethodId"/>
+                            <parameter name="ccDescription"/>
+                        </parameter>
+                        <parameter name="hasRead" type="Boolean"/>
+                        <parameter name="isActive" type="Boolean"/>
+                    </parameter>
+                </parameter>
+            </parameter>
         </out-parameters>
         <actions>
+            <service-call out-map="context"
+                name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner"/>
+            <entity-find-one entity-name="growerp.general.ChatRoom"
+                    value-field="room" for-update="true">
+                <field-map field-name="chatRoomId: chatRoomId"/>
+                <field-map field-name="ownerId" from="ownerId"/>
+            </entity-find-one>
+            <if condition="!room">
+                <then>
+                    <return error="true" message="Room $roomId not found"/></then>
+                <else>
+                    <set field="room.active" value="false"/>
+                    <entity-update value-field="room"/>
+                </else>
+            </if>
+            <service-call name="growerp.100.ChatServices100.get#ChatRoom"
+                in-map="[chatRoomId: chatRoom.chatRoomId]" out-map="context"/>
         </actions>
     </service>
 
@@ -214,7 +419,14 @@ along with this software (see the LICENSE.md file). If not, see
             <parameter name="search" default="null"/>
         </in-parameters>
         <out-parameters>
-            <parameter name="chatMessages" type="List"/>
+            <parameter name="chatMessages" type="List">
+                <parameter name="chatMessage" type="Map">
+                    <parameter name="chatMessageId"/>
+                    <parameter name="fromUserId"/>
+                    <parameter name="content"/>
+                    <parameter name="creationDate"/>
+                </parameter>
+            </parameter>
         </out-parameters>
         <actions>
             <service-call out-map="context"
@@ -249,7 +461,12 @@ along with this software (see the LICENSE.md file). If not, see
             <parameter name="message" required="true"/>
         </in-parameters>
         <out-parameters>
-            <parameter name="chatMessage"/>
+            <parameter name="chatMessage" type="Map">
+                <parameter name="chatMessageId"/>
+                <parameter name="fromUserId"/>
+                <parameter name="content"/>
+                <parameter name="creationDate"/>
+            </parameter>
         </out-parameters>
         <actions>
             <service-call name="create#growerp.general.ChatMessage"
