@@ -4,12 +4,12 @@ This is the backend to the flutter frontend at: https://github.com/growerp/growe
 
 - to run locally:
 ```
-git clone https://github.com/growerp/moqui-framework.git moqui && cd moqui
+git clone -b growerp https://github.com/growerp/moqui-framework.git moqui && cd moqui
 git clone https://github.com/growerp/moqui-runtime runtime
 git clone https://github.com/growerp/growerp-moqui.git runtime/component/growerp
 git clone https://github.com/growerp/PopCommerce.git runtime/component/PopCommerce
-git clone https://github.com/growerp/mantle-udm.git -b growerp runtime/component/mantle-udm
-git clone https://github.com/growerp/mantle-usl.git runtime/component/mantle-usl
+git clone  -b growerp https://github.com/growerp/mantle-udm.git -b growerp runtime/component/mantle-udm
+git clone  -b growerp https://github.com/growerp/mantle-usl.git runtime/component/mantle-usl
 git clone https://github.com/growerp/SimpleScreens.git runtime/component/SimpleScreens
 git clone https://github.com/growerp/moqui-fop.git runtime/component/moqui-fop
 
