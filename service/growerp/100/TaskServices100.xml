@@ -429,7 +429,7 @@ along with this software (see the LICENSE.md file). If not, see
     <service verb="get" noun="TimeEntry">
         <description>get hours worked just used internally, no owner check here</description>
         <in-parameters>
-            <parameter name="timeEntryId" type="Map" required="true"/>
+            <parameter name="timeEntryId" required="true"/>
         </in-parameters>
         <out-parameters>
             <parameter name="timeEntry" type="Map">
@@ -480,18 +480,18 @@ along with this software (see the LICENSE.md file). If not, see
                     name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner"/>
             <if condition="singleCompany"><set field="ownerCompany" from="singleCompany"/></if>
             <entity-find entity-name="mantle.work.effort.WorkEffort" list="workEfforts" limit="1">
-                <econdition field-name="workEffortId" from="timeEntryIn.taskId"/>
+                <econdition field-name="workEffortId" from="timeEntry.taskId"/>
                 <econdition field-name="ownerPartyId" ignore-if-empty="true" />
             </entity-find>
             <set field="workEffort" from="workEfforts[0]"/>
-            <if condition="!workEffort"><return error="true" message="Task not found: ${timeEntryIn.taskId}"/></if>
+            <if condition="!workEffort"><return error="true" message="Task not found: ${timeEntry.taskId}"/></if>
             <service-call name="create#mantle.work.time.TimeEntry" in-map="[
-                timeEntryId: timeEntryIn.timeEntryId,
-                workEffortId: timeEntryIn.taskId,
+                timeEntryId: timeEntry.timeEntryId,
+                workEffortId: timeEntry.taskId,
                 partyId: ec.user.userAccount.partyId,
-                hours: timeEntryIn.hours,
-                comments: timeEntryIn.comments,
-                fromDate: timeEntryIn.date ? timeEntryIn.date?.substring(0,18) : ec.user.nowTimestamp
+                hours: timeEntry.hours,
+                comments: timeEntry.comments,
+                fromDate: timeEntry.date ? timeEntry.date?.substring(0,18) : ec.user.nowTimestamp
             ]" out-map="context"/>
             <!-- set to inprogress -->
             <if condition="workEffort.statusId == 'WeInPlanning'">
@@ -554,18 +554,18 @@ along with this software (see the LICENSE.md file). If not, see
                     name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner"/>
             <if condition="singleCompany"><set field="ownerCompany" from="singleCompany"/></if>
             <entity-find entity-name="mantle.work.effort.WorkEffort" list="workEfforts" limit="1">
-                <econdition field-name="workEffortId" from="timeEntryIn.taskId"/>
+                <econdition field-name="workEffortId" from="timeEntry.taskId"/>
                 <econdition field-name="ownerPartyId" ignore-if-empty="true"/>
             </entity-find>
-            <if condition="!workEfforts"><return error="true" message="Task not found: ${timeEntryIn.taskId}"/></if>
+            <if condition="!workEfforts"><return error="true" message="Task not found: ${timeEntry.taskId}"/></if>
             <entity-find-one entity-name="mantle.work.time.TimeEntry" value-field="teOld">
-                <field-map field-name="timeEntryId" from="timeEntryIn.timeEntryId"/>
+                <field-map field-name="timeEntryId" from="timeEntry.timeEntryId"/>
             </entity-find-one>
             <if condition="teOld &amp;&amp; teOld.invoiceId">
                 <return error="true" message="Cannot delete time entry: already invoiced"/>
             </if>
             <service-call name="growerp.100.TaskServices100.get#TimeEntry"
-                in-map="[timeEntryId: timeEntryIn.timeEntryId]" out-map="context"/>
+                in-map="[timeEntryId: timeEntry.timeEntryId]" out-map="context"/>
             <entity-delete value-field="teOld"/>
         </actions>
     </service>
