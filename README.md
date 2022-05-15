@@ -13,6 +13,7 @@ git clone  -b growerp https://github.com/growerp/mantle-usl.git runtime/componen
 git clone https://github.com/growerp/SimpleScreens.git runtime/component/SimpleScreens
 git clone https://github.com/growerp/moqui-fop.git runtime/component/moqui-fop
 
+./gradlew downloadel
 ./gradlew build
 java -jar moqui.war load types=seed,seed-initial,install
 java -jar moqui.war
