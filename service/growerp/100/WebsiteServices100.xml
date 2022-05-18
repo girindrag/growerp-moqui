@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+This software is in the public domain under CC0 1.0 Universal plus a 
+Grant of Patent License.
+
+To the extent possible under law, the author(s) have dedicated all
+copyright and related and neighboring rights to this software to the
+public domain worldwide. This software is distributed without any
+warranty.
+
+You should have received a copy of the CC0 Public Domaicrn Dedication
+along with this software (see the LICENSE.md file). If not, see
+<http://creativecommons.org/publicdomain/zero/1.0/>.
+-->
+<services xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/service-definition-2.1.xsd">
+
+    <service verb="get" noun="Website">
+        <description>get the website information</description>
+        <out-parameters>
+            <parameter name="website" type="Map">
+                <parameter name="id"/>
+                <parameter name="hostName"/>
+                <parameter name="title"/>
+            </parameter>
+        </out-parameters>
+        <actions>
+            <service-call out-map="context" 
+                name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner"/>
+            <entity-find entity-name="mantle.product.store.ProductStore" list="stores" limit="1">
+                <econdition field-name="organizationPartyId" from="companyPartyId"/>
+            </entity-find>
+            <if condition="stores">
+                <set field="hostName" from="ec.web.getHostName(false)"/>
+                <if condition="hostName == '10.0.2.2'">
+                    <set field="hostName" value="http://localhost:8080"/></if>
+                <set field="website" from="[
+                        id: stores[0].productStoreId,
+                        hostName: hostName,
+                        title: stores[0].storeName
+                        ]"/>
+                <else>
+                    <log message="Product store not found for company $companyPartyId"/>
+                    <set field="website" from="[:]"/>
+                </else>
+            </if>
+            <log message="=====$website"/>
+        </actions>
+    </service>
+
+    <service verb="update" noun="Website">
+        <description>update the website information</description>
+        <in-parameters>
+            <parameter name="website" type="Map">
+                <parameter name="id"/>
+                <parameter name="title"/>
+            </parameter>
+        </in-parameters>
+        <out-parameters>
+            <parameter name="website" type="Map">
+                <parameter name="id"/>
+                <parameter name="hostName"/>
+                <parameter name="title"/>
+            </parameter>
+        </out-parameters>
+        <actions>
+            <log message="=input=title: ${website.title} id: ${website.id}"/>
+            <service-call out-map="context" 
+                name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner"/>
+            <entity-find entity-name="mantle.product.store.ProductStore"
+                    list="stores" limit="1" for-update="true">
+                <econdition field-name="organizationPartyId" from="companyPartyId"/>
+                <econdition field-name="productStoreId" from="website.id"/>
+            </entity-find>
+            <if condition="stores">
+                <set field="stores[0].storeName" from="website.title"/>
+                <entity-update value-field="stores[0]"/>
+                <service-call name="growerp.100.WebsiteServices100.get#Website"
+                    out-map="context"/>
+                <else>
+                    <log  message="Could not find company: $companyPartyId store: ${website.id}"/>
+                    <set field="website" from="[:]"/>
+                </else>
+            </if>
+        </actions>
+    </service>
+
+ </services>
