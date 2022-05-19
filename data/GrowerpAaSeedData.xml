@@ -133,4 +133,49 @@ along with this software (see the LICENSE.md file). If not, see
     <moqui.basic.Enumeration description="Restaurant Table" enumId="AsClsTable" enumTypeId="AssetClass"/>
     <moqui.basic.Enumeration description="Restaurant Table Area" enumId="AsClsTableArea" enumTypeId="AssetClass"/>
 
+
+    <!-- default setup for wiki productstore, categories etc -->
+    <moqui.resource.wiki.WikiSpace wikiSpaceId="DEFAULT" description="Default Content" restrictView="N" allowAnyHtml="Y"
+        rootPageLocation="dbresource://default/content.html" decoratorScreenLocation=""
+        publicPageUrl="/popc/content/${pagePath}?ver=${versionName}" publicAttachmentUrl="/popc/content/attachment/${wikiPageId}/${filename}"/>
+
+    <mantle.facility.Facility facilityId="DEFAULT_WH" facilityTypeEnumId="FcTpWarehouse" assetAllowIssueOverQoh="Y"
+        ownerPartyId="_NA_" facilityName="Default Warehouse">
+    <locations locationTypeEnumId="FltPick" locationSeqId="0001" sequenceNum="1" areaId="01" aisleId="01" sectionId="01" levelId="01" positionId=""/>
+    <locations locationTypeEnumId="FltPick" locationSeqId="0002" sequenceNum="2" areaId="01" aisleId="01" sectionId="02" levelId="01" positionId=""/>
+    </mantle.facility.Facility>
+
+    <mantle.product.store.ProductStore productStoreId="DEFAULT" storeName="Default Store"
+            organizationPartyId="_NA_" inventoryFacilityId="DEFAULT_WH" reservationOrderEnumId="AsResOrdFifoRec"
+            wikiSpaceId="DEFAULT" defaultLocale="en_US" defaultCurrencyUomId="USD" taxGatewayConfigId="LOCAL" requireInventory="Y">
+        <shipOptions carrierPartyId="_NA_" shipmentMethodEnumId="ShMthGround" sequenceNum="1"/>
+        <shipOptions carrierPartyId="_NA_" shipmentMethodEnumId="ShMthNextDay" sequenceNum="2"/>
+        <shipOptions carrierPartyId="_NA_" shipmentMethodEnumId="ShMthPickUp" sequenceNum="3"/>
+        <shippingGateways carrierPartyId="_NA_" shippingGatewayConfigId="NA_LOCAL"/>
+        <paymentGateways paymentInstrumentEnumId="PiCreditCard" paymentGatewayConfigId="TEST_APPROVE"/>
+    </mantle.product.store.ProductStore>
+
+    <!-- categories -->
+    <mantle.product.category.ProductCategory productCategoryId="PopcAllProducts" ownerPartyId="_NA_"
+        productCategoryTypeEnumId="PctCatalog" categoryName="All Products Category"/>
+    <mantle.product.category.ProductCategory productCategoryId="PopcDeals" ownerPartyId="_NA_"
+        productCategoryTypeEnumId="PctCatalog" categoryName="Deals"/>
+    <mantle.product.category.ProductCategory productCategoryId="PopcNew" ownerPartyId="_NA_"
+        productCategoryTypeEnumId="PctCatalog" categoryName="New"/>
+    <mantle.product.category.ProductCategory productCategoryId="PopcFeatured" ownerPartyId="_NA_"
+        productCategoryTypeEnumId="PctCatalog" categoryName="Featured Best Sellers"/>
+
+    <!-- product data -->
+    <mantle.product.feature.ProductFeature productFeatureId="SizeSmall" productFeatureTypeEnumId="PftSize" description="Small" abbrev="SM"/>
+    <mantle.product.feature.ProductFeature productFeatureId="SizeMedium" productFeatureTypeEnumId="PftSize" description="Medium" abbrev="MD"/>
+    <mantle.product.feature.ProductFeature productFeatureId="SizeLarge" productFeatureTypeEnumId="PftSize" description="Large" abbrev="LG"/>
+    <mantle.product.feature.ProductFeature productFeatureId="SizeXL" productFeatureTypeEnumId="PftSize" description="Extra Large" abbrev="XL"/>
+
+    <mantle.product.feature.ProductFeature productFeatureId="ColorBlue" productFeatureTypeEnumId="PftColor" description="Blue" abbrev="BU"/>
+    <mantle.product.feature.ProductFeature productFeatureId="ColorBlack" productFeatureTypeEnumId="PftColor" description="Black" abbrev="BL"/>
+    <mantle.product.feature.ProductFeature productFeatureId="ColorRed" productFeatureTypeEnumId="PftColor" description="Red" abbrev="RD"/>
+    <mantle.product.feature.ProductFeature productFeatureId="ColorGreen" productFeatureTypeEnumId="PftColor" description="Green" abbrev="GR"/>
+    <mantle.product.feature.ProductFeature productFeatureId="ColorYellow" productFeatureTypeEnumId="PftColor" description="Yellow" abbrev="YL"/>
+    <mantle.product.feature.ProductFeature productFeatureId="ColorWhite" productFeatureTypeEnumId="PftColor" description="White" abbrev="WH"/>
+
 </entity-facade-xml>
