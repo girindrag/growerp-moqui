@@ -611,7 +611,7 @@ along with this software (see the LICENSE.md file). If not, see
         <alias entity-alias="CM" name="emailAddressAlt" field="infoString"/>
    </view-entity>
    
-    <view-entity entity-name="ProductAndPriceAndProductCategory" package="growerp.mobile.product">
+    <view-entity entity-name="CategoryAndProductAndPrice" package="growerp.mobile.product">
         <member-entity entity-alias="CATG" entity-name="mantle.product.category.ProductCategory"/>
         <member-entity entity-alias="MEM" entity-name="mantle.product.category.ProductCategoryMember"
                 join-from-alias="CATG" join-optional="true">

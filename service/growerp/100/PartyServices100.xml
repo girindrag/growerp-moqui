@@ -1913,7 +1913,7 @@ along with this software (see the LICENSE.md file). If not, see
                                     roleTypeId: 'CustomerContactPerson']"/>
                         </else>
                     </if>
-                    <entity-find entity-name="growerp.mobile.product.ProductAndPriceAndProductCategory" list="products">
+                    <entity-find entity-name="growerp.mobile.product.CategoryAndProductAndPrice" list="products">
                         <econdition field-name="ownerPartyId" from="companyPartyId"/>
                         <econdition field-name="productName" operator="like" value="${order.productName}%"/>
                         <date-filter from-field-name="productFromDate" thru-field-name="productThruDate"/>
