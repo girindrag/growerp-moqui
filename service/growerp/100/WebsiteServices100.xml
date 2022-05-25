@@ -32,7 +32,8 @@ along with this software (see the LICENSE.md file). If not, see
             <if condition="stores">
                 <set field="hostName" from="ec.web.getHostName(false)"/>
                 <if condition="hostName == '10.0.2.2'">
-                    <set field="hostName" value="http://localhost:8080"/></if>
+                    <set field="hostName" value="localhost:8080"/></if>
+                <set field="hostName" value="${stores[0].productStoreId}.${hostName}/store"/>
                 <set field="website" from="[
                         id: stores[0].productStoreId,
                         hostName: hostName,
@@ -43,7 +44,6 @@ along with this software (see the LICENSE.md file). If not, see
                     <set field="website" from="[:]"/>
                 </else>
             </if>
-            <log message="=====$website"/>
         </actions>
     </service>
 

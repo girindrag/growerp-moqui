@@ -23,7 +23,7 @@ along with this software (see the LICENSE.md file). If not, see
             <parameter name="productTypeId"/>
             <parameter name="assetClassId"/>
             <parameter name="start" default-value="0" type="Integer"/>
-            <parameter name="limit" default-value="10" type="Integer"/>
+            <parameter name="limit" default-value="20" type="Integer"/>
             <parameter name="filter" default="null"/>
             <parameter name="search" default="null"/>
         </in-parameters>
@@ -80,7 +80,7 @@ along with this software (see the LICENSE.md file). If not, see
                 <entity-find
                     entity-name="mantle.product.category.ProductCategory" list="catList" limit="1">
                     <econdition field-name="ownerPartyId" from="companyPartyId"/>
-                    <econdition field-name="productCategoryTypeEnumId" operator="not-equals" value="PctRoot"/>
+                    <econdition field-name="productCategoryTypeEnumId" operator="not-equals" value="PsctBrowseRoot"/>
                     <order-by field-name="categoryName"/>
                 </entity-find>
                 <set field="categoryId" from="catList[0].productCategoryId"/>
@@ -96,7 +96,7 @@ along with this software (see the LICENSE.md file). If not, see
             <service-call name="growerp.100.FinDocServices100.convert#StatusId"
                 in-map="[docType: 'product', statusId: productTypeId]" out-map="productType"/>
             <!-- get products -->
-            <entity-find offset="start" limit="limit"
+            <entity-find offset="start" limit="limit*5"
                     entity-name="growerp.mobile.product.CategoryAndProductAndPrice"
                         list="productList">
                 <econdition field-name="ownerPartyId" ignore-if-empty="true"/>
@@ -241,7 +241,6 @@ along with this software (see the LICENSE.md file). If not, see
             </parameter>
         </out-parameters>
         <actions>
-            <log message=" incoming categories: ${product.categories}"/>
             <service-call out-map="context" in-map="[wantOwner: true]"
                 name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner"/>
             <set field="quantityUomId" value="OTH_ea"/>
@@ -785,6 +784,7 @@ along with this software (see the LICENSE.md file). If not, see
                 out-map="context"/>
             <entity-find entity-name="mantle.product.store.ProductStoreCategory" list="rootList">
                 <econdition field-name="productStoreId" from="productStore.productStoreId"/>
+                <econdition field-name="storeCategoryTypeEnumId" value="PsctBrowseRoot"/>
             </entity-find>
             <if condition="rootList">
                 <set field="parentProductCategoryId" from="rootList[0].productCategoryId"/>
@@ -813,6 +813,14 @@ along with this software (see the LICENSE.md file). If not, see
                 <date-filter ignore="categoryId"/>
                 <order-by field-name="categoryName"/>
             </entity-find>
+            <!-- add ecommerce categories -->
+            <entity-find entity-name="growerp.category.ProductStoreAndCategory" list="storeList">
+                <econdition field-name="productStoreId" from="productStore.productStoreId"/>
+                <econdition field-name="storeCategoryTypeEnumId" operator="not-equals" value="PsctBrowseRoot"/>
+                <econdition field-name="storeCategoryTypeEnumId" operator="not-equals" value="PsctPurchaseAllow"/>
+                <econdition field-name="storeCategoryTypeEnumId" operator="not-equals" value="PsctSearch"/>
+            </entity-find>
+            <script>groups.addAll(storeList)</script>
             <if condition="!categoryId">
                 <set field="categories" from="[]"/></if>
             <iterate entry="group" list="groups">
@@ -829,6 +837,7 @@ along with this software (see the LICENSE.md file). If not, see
                     <econdition field-name="productCategoryId" from="group.productCategoryId"/>
                     <econdition field-name="categoryContentTypeEnumId"
                         from="categoryId? 'PcctImageMedium' : 'PcctImageThumbNail'" />
+                    <date-filter/>
                 </entity-find>
                 <if condition="contents">
                     <service-call name="growerp.100.ImageServices100.download#Image"
@@ -893,6 +902,7 @@ along with this software (see the LICENSE.md file). If not, see
                 out-map="context"/>
             <entity-find entity-name="mantle.product.store.ProductStoreCategory" list="rootList">
                 <econdition field-name="productStoreId" from="productStore.productStoreId"/>
+                <econdition field-name="storeCategoryTypeEnumId" value="PsctBrowseRoot"/>
             </entity-find>
             <if condition="rootList">
                 <set field="rootProductCategoryId" from="rootList[0].productCategoryId"/>
@@ -909,6 +919,29 @@ along with this software (see the LICENSE.md file). If not, see
                 name="create#mantle.product.category.ProductCategoryRollup"
                     in-map="[parentProductCategoryId: rootProductCategoryId,
                         productCategoryId: productCategoryId]"/>
+            <!-- connect also to browse root for ecommerce site -->
+            <entity-find entity-name="mantle.product.store.ProductStoreCategory" list="browseRoot">
+                <econdition field-name="productStoreId" from="productStore.productStoreId"/>
+                <econdition field-name="storeCategoryTypeEnumId" value="PsctBrowseRoot"/>
+            </entity-find>
+            <if condition="browseRoot">
+                <service-call
+                name="create#mantle.product.category.ProductCategoryRollup"
+                    in-map="[parentProductCategoryId: browseRoot[0].productCategoryId,
+                        productCategoryId: productCategoryId]"/>
+            </if>
+            <!-- connect also to viewAll category -->
+            <entity-find entity-name="mantle.product.store.ProductStoreCategory" list="PsctViewAllow">
+                <econdition field-name="productStoreId" from="productStore.productStoreId"/>
+                <econdition field-name="storeCategoryTypeEnumId" value="PsctViewAllow"/>
+            </entity-find>
+            <if condition="PsctViewAllow">
+                <service-call
+                name="create#mantle.product.category.ProductCategoryRollup"
+                    in-map="[parentProductCategoryId: PsctViewAllow[0].productCategoryId,
+                        productCategoryId: productCategoryId]"/>
+            </if>
+            <!-- image -->
             <if condition="category.image">
                 <service-call name="growerp.100.ImageServices100.upload#Image"
                     in-map="[type: 'category',

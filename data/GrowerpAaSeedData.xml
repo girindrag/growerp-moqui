@@ -49,8 +49,9 @@ along with this software (see the LICENSE.md file). If not, see
     <moqui.basic.Enumeration description="Category Image Large Size" enumId="PcctImageLarge" enumTypeId="ProductCategoryContentType"/>
 
     <!-- define a top level category type for a restaurant menu -->
-    <moqui.basic.Enumeration enumId="PctRoot" description="Root category" enumTypeId="ProductCategoryType"/>
-    <moqui.basic.Enumeration enumId="PctRestaurant" description="Menu for Restauarant" enumTypeId="ProductCategoryType"/><!-- depreciated -->
+    <!-- now better use PsctBrowseRoot -->
+    <!--moqui.basic.Enumeration enumId="PsctBrowseRoot" description="Root category" enumTypeId="ProductCategoryType"/-->
+    <!--moqui.basic.Enumeration enumId="PctRestaurant" description="Menu for Restauarant" enumTypeId="ProductCategoryType"/-->
 
     <!-- hotel room reservation new product type: no shipment -->
     <moqui.basic.Enumeration description="Fixed Asset Use" enumId="PtFixedAssetUse" enumTypeId="ProductType"/>
@@ -145,7 +146,7 @@ along with this software (see the LICENSE.md file). If not, see
     <locations locationTypeEnumId="FltPick" locationSeqId="0002" sequenceNum="2" areaId="01" aisleId="01" sectionId="02" levelId="01" positionId=""/>
     </mantle.facility.Facility>
 
-    <mantle.product.store.ProductStore productStoreId="DEFAULT" storeName="Default Store"
+    <mantle.product.store.ProductStore productStoreId="POPC_DEFAULT" storeName="Default Store"
             organizationPartyId="_NA_" inventoryFacilityId="DEFAULT_WH" reservationOrderEnumId="AsResOrdFifoRec"
             wikiSpaceId="DEFAULT" defaultLocale="en_US" defaultCurrencyUomId="USD" taxGatewayConfigId="LOCAL" requireInventory="Y">
         <shipOptions carrierPartyId="_NA_" shipmentMethodEnumId="ShMthGround" sequenceNum="1"/>
@@ -155,15 +156,35 @@ along with this software (see the LICENSE.md file). If not, see
         <paymentGateways paymentInstrumentEnumId="PiCreditCard" paymentGatewayConfigId="TEST_APPROVE"/>
     </mantle.product.store.ProductStore>
 
-    <!-- categories -->
+    <!-- ecommerce categories  -->
     <mantle.product.category.ProductCategory productCategoryId="PopcAllProducts" ownerPartyId="_NA_"
         productCategoryTypeEnumId="PctCatalog" categoryName="All Products Category"/>
+        
     <mantle.product.category.ProductCategory productCategoryId="PopcDeals" ownerPartyId="_NA_"
         productCategoryTypeEnumId="PctCatalog" categoryName="Deals"/>
+    <mantle.product.store.ProductStoreCategory productStoreId="POPC_DEFAULT" productCategoryId="PopcDeals"
+        storeCategoryTypeEnumId="PsctPromotions" fromDate="1265184000000" thruDate=""/>
     <mantle.product.category.ProductCategory productCategoryId="PopcNew" ownerPartyId="_NA_"
-        productCategoryTypeEnumId="PctCatalog" categoryName="New"/>
+        productCategoryTypeEnumId="PctCatalog" categoryName="New"
+        description="Used on the E-Commerce website, products in this category will appear in the 'new' section"/>
+    <mantle.product.store.ProductStoreCategory productStoreId="POPC_DEFAULT" productCategoryId="PopcNew"
+        storeCategoryTypeEnumId="PsctNewProducts" fromDate="1265184000000" thruDate=""/>
     <mantle.product.category.ProductCategory productCategoryId="PopcFeatured" ownerPartyId="_NA_"
-        productCategoryTypeEnumId="PctCatalog" categoryName="Featured Best Sellers"/>
+        productCategoryTypeEnumId="PctCatalog" categoryName="Featured"
+        description="Used on the E-Commerce website, products in this category will appear in the 'featured' section"/>
+    <mantle.product.store.ProductStoreCategory productStoreId="POPC_DEFAULT" productCategoryId="PopcFeatured"
+        storeCategoryTypeEnumId="PsctFeatured" fromDate="1265184000000" thruDate=""/>
+    <mantle.product.category.ProductCategory productCategoryId="PopcHome" ownerPartyId="_NA_"
+        productCategoryTypeEnumId="PctCatalog" categoryName="Home"
+        description="Used on the E-Commerce website, products in this category will appear in the 'home' section"/>
+    <mantle.product.store.ProductStoreCategory productStoreId="POPC_DEFAULT" productCategoryId="PopcHome"
+        storeCategoryTypeEnumId="PsctHomePage" fromDate="1265184000000" thruDate=""/>
+    <mantle.product.category.ProductCategory productCategoryId="PopcBrowseRoot" ownerPartyId="_NA_"
+    description="Used on the E-Commerce website, products in this category will appear in the 'root' section"/>
+        productCategoryTypeEnumId="PctCatalog" categoryName="Root"/>
+    <mantle.product.store.ProductStoreCategory productStoreId="POPC_DEFAULT" productCategoryId="PopcBrowseRoot"
+        storeCategoryTypeEnumId="PsctBrowseRoot" fromDate="1265184000000" thruDate=""/>
+
 
     <!-- product data -->
     <mantle.product.feature.ProductFeature productFeatureId="SizeSmall" productFeatureTypeEnumId="PftSize" description="Small" abbrev="SM"/>

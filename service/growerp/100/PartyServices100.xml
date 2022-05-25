@@ -1483,6 +1483,11 @@ along with this software (see the LICENSE.md file). If not, see
                 <set field="productStore" from="stores[0]"/>
                 <return/>
             </if>
+
+            <entity-find-one entity-name="mantle.party.Organization" value-field="company">
+                <field-map field-name="partyId" from="companyPartyId"/>
+            </entity-find-one>
+
             <!-- create inventory facility if not there yet-->
             <entity-find entity-name="mantle.facility.Facility" list="facilities">
                 <econdition field-name="ownerPartyId" from="companyPartyId"/>
@@ -1492,15 +1497,29 @@ along with this software (see the LICENSE.md file). If not, see
                 <else>
                     <service-call name="create#mantle.facility.Facility"
                     in-map="[ownerPartyId: companyPartyId, facilityTypeEnumId: 'FcTpWarehouse',
-                        facilityName: 'Inventory', assetAllowOtherOwner: 'N']"
+                        facilityName: '${company.organizationName} Inventory', assetAllowOtherOwner: 'N']"
                     out-map="context"/>
                 </else>
             </if>
+
+            <!-- get currency -->
+            <entity-find-one entity-name="mantle.ledger.config.PartyAcctgPreference"
+                    value-field="aPref">
+                <field-map field-name="organizationPartyId" from="companyPartyId"/>
+            </entity-find-one>
+            <!-- create productStore from default -->
+            <entity-find-one entity-name="mantle.product.store.ProductStore" value-field="defProductStore">
+                <field-map field-name="productStoreId" value="POPC_DEFAULT"/>
+            </entity-find-one>
+
             <!-- create map for productStore -->
-            <set field="inMap" from="[
+            <set field="inMap" from="defProductStore + [
+                productStoreId: null,
                 organizationPartyId: companyPartyId,
                 storeDomain: classificationId,
                 inventoryFacilityId: facilityId,
+                storeName: company.organizationName,
+                defaultCurrencyUomId: aPref.baseCurrencyUomId,
                 ]"/>
             <if condition="classificationId == 'AppAdmin'">
                 <set field="inMap" from="inMap + [
@@ -1514,35 +1533,54 @@ along with this software (see the LICENSE.md file). If not, see
                 reservationOrderEnumId:'AsResOrdNoRes',
                 ]"/>
             </if>
-            <!-- create productStore -->
             <service-call name="create#mantle.product.store.ProductStore"
                 out-map="context" in-map="inMap" />
-            <!-- create root category if required -->
-            <entity-find list="catgs"
-                entity-name="mantle.product.category.ProductCategory">
-                <econdition field-name="ownerPartyId" from="companyPartyId"/>
-                <econdition field-name="productCategoryTypeEnumId" value="PctRoot"/>
+
+            <!-- create ecommerce website categories for popreststore -->
+            <entity-find entity-name="mantle.product.category.ProductCategory"
+                    list="catgs">
+                <econdition field-name="ownerPartyId" value="_NA_"/>
             </entity-find>
-            <if condition="catgs">
-                <set field="rootProductCategoryId" from="catgs[0].productCategoryId"/>
-                <else>
-                    <service-call name="create#mantle.product.category.ProductCategory" out-map="context" 
-                        in-map="[ownerPartyId: companyPartyId, productCategoryTypeEnumId: 'PctRoot',
-                            categoryName: 'Root category for: ' + classificationId]" />
-                    <set field="rootProductCategoryId" from="productCategoryId"/>
-                </else>
-            </if>
-            <!-- connect to productstore -->
-            <service-call name="create#mantle.product.store.ProductStoreCategory" 
-                in-map="[productCategoryId: rootProductCategoryId,
-                    storeCategoryTypeEnumId: 'PsctBrowseRoot',
-                    productStoreId: productStoreId,
-                    fromDate: fromDate]" />
-            <entity-find entity-name="mantle.product.store.ProductStore" list="stores">
-                <econdition field-name="organizationPartyId" from="companyPartyId"/>
-                <econdition field-name="storeDomain" from="classificationId"/>
-            </entity-find>
-            <set field="productStore" from="stores[0]"/>
+            <!-- translate categoryId to store type -->
+            <set field="typesList" from="[
+                'PopcAllProducts': ['PsctSearch','PsctPurchaseAllow','PsctViewAllow'],
+                'PopcDeals': ['PsctPromotions'],
+                'PopcNew': ['PsctNewProducts'],
+                'PopcFeatured': ['PsctFeatured'],
+                'PopcHome': ['PsctHomePage'],
+                'PopcBrowseRoot': ['PsctBrowseRoot'],
+                ]"/>
+
+            <!-- website url -->
+            <set field="hostName" from="ec.web.getHostName(false)"/>
+            <if condition="hostName == '10.0.2.2'"><set field="hostName" value="localhost"/></if>
+            <set field="hostName" value="${productStoreId}.${hostName}"/>
+            <service-call name="create#mantle.product.store.ProductStoreSetting"
+                in-map="productStoreId: productStoreId,
+                        settingTypeEnumId: 'PsstHostname', settingValue: hostName"/>
+
+            <iterate list="catgs" entry="catg">
+                <!-- only do lowercase categoryId's -->
+                <if condition="catg.productCategoryId == catg.productCategoryId.toUpperCase()">
+                    <continue/></if>
+                <service-call name="create#mantle.product.category.ProductCategory"
+                    out-map="context" in-map="catg + [
+                        productCategoryId: null,
+                        ownerPartyId: companyPartyId,
+                        ]" />
+                <set field="types" from="typesList[catg.productCategoryId]"/>
+                <!-- connect to product store -->
+                <iterate list="types" entry="type">
+                    <service-call name="create#mantle.product.store.ProductStoreCategory"
+                        in-map="[productStoreId: productStoreId,
+                        productCategoryId: productCategoryId,
+                        storeCategoryTypeEnumId: type ]"/>
+                    <if condition="type == 'PsctBrowseRoot'">
+                        <set field="rootProductCategoryId" from="productCategoryId"/>
+                    </if>
+                </iterate>
+            </iterate>
+
             <!-- hotel app not using categories but need one for products -->
             <entity-find list="categories" limit="1"
                     entity-name="mantle.product.category.ProductCategory">
@@ -1576,10 +1614,17 @@ along with this software (see the LICENSE.md file). If not, see
             <parameter name="counterMax" default="1" type="Integer"/>
         </in-parameters>
         <actions>
-            <!--script>sleep(3000)</script--><!-- wait for registration above to commit for async-->
-            <entity-find entity-name="mantle.product.category.ProductCategory" list="rootList">
-                <econdition field-name="productCategoryTypeEnumId" value="PctRoot"/>
-                <econdition field-name="ownerPartyId" from="companyPartyId"/></entity-find>
+            <!-- get productStore -->
+            <entity-find entity-name="mantle.product.store.ProductStore" list="stores">
+                <econdition field-name="organizationPartyId" from="companyPartyId"/>
+                <econdition field-name="storeDomain" from="classificationId"/>
+            </entity-find>
+            <set field="productStoreId" from="stores[0].productStoreId"/>
+
+            <!-- get root (browse) category -->
+            <entity-find entity-name="mantle.product.store.ProductStoreCategory" list="rootList">
+                <econdition field-name="storeCategoryTypeEnumId" value="PsctBrowseRoot"/>
+                <econdition field-name="productStoreId" from="productStoreId"/></entity-find>
             <if condition="!rootList">
                 <return error="true" message="Root category not found for companyId: $companyPartyId"/></if>
             <set field="rootProductCategoryId" from="rootList[0].productCategoryId"/>
@@ -1641,15 +1686,93 @@ along with this software (see the LICENSE.md file). If not, see
             <set field="counter" value="0" type="Integer"/>
             <while condition="counter++ &lt; counterMax">
 
-                <!-- products and categories -->
-                <!-- products  -->
-                <set field="productsAdmin" from="[
-                    [ productName: 'cola', description:'The traditional american drink', price: 1.4, image: 'cola', categoryName: 'drinks',assetTypeId: 'AsClsInventory'],
-                    [ productName: 'wiskey', description:'Yes, from Scotland', price: 5.21, image: 'wiskey', categoryName: 'drinks',assetTypeId: 'AsClsInventory'],
-                    [ productName: 'macaroni', description:'yes from Italy', price: 8.40, image: 'macaroni', categoryName: 'Food',assetTypeId: 'AsClsInventory'],
-                    [ productName: 'hamburger', description:'Another US special', price: 6.50, image: 'hamburger', categoryName: 'Food',assetTypeId: 'AsClsInventory']
-                ]"/>    
+                <!-- admin products  and categories -->
+                <!-- product/categories for admin are taken from the poprest store and are stored under the owner _NA_
+                    at initial load time -->
+                <!-- uppercase categories are demo, lowercase category id's should be connected to the current rootcategory -->
 
+                <!-- copy demo categories -->
+                <set field="catgTrans" from="[:]"/>
+                <set field="prodTrans" from="[:]"/>
+                <if condition="classificationId == 'AppAdmin'">
+                    <entity-find entity-name="mantle.product.category.ProductCategory"
+                            list="categories">
+                        <econdition field-name="ownerPartyId" value="_NA_"/>
+                    </entity-find>
+                    <iterate list="categories" entry="category">
+                        <if condition="category.productCategoryId.toUpperCase() != category.productCategoryId">
+                            <continue/></if>
+                        <!-- create category -->
+                        <service-call name="create#mantle.product.category.ProductCategory"
+                            in-map="category + [productCategoryId: null, ownerPartyId: companyPartyId]"
+                            out-map="context"/>
+                        <set field="catgTrans[category.productCategoryId]" from="productCategoryId"/>
+                        <!-- connect to (browse) root -->
+                        <service-call 
+                            name="create#mantle.product.category.ProductCategoryRollup"
+                            in-map="[parentProductCategoryId: rootProductCategoryId,
+                                    productCategoryId: productCategoryId]"/>
+                    </iterate>
+                    <!-- create translation table for categories-->
+                    <entity-find entity-name="mantle.product.category.ProductCategory"
+                        list="categories">
+                        <econdition field-name="ownerPartyId" value="_NA_"/>
+                    </entity-find>
+                    <iterate list="categories" entry="category">
+                        <entity-find entity-name="mantle.product.category.ProductCategory"
+                            list="localProductCategories">
+                            <econdition field-name="ownerPartyId" from="companyPartyId"/>
+                            <econdition field-name="categoryName" from="category.categoryName"/>
+                        </entity-find>
+                        <set field="catgTrans[category.productCategoryId]"
+                            from="localProductCategories[0].productCategoryId"/>
+                    </iterate>
+                    <!-- create product -->
+                    <entity-find entity-name="mantle.product.Product" list="products">
+                        <econdition field-name="ownerPartyId" value="_NA_"/>
+                        <econdition field-name="productTypeEnumId" value="PtAsset"/>
+                    </entity-find>
+                    <iterate list="products" entry="product">
+                        <service-call name="create#mantle.product.Product"
+                            in-map="product + [productId: null, ownerPartyId: companyPartyId,
+                                    pseudoId: null]" out-map="context"/>
+                        <set field="prodTrans[product.productId]" from="productId"/>
+                        <!-- content -->
+                        <entity-find entity-name="mantle.product.ProductContent"
+                                list="prodContents">
+                            <econdition field-name="productId" from="product.productId"/>
+                        </entity-find>
+                        <iterate list="prodContents" entry="prodContent">
+                            <if condition="prodContent.productContentTypeEnumId == 'PcntImageLarge'">
+                                <service-call name="create#mantle.product.ProductContent"
+                                    in-map="prodContent + [productContentId: null, productId: productId,
+                                    productContentTypeEnumId: 'PcntImageSmall']"/></if>
+                        </iterate>
+                        <!-- price -->
+                        <entity-find entity-name="mantle.product.ProductPrice" list="prodPrices">
+                            <econdition field-name="productId" from="product.productId"/>
+                        </entity-find>
+                        <iterate list="prodPrices" entry="prodPrice">
+                            <service-call name="create#mantle.product.ProductPrice"
+                                in-map="prodPrice + [ priceUomId: currencyId, 
+                                        productId: productId, productPriceId: null]"/>
+                        </iterate>
+                        <!-- attach product to categories -->
+                        <entity-find entity-name="mantle.product.category.ProductCategoryMember"
+                                list="members">
+                            <econdition field-name="productId" from="product.productId"/>
+                        </entity-find>
+                        <iterate list="members" entry="member">
+                            <set field="newProductId" from="prodTrans[product.productId]"/>
+                            <set field="newCategoryId" from="catgTrans[member.productCategoryId]"/>
+                            <service-call name="create#mantle.product.category.ProductCategoryMember"
+                            in-map="member + [productId: newProductId,
+                                            productCategoryId: newCategoryId]"/>
+                        </iterate>
+                    </iterate>
+                </if>
+
+                <!-- hotel products -->
                 <set field="productsHotel" from="[
                     [ productName: 'Single Room', description:'The Single bed room',
                         productTypeId: 'PtFixedAssetUse', assetClassId: 'AsClsRoom', assetTypeId: 'AstTpFixed',
@@ -1666,11 +1789,21 @@ along with this software (see the LICENSE.md file). If not, see
                     [ productName: 'Appartment', description:'The living,  two bedroom appartment',
                         productTypeId: 'PtFixedAssetUse', assetClassId: 'AsClsRoom', assetTypeId: 'AstTpFixed',
                         price: 460, image: 'demoRooms/room5', categoryName: 'rooms'],
-                ]"/>  
-                <if condition="classificationId == 'AppAdmin'"><set field="productsIn" from="productsAdmin"/></if>
+                ]"/>
+
+                <entity-find-one entity-name="mantle.ledger.config.PartyAcctgPreference"
+                        value-field="aPref">
+                    <field-map field-name="organizationPartyId" from="companyPartyId"/>
+                </entity-find-one>
+
+                <entity-find entity-name="mantle.product.store.ProductStore" list="stores">
+                    <econdition field-name="organizationPartyId" from="companyPartyId"/>
+                    <econdition field-name="storeDomain" from="classificationId"/>
+                </entity-find>
+
                 <if condition="classificationId == 'AppHotel'"><set field="productsIn" from="productsHotel"/></if>
                 <!-- for hotel just create a one count list -->
-                <if condition="classificationId == 'AppAdmin' || (classificationId == 'AppHotel' &amp;&amp; counter == 1)">
+                <if condition="classificationId == 'AppHotel' &amp;&amp; counter == 1">
                     <iterate list="productsIn" entry="el">
                         <entity-find entity-name="mantle.product.category.ProductCategory" list="categories">
                             <econdition field-name="categoryName" from="el.categoryName + counter"/>
@@ -1730,10 +1863,6 @@ along with this software (see the LICENSE.md file). If not, see
                     </iterate>
 
                     <!-- assets -->
-                    <entity-find entity-name="mantle.product.store.ProductStore" list="stores">
-                        <econdition field-name="organizationPartyId" from="companyPartyId"/>
-                        <econdition field-name="storeDomain" from="classificationId"/>
-                    </entity-find>
                     <set field="assetsHotel" from="[
                         [ assetName: '01', productName: 'Single Room'],
                         [ assetName: '02', productName: 'Single Room'],
@@ -1875,7 +2004,7 @@ along with this software (see the LICENSE.md file). If not, see
                         rentalThruDate: nowDate.plus(11), 
                         orderName: 'fifth generated Hotel order']
                     ]"/>
-    
+    <!--
                 <if condition="classificationId == 'AppAdmin'"><set field="ordersIn" from="ordersAdmin"/></if>
                 <if condition="classificationId == 'AppHotel'"><set field="ordersIn" from="ordersHotel"/></if>
                 <entity-find entity-name="growerp.mobile.CompanyPersonAndLoginGroup" list="customers">
@@ -1886,10 +2015,6 @@ along with this software (see the LICENSE.md file). If not, see
                     <econdition field-name="ownerPartyId" from="companyPartyId"/>
                     <econdition field-name="userGroupId" value="GROWERP_M_SUPPLIER"/>
                 </entity-find>
-                <entity-find-one entity-name="mantle.ledger.config.PartyAcctgPreference"
-                        value-field="aPref">
-                    <field-map field-name="organizationPartyId" from="companyPartyId"/>
-                </entity-find-one>
                 <set field="index" type="Integer" value="0"/>
                 <iterate list="ordersIn" entry="order">
                     <entity-find entity-name="mantle.order.OrderHeader" list="orders">
@@ -1927,7 +2052,7 @@ along with this software (see the LICENSE.md file). If not, see
                                             requiredByDate: order.reservationDate,
                                             quantity: order.quantity]"
                         out-map="context"/>
-                    <while condition="order.quantity--">
+                    <while condition="order.quantity">
                         <service-call name="create#growerp.product.AssetRental"
                             in-map="[ productId: products[0].productId,
                             orderId: orderId, orderItemSeqId: orderItemSeqId,
@@ -1940,7 +2065,7 @@ along with this software (see the LICENSE.md file). If not, see
                         name="growerp.100.FinDocServices100.update#Order"/>
                     <set field="index" from="index + 1"/>
                 </iterate>
-
+            -->
                 <!-- tasks -->
                 <entity-find entity-name="growerp.mobile.CompanyPersonAndLoginGroup" list="employees">
                     <econdition field-name="ownerPartyId" from="companyPartyId"/>

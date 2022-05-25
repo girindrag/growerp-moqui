@@ -220,7 +220,7 @@ along with this software (see the LICENSE.md file). If not, see
             <if condition="!rootCategories"><!-- if not exist create one -->
                 <service-call name="create#mantle.product.category.ProductCategory"
                     in-map="[
-                        productCategoryTypeEnumId: 'PctRoot',
+                        productCategoryTypeEnumId: 'PsctBrowseRoot',
                         ownerPartyId: companyPartyId,
                         categoryName: 'Root category of company: ' +  companyPartyId,
                         ]" out-map="context"/>
@@ -236,7 +236,7 @@ along with this software (see the LICENSE.md file). If not, see
             </if>
             <!-- get 'non root' categories -->
             <entity-find entity-name="mantle.product.category.ProductCategory" list="categories">
-                <econdition field-name="productCategoryTypeEnumId" operator="not-equals" value="PctRoot"/>
+                <econdition field-name="productCategoryTypeEnumId" operator="not-equals" value="PsctBrowseRoot"/>
             </entity-find>
             <!-- add to top category if not exist -->
             <iterate list="categories" entry="category">
