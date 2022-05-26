@@ -1488,19 +1488,17 @@ along with this software (see the LICENSE.md file). If not, see
                 <field-map field-name="partyId" from="companyPartyId"/>
             </entity-find-one>
 
-            <!-- create inventory facility if not there yet-->
-            <entity-find entity-name="mantle.facility.Facility" list="facilities">
-                <econdition field-name="ownerPartyId" from="companyPartyId"/>
-            </entity-find>
-            <if condition="facilities">
-                <set field="facilityId" from="facilities[0].facilityId"/>
-                <else>
-                    <service-call name="create#mantle.facility.Facility"
-                    in-map="[ownerPartyId: companyPartyId, facilityTypeEnumId: 'FcTpWarehouse',
-                        facilityName: '${company.organizationName} Inventory', assetAllowOtherOwner: 'N']"
-                    out-map="context"/>
-                </else>
-            </if>
+            <!-- create inventory facility -->
+            <entity-find-one entity-name="mantle.facility.Facility" value-field="facility">
+                <field-map field-name="facilityId" value="DEFAULT_WH"/>
+            </entity-find-one>
+            <service-call name="create#mantle.facility.Facility"
+                in-map="facility + [
+                    pseudoId: null,
+                    facilityId: null,
+                    ownerPartyId: companyPartyId,
+                    facilityName: company.organizationName + ' Inventory']"
+                out-map="context"/>
 
             <!-- get currency -->
             <entity-find-one entity-name="mantle.ledger.config.PartyAcctgPreference"
@@ -1512,6 +1510,30 @@ along with this software (see the LICENSE.md file). If not, see
                 <field-map field-name="productStoreId" value="POPC_DEFAULT"/>
             </entity-find-one>
 
+            <!-- create top resource -->
+            <service-call name="create#moqui.resource.DbResource"
+                in-map="[isFile: 'N', filename: companyPartyId]"
+                out-map="topResource"/>
+
+            <!-- create wiki space -->
+            <entity-find-one entity-name="moqui.resource.wiki.WikiSpace" value-field="wikiSpace">
+                <field-map field-name="wikiSpaceId" value="WS_DEFAULT"/>
+            </entity-find-one>
+            <service-call name="create#moqui.resource.wiki.WikiSpace"
+                in-map="wikiSpace + [wikiSpaceId: null,
+                rootPageLocation: wikiSpace.rootPageLocation.replace('defaultOwner', companyPartyId),
+                    ]"
+                out-map="context"/>
+            <!-- wikipages -->
+            <entity-find entity-name="moqui.resource.wiki.WikiPage" list="pages">
+                <econdition field-name="wikiSpaceId" value="WS_DEFAULT"/>
+            </entity-find>
+            <iterate list="pages" entry="page">
+                <service-call name="create#moqui.resource.wiki.WikiPage"
+                    in-map="page + [wikiSpaceId: wikiSpaceId,
+                            wikiPageId: null]"/>
+            </iterate>
+
             <!-- create map for productStore -->
             <set field="inMap" from="defProductStore + [
                 productStoreId: null,
@@ -1520,6 +1542,7 @@ along with this software (see the LICENSE.md file). If not, see
                 inventoryFacilityId: facilityId,
                 storeName: company.organizationName,
                 defaultCurrencyUomId: aPref.baseCurrencyUomId,
+                wikiSpaceId: wikiSpaceId,
                 ]"/>
             <if condition="classificationId == 'AppAdmin'">
                 <set field="inMap" from="inMap + [
@@ -1536,6 +1559,14 @@ along with this software (see the LICENSE.md file). If not, see
             <service-call name="create#mantle.product.store.ProductStore"
                 out-map="context" in-map="inMap" />
 
+            <!-- website url in settings to translate domein to productStoreId-->
+            <set field="hostName" from="ec.web.getHostName(false)"/>
+            <if condition="hostName == '10.0.2.2'"><set field="hostName" value="localhost"/></if>
+            <set field="hostName" value="${productStoreId}.${hostName}"/>
+            <service-call name="create#mantle.product.store.ProductStoreSetting"
+                in-map="productStoreId: productStoreId,
+                        settingTypeEnumId: 'PsstHostname', settingValue: hostName"/>
+
             <!-- create ecommerce website categories for popreststore -->
             <entity-find entity-name="mantle.product.category.ProductCategory"
                     list="catgs">
@@ -1550,14 +1581,6 @@ along with this software (see the LICENSE.md file). If not, see
                 'PopcHome': ['PsctHomePage'],
                 'PopcBrowseRoot': ['PsctBrowseRoot'],
                 ]"/>
-
-            <!-- website url -->
-            <set field="hostName" from="ec.web.getHostName(false)"/>
-            <if condition="hostName == '10.0.2.2'"><set field="hostName" value="localhost"/></if>
-            <set field="hostName" value="${productStoreId}.${hostName}"/>
-            <service-call name="create#mantle.product.store.ProductStoreSetting"
-                in-map="productStoreId: productStoreId,
-                        settingTypeEnumId: 'PsstHostname', settingValue: hostName"/>
 
             <iterate list="catgs" entry="catg">
                 <!-- only do lowercase categoryId's -->
@@ -1577,6 +1600,54 @@ along with this software (see the LICENSE.md file). If not, see
                         storeCategoryTypeEnumId: type ]"/>
                     <if condition="type == 'PsctBrowseRoot'">
                         <set field="rootProductCategoryId" from="productCategoryId"/>
+                    </if>
+                </iterate>
+            </iterate>
+
+            <!-- DBResources just 2 dependent levels-->
+            <entity-find entity-name="moqui.resource.DbResource" list="resources1">
+                <econdition field-name="parentResourceId" value="defaultOwner"/>
+            </entity-find>
+            <iterate list="resources1" entry="resource1">
+                <service-call name="create#moqui.resource.DbResource"
+                    in-map="resource1 + [resourceId: null, 
+                            parentResourceId: topResource.resourceId]"
+                    out-map="newResource1"/>
+                <if condition="resource1.isFile == 'Y'">
+                    <entity-find-one entity-name="moqui.resource.DbResourceFile" value-field="rFile">
+                         <field-map field-name="resourceId" from="resource1.resourceId"/>
+                    </entity-find-one>
+                    <service-call name="create#moqui.resource.DbResourceFile"
+                        in-map="rFile + [resourceId: newResource1.resourceId]"/>
+                    <entity-find entity-name="moqui.resource.DbResourceFileHistory" list="histories">
+                        <econdition field-name="resourceId" from="resource1.resourceId"/>
+                    </entity-find>
+                    <iterate list="histories" entry="history">
+                        <service-call name="create#moqui.resource.DbResourceFileHistory"
+                            in-map="history + [resourceId: newResource1.resourceId]"/>
+                    </iterate>
+                </if>
+                <entity-find entity-name="moqui.resource.DbResource" list="resources2">
+                    <econdition field-name="parentResourceId" from="resource1.resourceId"/>
+                </entity-find>
+                <iterate list="resources2" entry="resource2">
+                    <service-call name="create#moqui.resource.DbResource"
+                        in-map="resource2 + [resourceId: null, 
+                                parentResourceId: newResource1.resourceId]"
+                        out-map="newResource2"/>
+                    <if condition="resource2.isFile == 'Y'">
+                        <entity-find-one entity-name="moqui.resource.DbResourceFile" value-field="rFile">
+                            <field-map field-name="resourceId" from="resource2.resourceId"/>
+                        </entity-find-one>
+                        <service-call name="create#moqui.resource.DbResourceFile"
+                            in-map="rFile + [resourceId: newResource2.resourceId]"/>
+                        <entity-find entity-name="moqui.resource.DbResourceFileHistory" list="histories">
+                            <econdition field-name="resourceId" from="resource2.resourceId"/>
+                        </entity-find>
+                        <iterate list="histories" entry="history">
+                            <service-call name="create#moqui.resource.DbResourceFileHistory"
+                                in-map="history + [resourceId: newResource2.resourceId]"/>
+                        </iterate>
                     </if>
                 </iterate>
             </iterate>

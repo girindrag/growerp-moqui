@@ -198,12 +198,12 @@ along with this software (see the LICENSE.md file). If not, see
         <!-- Adds quantity in stock to the USB product so that the checkout form can be tested -->
         <!--
         <mantle.product.asset.Asset assetId="DEMO_USB32G" assetTypeEnumId="AstTpInventory" classEnumId="AsClsInventoryFin"
-                statusId="AstAvailable" facilityId="ZIRET_WH" locationSeqId="01010101" ownerPartyId="_NA_"
+                statusId="AstAvailable" facilityId="DEFAULT_WH" locationSeqId="01010101" ownerPartyId="_NA_"
                 hasQuantity="Y" quantityOnHandTotal="10" availableToPromiseTotal="10"
                 acquireCost="7.50" acquireCostUomId="USD" receivedDate="1265184000000">
             <mantle.product.asset.AssetDetail assetDetailId="DEMO_USB32G" effectiveDate="1265184000000"
                     quantityOnHandDiff="100" availableToPromiseDiff="100"/>
-        </mantle.product.asset.Asset>-->
+        </mantle.product.asset.Asset-->
 
         <contents productContentId="DEMO_USB32G_DL" productContentTypeEnumId="PcntDescriptionLong" locale="en_US"
                 contentLocation="dbresource://mantle/content/product/DEMO_USB32G/description.html"/>
