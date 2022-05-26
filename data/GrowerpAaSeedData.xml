@@ -134,11 +134,25 @@ along with this software (see the LICENSE.md file). If not, see
     <moqui.basic.Enumeration description="Restaurant Table" enumId="AsClsTable" enumTypeId="AssetClass"/>
     <moqui.basic.Enumeration description="Restaurant Table Area" enumId="AsClsTableArea" enumTypeId="AssetClass"/>
 
-
+    <!-- default template Retail Wiki/Content -->
+    <moqui.resource.DbResource filename="defaultOwner" isFile="N" resourceId="defaultOwner" parentResourceId=""/>
+    <moqui.resource.DbResource filename="retail" isFile="N" resourceId="default_retail" parentResourceId="defaultOwner"/>
+    <moqui.resource.DbResource filename="content.html" isFile="Y" resourceId="default_content" parentResourceId="default_retail">
+        <file mimeType="text/html" versionName="01" rootVersionName="01">
+            <fileData><![CDATA[<h3>Welcome to Default Retail</h3>]]></fileData>
+            <histories versionName="01" versionDate="1485028800000" isDiff="N"/>
+        </file>
+    </moqui.resource.DbResource>
+    <!-- this is the directory to put all site content under -->
+    <moqui.resource.DbResource filename="content" isFile="N" resourceId="default_content_dir" parentResourceId="default_retail"/>
     <!-- default setup for wiki productstore, categories etc -->
-    <moqui.resource.wiki.WikiSpace wikiSpaceId="DEFAULT" description="Default Content" restrictView="N" allowAnyHtml="Y"
-        rootPageLocation="dbresource://default/content.html" decoratorScreenLocation=""
-        publicPageUrl="/popc/content/${pagePath}?ver=${versionName}" publicAttachmentUrl="/popc/content/attachment/${wikiPageId}/${filename}"/>
+    <moqui.resource.wiki.WikiSpace wikiSpaceId="WS_DEFAULT" description="Default Content" restrictView="N" allowAnyHtml="Y"
+        rootPageLocation="dbresource://defaultOwner/retail/content.html" decoratorScreenLocation=""
+        publicPageUrl="/content/${pagePath}?ver=${versionName}"
+        publicAttachmentUrl="/popc/content/attachment/${wikiPageId}/${filename}"/>
+        <moqui.resource.wiki.WikiPage wikiPageId="default_content" wikiSpaceId="WS_DEFAULT" pagePath="">
+            <histories historySeqId="01" versionName="01" changeDateTime="1485028800000"/>
+    </moqui.resource.wiki.WikiPage>
 
     <mantle.facility.Facility facilityId="DEFAULT_WH" facilityTypeEnumId="FcTpWarehouse" assetAllowIssueOverQoh="Y"
         ownerPartyId="_NA_" facilityName="Default Warehouse">
@@ -148,7 +162,7 @@ along with this software (see the LICENSE.md file). If not, see
 
     <mantle.product.store.ProductStore productStoreId="POPC_DEFAULT" storeName="Default Store"
             organizationPartyId="_NA_" inventoryFacilityId="DEFAULT_WH" reservationOrderEnumId="AsResOrdFifoRec"
-            wikiSpaceId="DEFAULT" defaultLocale="en_US" defaultCurrencyUomId="USD" taxGatewayConfigId="LOCAL" requireInventory="Y">
+            wikiSpaceId="WS_DEFAULT" defaultLocale="en_US" defaultCurrencyUomId="USD" taxGatewayConfigId="LOCAL" requireInventory="Y">
         <shipOptions carrierPartyId="_NA_" shipmentMethodEnumId="ShMthGround" sequenceNum="1"/>
         <shipOptions carrierPartyId="_NA_" shipmentMethodEnumId="ShMthNextDay" sequenceNum="2"/>
         <shipOptions carrierPartyId="_NA_" shipmentMethodEnumId="ShMthPickUp" sequenceNum="3"/>
