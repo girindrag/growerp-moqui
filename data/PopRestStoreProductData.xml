@@ -260,9 +260,11 @@ along with this software (see the LICENSE.md file). If not, see
     <moqui.resource.wiki.WikiPage wikiPageId="default_about" wikiSpaceId="WS_DEFAULT" pagePath="about" publishedVersionName="01">
         <histories historySeqId="01" versionName="01" changeDateTime="1485028800000"/>
     </moqui.resource.wiki.WikiPage>
-    <moqui.resource.wiki.WikiPageAlias wikiSpaceId="WS_DEFAULT" aliasPath="about_alias" wikiPageId="default_about"/>
 
     <!-- Contact Us -->
+    <moqui.resource.wiki.WikiPage wikiPageId="default_contact" wikiSpaceId="WS_DEFAULT" pagePath="contact" publishedVersionName="01">
+        <histories historySeqId="01" versionName="01" changeDateTime="1485028800000"/>
+    </moqui.resource.wiki.WikiPage>
     <moqui.resource.DbResource filename="contact.html" isFile="Y" resourceId="default_contact" parentResourceId="default_content_dir">
         <file mimeType="text/html" versionName="01" rootVersionName="01">
             <fileData><![CDATA[
@@ -272,70 +274,25 @@ along with this software (see the LICENSE.md file). If not, see
             <histories versionName="01" versionDate="1485028800000" isDiff="N"/>
         </file>
     </moqui.resource.DbResource>
-    <moqui.resource.wiki.WikiPage wikiPageId="default_contact" wikiSpaceId="WS_DEFAULT" pagePath="contact" publishedVersionName="01">
-        <histories historySeqId="01" versionName="01" changeDateTime="1485028800000"/>
-    </moqui.resource.wiki.WikiPage>
-    <moqui.screen.ScreenPathAlias aliasPath="/pcontact" fromDate="1485028800000" thruDate="" screenPath="/popc/content/contact"/>
     
     <!-- help page -->
     <moqui.resource.wiki.WikiPage wikiPageId="default_help" wikiSpaceId="WS_DEFAULT" pagePath="help" publishedVersionName="01">
         <histories historySeqId="01" versionName="01" changeDateTime="1485028800000"/>
     </moqui.resource.wiki.WikiPage>
-    <dbResources resourceId="default_help" filename="help.html" isFile="Y" parentResourceId="default_content_dir">
-        <file mimeType="text/html" versionName="01" rootVersionName="01">
+    <moqui.resource.DbResource resourceId="default_help" filename="help.md" isFile="Y" parentResourceId="default_content_dir">
+        <file mimeType="text/markdown" versionName="01" rootVersionName="01">
             <fileData><![CDATA[
-<div class="container">
-    <div class="row mt-4">
-        <div class="customer-menu col col-lg-2 col-md-3 mb-5">
-            <span class="modal-text">Help Center</span>
-            <ul class="customer-orders-ul">
-                <li><a href="/store/content/help">Delivery Rates</a></li>
-                <li><a href="/store/content/help#delivery">Delivery Times</a></li>
-                <li><a href="/store/content/help#customer-pick-up">Customer Pick Up</a></li>
-                <li><a href="/store/content/help#how-to-pay">How to Pay</a></li>
-            </ul>
-            <a class="customer-link" href="/store/content/about">About POP Shop</a>
-            <a class="customer-link" href="/store/content/contact">Contact Us</a>
-        </div>
-        <div class="col col-lg-9 offset-lg-1 col-12">
-            <span class="customer-orders-title help-title">Help Center</span>
+# This is the help page
 
-            <p class="order-text-color account-subtitle mt-3" id="delivery">Delivery Rates</p>
+using markdown formatting.
 
-            <hr class="account-hr" />
-            <p class="modal-text">We deliver nationwide from $2.99 for standard shipping. Express shipping cost $6.99 and comes with tracking.</p>
-
-            <p class="modal-text"><a class="customer-link" href="/store/content/contact">Contact us</a> for information about international orders. We can ship as far away Canada.</p>
-
-            <p></p>
-
-            <p class="order-text-color account-subtitle mt-5" id="customer-pick-up">Delivery Times</p>
-            <a class="account-back-top" href="/store/content/help">Back to Top</a>
-
-            <hr class="account-hr" />
-            <p class="modal-text">Standar shipping takes between 1 and 2 weeks. Express shipping takes 1 to 2 days.</p>
-
-            <p class="order-text-color account-subtitle mt-5" id="how-to-pay">Customer Pick Up</p>
-            <a class="account-back-top" href="/store/content/help">Back to Top</a>
-
-            <hr class="account-hr" />
-            <p class="modal-text">If you don&#39;t have a mail box then drop by our warehouses in Los Angeles or Atlanta.</p>
-
-            <p class="order-text-color account-subtitle mt-5">How To Pay</p>
-            <a class="account-back-top" href="/store/content/help">Back to Top</a>
-
-            <hr class="account-hr" />
-            <p class="modal-text">Paying is simple. All you need is a credit card and you&#39;re good to go. We accept Master Card and visa.</p>
-        </div>
-    </div>
-</div>
-            ]]></fileData>
+                ]]></fileData>
             <histories versionName="01" versionDate="1485028800000" isDiff="N"/>
         </file>
-    </dbResources>
+    </moqui.resource.DbResource>
 
     <!-- NOTE: these are not complete record sets (for about, contact), just override file data from mantle-udm demo data -->
-    <moqui.resource.DbResourceFile resourceId="default_about" rootVersionName="01" mimeType="text/html" versionName="01">
+<!--    <moqui.resource.DbResourceFile resourceId="default_about" rootVersionName="01" mimeType="text/html" versionName="01">
         <fileData><![CDATA[
 <div class="container">
     <span class="customer-orders-title help-title">About POP Shop</span>
@@ -383,7 +340,7 @@ along with this software (see the LICENSE.md file). If not, see
 </div>
         ]]></fileData>
     </moqui.resource.DbResourceFile>
-
+-->
     <!-- ==================== Image BINARY Data ==================== -->
 
     <moqui.resource.DbResourceFile resourceId="DEMO_TS_W_ILF" rootVersionName="01" mimeType="image/jpeg" versionName="01">

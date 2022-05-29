@@ -904,4 +904,52 @@ along with this software (see the LICENSE.md file). If not, see
     <alias name="invoiceId" entity-alias="TE"/-->
 </view-entity>
 
+<view-entity entity-name="ProductStoreAndWebsiteContent" package="growerp.website">
+    <member-entity entity-alias="PS" entity-name="mantle.product.store.ProductStore"/>
+    <member-entity entity-alias="WS" entity-name="moqui.resource.wiki.WikiSpace"
+        join-from-alias="PS"><key-map field-name="wikiSpaceId"/></member-entity>
+    <member-entity entity-alias="WP" entity-name="moqui.resource.wiki.WikiPage"
+        join-from-alias="PS"><key-map field-name="wikiSpaceId"/></member-entity>
+    <alias name="productStoreId" entity-alias="PS"/>
+    <alias name="organizationPartyId" entity-alias="PS"/>
+    <alias name="storeName" entity-alias="PS"/>
+    <alias name="classificationId" field="storeDomain" entity-alias="PS"/>
+    <alias name="wikiSpaceId" entity-alias="WS"/>
+    <alias name="rootPageLocation" entity-alias="WS"/>
+    <alias name="wikiPageId" entity-alias="WP"/>
+    <alias name="pagePath" entity-alias="WP"/>
+    <alias name="parentWikiPageId" entity-alias="WP"/>
+</view-entity>
+
+<view-entity entity-name="ProductStoreAndWebsiteResource" package="growerp.website">
+    <member-entity entity-alias="PS" entity-name="mantle.product.store.ProductStore"/>
+    <member-entity entity-alias="R1" entity-name="moqui.resource.DbResource"
+        join-from-alias="PS"><key-map field-name="organizationPartyId" related="resourceId"/>
+    </member-entity>
+    <member-entity entity-alias="R2" entity-name="moqui.resource.DbResource"
+        join-from-alias="R1"><key-map field-name="resourceId" related="parentResourceId"/>
+    </member-entity>
+    <member-entity entity-alias="R3" entity-name="moqui.resource.DbResource"
+        join-from-alias="R2"><key-map field-name="resourceId" related="parentResourceId"/>
+    </member-entity>
+    <member-entity entity-alias="FILEDATA" entity-name="moqui.resource.DbResourceFile"
+        join-from-alias="R2"><key-map field-name="resourceId"/>
+    </member-entity>
+    <alias name="productStoreId" entity-alias="PS"/>
+    <alias name="organizationPartyId" entity-alias="PS"/>
+    <alias name="storeName" entity-alias="PS"/>
+    <alias name="classificationId" field="storeDomain" entity-alias="PS"/>
+    <alias name="resourceId2" field="resourceId" entity-alias="R2"/>
+    <alias name="filename2" field="filename" entity-alias="R2"/>
+    <!--alias name="parentResourceId1" field="parentResourceId" entity-alias="R1"/>
+    <alias name="resourceId1" field="resourceId" entity-alias="R1"/>
+    <alias name="parentResourceId2" field="parentResourceId" entity-alias="R2"/>
+    <alias name="resourceId2" field="resourceId" entity-alias="R2"/>
+    <alias name="parentResourceId3" field="parentResourceId" entity-alias="R3"/-->
+    <alias name="resourceId3" field="resourceId" entity-alias="R3"/>
+    <alias name="filename3" field="filename" entity-alias="R3"/>
+    <alias name="isFile3" field="isFile" entity-alias="R3"/>
+    <!--alias name="fileData" entity-alias="FILEDATA"/-->
+</view-entity>
+
 </entities>

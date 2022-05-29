@@ -16,34 +16,54 @@ along with this software (see the LICENSE.md file). If not, see
 
     <service verb="get" noun="Website">
         <description>get the website information</description>
+        <in-parameters>
+            <parameter name="classificationId"/><!-- admin, hotel etc -->
+        </in-parameters>
         <out-parameters>
-            <parameter name="website" type="Map">
+            <parameter name="website" type="Map" default-value="AppAdmin">
                 <parameter name="id"/>
                 <parameter name="hostName"/>
-                <parameter name="title"/>
+                <parameter name="content" type="Map">
+                    <parameter name="title"/>
+                    <parameter name="about"/>
+                    <parameter name="contact"/>
+                    <parameter name="help"/>
+                </parameter>
             </parameter>
         </out-parameters>
         <actions>
             <service-call out-map="context" 
                 name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner"/>
-            <entity-find entity-name="mantle.product.store.ProductStore" list="stores" limit="1">
+            <entity-find entity-name="growerp.website.ProductStoreAndWebsiteContent" list="pages">
                 <econdition field-name="organizationPartyId" from="companyPartyId"/>
+                <econdition field-name="classificationId" from="classificationId"/>
+                <econdition field-name="pagePath" operator="is-not-null"/>
             </entity-find>
-            <if condition="stores">
-                <set field="hostName" from="ec.web.getHostName(false)"/>
-                <if condition="hostName == '10.0.2.2'">
-                    <set field="hostName" value="localhost:8080"/></if>
-                <set field="hostName" value="${stores[0].productStoreId}.${hostName}/store"/>
-                <set field="website" from="[
-                        id: stores[0].productStoreId,
-                        hostName: hostName,
-                        title: stores[0].storeName
-                        ]"/>
-                <else>
-                    <log message="Product store not found for company $companyPartyId"/>
-                    <set field="website" from="[:]"/>
-                </else>
+            <if condition="!pages">
+                <set field="website" from="[:]"/>
+                <return error="true" message="Product store not found for company $companyPartyId"/>
             </if>
+            <set field="hostName" from="ec.web.getHostName(false)"/>
+            <if condition="hostName == '10.0.2.2'">
+                <set field="hostName" value="localhost:8080"/></if>
+            <set field="hostName" value="${pages[0].productStoreId}.${hostName}/store"/>
+            <set field="website" from="[
+                    id: pages[0].productStoreId,
+                    hostName: hostName,
+                    ]"/>
+            <set field="contentPages" from="[:]"/>
+            <set field="contentPages['title']" from="pages[0].storeName"/>
+            <iterate list="pages" entry="page">
+                <set field="location" value="${page.rootPageLocation}/content/${page.pagePath}.md"/>
+                <set field="contentRef" from="ec.resource.getLocationReference(location)"/>
+                <if condition="contentRef != null &amp;&amp; contentRef.isText()">
+                    <set field="contentText" from="contentRef.getText()"/>
+                    <if condition="contentText">
+                        <set field="contentPages[page.pagePath]" from="contentText"/>
+                    </if>
+                </if>
+            </iterate>
+            <set field="website.content" from="contentPages"/>
         </actions>
     </service>
 
@@ -52,18 +72,27 @@ along with this software (see the LICENSE.md file). If not, see
         <in-parameters>
             <parameter name="website" type="Map">
                 <parameter name="id"/>
-                <parameter name="title"/>
+                <parameter name="content" type="Map">
+                    <parameter name="title"/>
+                    <parameter name="about"/>
+                    <parameter name="contact"/>
+                    <parameter name="help"/>
+                </parameter>
             </parameter>
         </in-parameters>
         <out-parameters>
             <parameter name="website" type="Map">
                 <parameter name="id"/>
                 <parameter name="hostName"/>
-                <parameter name="title"/>
+                <parameter name="content" type="Map">
+                    <parameter name="title"/>
+                    <parameter name="about"/>
+                    <parameter name="contact"/>
+                    <parameter name="help"/>
+                </parameter>
             </parameter>
         </out-parameters>
         <actions>
-            <log message="=input=title: ${website.title} id: ${website.id}"/>
             <service-call out-map="context" 
                 name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner"/>
             <entity-find entity-name="mantle.product.store.ProductStore"
@@ -72,9 +101,24 @@ along with this software (see the LICENSE.md file). If not, see
                 <econdition field-name="productStoreId" from="website.id"/>
             </entity-find>
             <if condition="stores">
-                <set field="stores[0].storeName" from="website.title"/>
+                <set field="stores[0].storeName" from="website.content.title"/>
                 <entity-update value-field="stores[0]"/>
+                <entity-find entity-name="growerp.website.ProductStoreAndWebsiteContent" list="pages">
+                    <econdition field-name="productStoreId" from="website.id"/>
+                </entity-find>
+                <script><![CDATA[
+                    website.content.each {
+                        if (it.key != 'title') {
+                        def index = pages.findIndexOf{page -> page.pagePath == it.key};
+                        String location = "${pages[index].rootPageLocation}/content/${pages[index].pagePath}.md";
+                        org.moqui.resource.ResourceReference docRr = ec.resource.getLocationReference(location);
+                        if (it.value != docRr.getText())
+                            docRr.putText(it.value)
+                        }
+                    }
+                    ]]></script>
                 <service-call name="growerp.100.WebsiteServices100.get#Website"
+                    in-map="[classificationId: pages[0].classificationId]"
                     out-map="context"/>
                 <else>
                     <log  message="Could not find company: $companyPartyId store: ${website.id}"/>

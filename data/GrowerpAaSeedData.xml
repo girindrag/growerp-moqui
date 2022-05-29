@@ -135,18 +135,18 @@ along with this software (see the LICENSE.md file). If not, see
     <moqui.basic.Enumeration description="Restaurant Table Area" enumId="AsClsTableArea" enumTypeId="AssetClass"/>
 
     <!-- default template Retail Wiki/Content -->
-    <moqui.resource.DbResource filename="defaultOwner" isFile="N" resourceId="defaultOwner" parentResourceId=""/>
-    <moqui.resource.DbResource filename="content.html" isFile="Y" resourceId="default_content" parentResourceId="defaultOwner">
+    <moqui.resource.DbResource filename="_NA_" isFile="N" resourceId="_NA_" parentResourceId=""/>
+    <moqui.resource.DbResource filename="content.html" isFile="Y" resourceId="default_content" parentResourceId="_NA_">
         <file mimeType="text/html" versionName="01" rootVersionName="01">
             <fileData><![CDATA[<h3>Welcome to Default Retail</h3>]]></fileData>
             <histories versionName="01" versionDate="1485028800000" isDiff="N"/>
         </file>
     </moqui.resource.DbResource>
     <!-- this is the directory to put all site content under -->
-    <moqui.resource.DbResource filename="content" isFile="N" resourceId="default_content_dir" parentResourceId="defaultOwner"/>
+    <moqui.resource.DbResource filename="content" isFile="N" resourceId="default_content_dir" parentResourceId="_NA_"/>
     <!-- default setup for wiki productstore, categories etc -->
     <moqui.resource.wiki.WikiSpace wikiSpaceId="WS_DEFAULT" description="Default Content" restrictView="N" allowAnyHtml="Y"
-        rootPageLocation="dbresource://defaultOwner/content.html" decoratorScreenLocation=""
+        rootPageLocation="dbresource://_NA_" decoratorScreenLocation=""
         publicPageUrl="/content/${pagePath}?ver=${versionName}"
         publicAttachmentUrl="/popc/content/attachment/${wikiPageId}/${filename}"/>
         <moqui.resource.wiki.WikiPage wikiPageId="default_content" wikiSpaceId="WS_DEFAULT" pagePath="">

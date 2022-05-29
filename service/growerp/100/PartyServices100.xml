@@ -1521,7 +1521,7 @@ along with this software (see the LICENSE.md file). If not, see
             </entity-find-one>
             <service-call name="create#moqui.resource.wiki.WikiSpace"
                 in-map="wikiSpace + [wikiSpaceId: null,
-                rootPageLocation: wikiSpace.rootPageLocation.replace('defaultOwner', companyPartyId),
+                rootPageLocation: wikiSpace.rootPageLocation.replace('_NA_', companyPartyId),
                     ]"
                 out-map="context"/>
             <!-- wikipages -->
@@ -1567,6 +1567,12 @@ along with this software (see the LICENSE.md file). If not, see
                 in-map="productStoreId: productStoreId,
                         settingTypeEnumId: 'PsstHostname', settingValue: hostName"/>
 
+            <!-- get content from database resource -->
+            <set field="location" value="dbresource://${companyPartyId}/content/help.md"/>
+            <service-call name="create#mantle.product.store.ProductStoreSetting"
+                in-map="productStoreId: productStoreId,
+                        settingTypeEnumId: 'PsstContentLocation', settingValue: location"/>
+
             <!-- create ecommerce website categories for popreststore -->
             <entity-find entity-name="mantle.product.category.ProductCategory"
                     list="catgs">
@@ -1606,7 +1612,7 @@ along with this software (see the LICENSE.md file). If not, see
 
             <!-- DBResources just 2 dependent levels-->
             <entity-find entity-name="moqui.resource.DbResource" list="resources1">
-                <econdition field-name="parentResourceId" value="defaultOwner"/>
+                <econdition field-name="parentResourceId" value="_NA_"/>
             </entity-find>
             <iterate list="resources1" entry="resource1">
                 <service-call name="create#moqui.resource.DbResource"
