@@ -1427,6 +1427,13 @@ along with this software (see the LICENSE.md file). If not, see
                     <field-map field-name="partyId" from="companyPartyId"/></entity-find-one>
                 <set field="companyParty.ownerPartyId" from="companyPartyId"/>
                 <entity-update value-field="companyParty"/>
+                <!-- create general rootcategory -->
+                <service-call name="create#mantle.product.category.ProductCategory"
+                out-map="context" in-map="[
+                    ownerPartyId: companyPartyId,
+                    productCategoryTypeEnumId: 'PctRoot',
+                    categoryName: 'RootCategory of company'
+                    ]" />
                 <!-- load demo data -->
                 <script>ec.user.loginUser(username, newPassword)</script>
                 <if condition="demoData == 'true'">
@@ -1699,9 +1706,16 @@ along with this software (see the LICENSE.md file). If not, see
             <set field="productStoreId" from="stores[0].productStoreId"/>
 
             <!-- get root (browse) category -->
-            <entity-find entity-name="mantle.product.store.ProductStoreCategory" list="rootList">
+            <entity-find entity-name="mantle.product.store.ProductStoreCategory" list="browseRootList">
                 <econdition field-name="storeCategoryTypeEnumId" value="PsctBrowseRoot"/>
                 <econdition field-name="productStoreId" from="productStoreId"/></entity-find>
+            <if condition="!browseRootList">
+                <return error="true" message="Root category not found for companyId: $companyPartyId"/></if>
+            <set field="browseRootProductCategoryId" from="browseRootList[0].productCategoryId"/>
+            <!-- root category -->
+            <entity-find entity-name="mantle.product.category.ProductCategory" list="rootList">
+                <econdition field-name="productCategoryTypeEnumId" value="PctRoot"/>
+                <econdition field-name="ownerPartyId" from="companyPartyId"/></entity-find>
             <if condition="!rootList">
                 <return error="true" message="Root category not found for companyId: $companyPartyId"/></if>
             <set field="rootProductCategoryId" from="rootList[0].productCategoryId"/>
@@ -1784,10 +1798,15 @@ along with this software (see the LICENSE.md file). If not, see
                             in-map="category + [productCategoryId: null, ownerPartyId: companyPartyId]"
                             out-map="context"/>
                         <set field="catgTrans[category.productCategoryId]" from="productCategoryId"/>
-                        <!-- connect to (browse) root -->
+                        <!-- connect to root -->
                         <service-call 
                             name="create#mantle.product.category.ProductCategoryRollup"
                             in-map="[parentProductCategoryId: rootProductCategoryId,
+                                    productCategoryId: productCategoryId]"/>
+                        <!-- and ecommerce browseRoot -->
+                        <service-call 
+                            name="create#mantle.product.category.ProductCategoryRollup"
+                            in-map="[parentProductCategoryId: browseRootProductCategoryId,
                                     productCategoryId: productCategoryId]"/>
                     </iterate>
                     <!-- create translation table for categories-->

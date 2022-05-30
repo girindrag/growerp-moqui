@@ -17,7 +17,7 @@ along with this software (see the LICENSE.md file). If not, see
     <service verb="get" noun="Website">
         <description>get the website information</description>
         <in-parameters>
-            <parameter name="classificationId"/><!-- admin, hotel etc -->
+            <parameter name="classificationId" default="AppAdmin"/><!-- admin, hotel etc -->
         </in-parameters>
         <out-parameters>
             <parameter name="website" type="Map" default-value="AppAdmin">
@@ -41,7 +41,7 @@ along with this software (see the LICENSE.md file). If not, see
             </entity-find>
             <if condition="!pages">
                 <set field="website" from="[:]"/>
-                <return error="true" message="Product store not found for company $companyPartyId"/>
+                <return error="true" message="No product store found for company $companyPartyId appl: $classificationId"/>
             </if>
             <set field="hostName" from="ec.web.getHostName(false)"/>
             <if condition="hostName == '10.0.2.2'">

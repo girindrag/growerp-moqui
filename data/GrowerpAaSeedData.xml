@@ -48,9 +48,8 @@ along with this software (see the LICENSE.md file). If not, see
     <moqui.basic.Enumeration description="Category Image Medium Size" enumId="PcctImageMedium" enumTypeId="ProductCategoryContentType"/>
     <moqui.basic.Enumeration description="Category Image Large Size" enumId="PcctImageLarge" enumTypeId="ProductCategoryContentType"/>
 
-    <!-- define a top level category type for a restaurant menu -->
-    <!-- now better use PsctBrowseRoot -->
-    <!--moqui.basic.Enumeration enumId="PsctBrowseRoot" description="Root category" enumTypeId="ProductCategoryType"/-->
+    <!-- define a top level category  -->
+    <moqui.basic.Enumeration enumId="PctRoot" description="General Root category" enumTypeId="ProductCategoryType"/>
     <!--moqui.basic.Enumeration enumId="PctRestaurant" description="Menu for Restauarant" enumTypeId="ProductCategoryType"/-->
 
     <!-- hotel room reservation new product type: no shipment -->

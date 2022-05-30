@@ -778,18 +778,14 @@ along with this software (see the LICENSE.md file). If not, see
                     <order-by field-name="partyId"/></entity-find>
                 <set field="companyPartyId" from="parties[0].partyId"/>
             <log message="Using first allocated companyPartyId"/></if>
-            <!-- get root category from productStore can be different per app classification-->
-            <service-call  name="growerp.100.PartyServices100.verifyAndGet#ProductStore"
-                in-map="[companyPartyId: companyPartyId, classificationId: classificationId]"
-                out-map="context"/>
-            <entity-find entity-name="mantle.product.store.ProductStoreCategory" list="rootList">
-                <econdition field-name="productStoreId" from="productStore.productStoreId"/>
-                <econdition field-name="storeCategoryTypeEnumId" value="PsctBrowseRoot"/>
-            </entity-find>
-            <if condition="rootList">
-                <set field="parentProductCategoryId" from="rootList[0].productCategoryId"/>
-            <else><return error="true"
-                message="Category root not found for company: ${companyPartyId}"/></else></if>
+            <!-- root category -->
+            <entity-find entity-name="mantle.product.category.ProductCategory" list="rootList">
+                <econdition field-name="productCategoryTypeEnumId" value="PctRoot"/>
+                <econdition field-name="ownerPartyId" from="companyPartyId"/></entity-find>
+            <if condition="!rootList">
+                <return error="true" message="Root category not found for companyId: $companyPartyId"/></if>
+            <set field="parentProductCategoryId" from="rootList[0].productCategoryId"/>
+
             <if condition="filter != null">
                 <set field="filter" value="%${filter}%"/></if>
             <if condition="search != null">
@@ -813,14 +809,6 @@ along with this software (see the LICENSE.md file). If not, see
                 <date-filter ignore="categoryId"/>
                 <order-by field-name="categoryName"/>
             </entity-find>
-            <!-- add ecommerce categories -->
-            <entity-find entity-name="growerp.category.ProductStoreAndCategory" list="storeList">
-                <econdition field-name="productStoreId" from="productStore.productStoreId"/>
-                <econdition field-name="storeCategoryTypeEnumId" operator="not-equals" value="PsctBrowseRoot"/>
-                <econdition field-name="storeCategoryTypeEnumId" operator="not-equals" value="PsctPurchaseAllow"/>
-                <econdition field-name="storeCategoryTypeEnumId" operator="not-equals" value="PsctSearch"/>
-            </entity-find>
-            <script>groups.addAll(storeList)</script>
             <if condition="!categoryId">
                 <set field="categories" from="[]"/></if>
             <iterate entry="group" list="groups">
@@ -900,16 +888,14 @@ along with this software (see the LICENSE.md file). If not, see
             <service-call  name="growerp.100.PartyServices100.verifyAndGet#ProductStore"
                 in-map="[companyPartyId: companyPartyId, classificationId: classificationId]"
                 out-map="context"/>
-            <entity-find entity-name="mantle.product.store.ProductStoreCategory" list="rootList">
-                <econdition field-name="productStoreId" from="productStore.productStoreId"/>
-                <econdition field-name="storeCategoryTypeEnumId" value="PsctBrowseRoot"/>
-            </entity-find>
-            <if condition="rootList">
-                <set field="rootProductCategoryId" from="rootList[0].productCategoryId"/>
-                <else>
-                    <return error="true"
-                        message="Root category could not be found for compant: ${ownerPartyId}"/>
-                </else></if>
+            <!-- get root category -->
+            <entity-find entity-name="mantle.product.category.ProductCategory" list="rootList">
+                <econdition field-name="productCategoryTypeEnumId" value="PctRoot"/>
+                <econdition field-name="ownerPartyId" from="ownerPartyId"/></entity-find>
+            <if condition="!rootList">
+                <return error="true" message="Root category not found for companyId: $companyPartyId"/></if>
+            <set field="rootProductCategoryId" from="rootList[0].productCategoryId"/>
+            <!-- create -->
             <service-call name="create#mantle.product.category.ProductCategory"
                 in-map="[categoryName: category.categoryName,
                     description: category.description,
@@ -1041,7 +1027,8 @@ along with this software (see the LICENSE.md file). If not, see
             <!-- disable category in categoryRollUp entity -->
             <if condition="singleCompany"><set field="ownerPartyId" from="singleCompany"/></if>
             <entity-find entity-name="mantle.product.category.ProductCategory" list="rootList">
-                <econdition field-name="ownerPartyId"/></entity-find>
+                <econdition field-name="ownerPartyId"/>
+                <econdition field-name="productCategoryTypeEnumId" value="PctRoot"/></entity-find>
             <entity-find entity-name="mantle.product.category.ProductCategoryRollup" 
                     list="rollUpList" for-update="true" limit="1">
                 <econdition field-name="productCategoryId" from="category.categoryId"/>

@@ -291,6 +291,36 @@ using markdown formatting.
         </file>
     </moqui.resource.DbResource>
 
+    <!-- help page -->
+    <moqui.resource.wiki.WikiPage wikiPageId="ftl_help" wikiSpaceId="WS_DEFAULT" pagePath="ftlhelp" publishedVersionName="01">
+        <histories historySeqId="01" versionName="01" changeDateTime="1485028800000"/>
+    </moqui.resource.wiki.WikiPage>
+    <dbResources resourceId="ftl_help" filename="help.ftl" isFile="Y" parentResourceId="default_content_dir">
+        <file mimeType="text/html" versionName="01" rootVersionName="01">
+            <fileData><![CDATA[
+<div class="container">
+    <div class="row mt-4">
+        <div class="customer-menu col col-lg-2 col-md-3 mb-5">
+            <span class="modal-text">Help Center</span>
+            <ul class="customer-orders-ul">
+                <li><a href="/store/content/help">Delivery Rates</a></li>
+                <li><a href="/store/content/help#delivery">Delivery Times</a></li>
+                <li><a href="/store/content/help#customer-pick-up">Customer Pick Up</a></li>
+                <li><a href="/store/content/help#how-to-pay">How to Pay</a></li>
+            </ul>
+            <a class="customer-link" href="/store/content/about">About POP Shop</a>
+            <a class="customer-link" href="/store/content/contact">Contact Us</a>
+        </div>
+        <div class="col col-lg-9 offset-lg-1 col-12">
+            ${includePage}
+        </div>
+    </div>
+</div>
+            ]]></fileData>
+            <histories versionName="01" versionDate="1485028800000" isDiff="N"/>
+        </file>
+    </dbResources>
+
     <!-- NOTE: these are not complete record sets (for about, contact), just override file data from mantle-udm demo data -->
 <!--    <moqui.resource.DbResourceFile resourceId="default_about" rootVersionName="01" mimeType="text/html" versionName="01">
         <fileData><![CDATA[
