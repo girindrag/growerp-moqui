@@ -949,6 +949,27 @@ along with this software (see the LICENSE.md file). If not, see
     <alias name="parentWikiPageId" entity-alias="WP"/>
 </view-entity>
 
+<view-entity entity-name="ProductStoreAndWebsiteCategories" package="growerp.website">
+    <member-entity entity-alias="PS" entity-name="mantle.product.store.ProductStore"/>
+    <member-entity entity-alias="CMEMBER" entity-name="mantle.product.store.ProductStoreCategory"
+        join-from-alias="PS"><key-map field-name="productStoreId"/></member-entity>
+    <member-entity entity-alias="CATG" entity-name="mantle.product.category.ProductCategory"
+        join-from-alias="CMEMBER"><key-map field-name="productCategoryId"/></member-entity>
+    <member-entity entity-alias="PMEMBER" entity-name="mantle.product.category.ProductCategoryMember"
+        join-from-alias="CATG" join-optional="true"><key-map field-name="productCategoryId"/></member-entity>
+    <member-entity entity-alias="PROD" entity-name="mantle.product.Product"
+        join-from-alias="PMEMBER" join-optional="true"><key-map field-name="productId"/></member-entity>
+    <alias name="productStoreId" entity-alias="PS"/>
+    <alias name="organizationPartyId" entity-alias="PS"/>
+    <alias name="storeName" entity-alias="PS"/>
+    <alias name="classificationId" field="storeDomain" entity-alias="PS"/>
+    <alias name="storeCategoryTypeEnumId" entity-alias="CMEMBER"/>
+    <alias name="productCategoryId" entity-alias="CATG"/>
+    <alias name="categoryName" entity-alias="CATG"/>
+    <alias name="productId" entity-alias="PROD"/>
+    <alias name="productName" entity-alias="PROD"/>
+</view-entity>
+
 <view-entity entity-name="ProductStoreAndWebsiteResource" package="growerp.website">
     <member-entity entity-alias="PS" entity-name="mantle.product.store.ProductStore"/>
     <member-entity entity-alias="R1" entity-name="moqui.resource.DbResource"
@@ -978,6 +999,16 @@ along with this software (see the LICENSE.md file). If not, see
     <alias name="filename3" field="filename" entity-alias="R3"/>
     <alias name="isFile3" field="isFile" entity-alias="R3"/>
     <!--alias name="fileData" entity-alias="FILEDATA"/-->
+</view-entity>
+
+<view-entity entity-name="WikiPageAndDbResource" package="growerp.wiki">
+    <member-entity entity-alias="WPAG" entity-name="moqui.resource.wiki.WikiPage"/>
+    <member-entity entity-alias="DRES" entity-name="moqui.resource.DbResource"
+        join-from-alias="WPAG" join-optional="true">
+        <key-map field-name="wikiPageId" related="resourceId"/>
+    </member-entity>
+    <alias-all entity-alias="WPAG"/>
+    <alias-all entity-alias="DRES"/>
 </view-entity>
 
 </entities>

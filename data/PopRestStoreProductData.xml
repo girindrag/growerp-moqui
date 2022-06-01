@@ -279,7 +279,7 @@ along with this software (see the LICENSE.md file). If not, see
     <moqui.resource.wiki.WikiPage wikiPageId="default_help" wikiSpaceId="WS_DEFAULT" pagePath="help" publishedVersionName="01">
         <histories historySeqId="01" versionName="01" changeDateTime="1485028800000"/>
     </moqui.resource.wiki.WikiPage>
-    <moqui.resource.DbResource resourceId="default_help" filename="help.md" isFile="Y" parentResourceId="default_content_dir">
+    <moqui.resource.DbResource resourceId="default_help" filename="help" isFile="Y" parentResourceId="default_content_dir">
         <file mimeType="text/markdown" versionName="01" rootVersionName="01">
             <fileData><![CDATA[
 # This is the help page

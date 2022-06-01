@@ -1531,7 +1531,8 @@ along with this software (see the LICENSE.md file). If not, see
                 rootPageLocation: wikiSpace.rootPageLocation.replace('_NA_', companyPartyId),
                     ]"
                 out-map="context"/>
-            <!-- wikipages -->
+
+            <!-- wikipages and connect to data resource wikipageId = dbResourceId not use for now-->
             <entity-find entity-name="moqui.resource.wiki.WikiPage" list="pages">
                 <econdition field-name="wikiSpaceId" value="WS_DEFAULT"/>
             </entity-find>
@@ -1566,19 +1567,13 @@ along with this software (see the LICENSE.md file). If not, see
             <service-call name="create#mantle.product.store.ProductStore"
                 out-map="context" in-map="inMap" />
 
-            <!-- website url in settings to translate domein to productStoreId-->
+            <!-- website url in settings to translate domain to productStoreId-->
             <set field="hostName" from="ec.web.getHostName(false)"/>
             <if condition="hostName == '10.0.2.2'"><set field="hostName" value="localhost"/></if>
             <set field="hostName" value="${productStoreId}.${hostName}"/>
             <service-call name="create#mantle.product.store.ProductStoreSetting"
                 in-map="productStoreId: productStoreId,
                         settingTypeEnumId: 'PsstHostname', settingValue: hostName"/>
-
-            <!-- get content from database resource -->
-            <set field="location" value="dbresource://${companyPartyId}/content/help.md"/>
-            <service-call name="create#mantle.product.store.ProductStoreSetting"
-                in-map="productStoreId: productStoreId,
-                        settingTypeEnumId: 'PsstContentLocation', settingValue: location"/>
 
             <!-- create ecommerce website categories for popreststore -->
             <entity-find entity-name="mantle.product.category.ProductCategory"

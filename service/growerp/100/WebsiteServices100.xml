@@ -21,13 +21,24 @@ along with this software (see the LICENSE.md file). If not, see
         </in-parameters>
         <out-parameters>
             <parameter name="website" type="Map" default-value="AppAdmin">
-                <parameter name="id"/>
+                <parameter name="id"/><!-- productStoreId -->
                 <parameter name="hostName"/>
-                <parameter name="content" type="Map">
-                    <parameter name="title"/>
-                    <parameter name="about"/>
-                    <parameter name="contact"/>
-                    <parameter name="help"/>
+                <parameter name="websiteContent" type="List">
+                    <parameter name="content" type="Map">
+                        <parameter name="id"/>
+                        <parameter name="text"/>
+                    </parameter>
+                </parameter>
+                <parameter name="websiteCategories" type="List">
+                    <parameter name="websiteCategory" type="Map">
+                        <parameter name="categoryId"/>
+                        <parameter name="categoryName"/>
+                        <parameter name="products" type="List"/>
+                        <parameter name="product" type="Map">
+                            <parameter name="productId"/>
+                            <parameter name="productName"/>
+                        </parameter>
+                    </parameter>
                 </parameter>
             </parameter>
         </out-parameters>
@@ -51,32 +62,77 @@ along with this software (see the LICENSE.md file). If not, see
                     id: pages[0].productStoreId,
                     hostName: hostName,
                     ]"/>
-            <set field="contentPages" from="[:]"/>
-            <set field="contentPages['title']" from="pages[0].storeName"/>
+            <set field="websiteContent" from="[]"/>
+            <script>websiteContent.add([id: 'title', text: pages[0].storeName])</script>
             <iterate list="pages" entry="page">
-                <set field="location" value="${page.rootPageLocation}/content/${page.pagePath}.md"/>
+                <set field="location" value="${page.rootPageLocation}/content/${page.pagePath}"/>
                 <set field="contentRef" from="ec.resource.getLocationReference(location)"/>
-                <if condition="contentRef != null &amp;&amp; contentRef.isText()">
+                <if condition="contentRef != null">
                     <set field="contentText" from="contentRef.getText()"/>
-                    <if condition="contentText">
-                        <set field="contentPages[page.pagePath]" from="contentText"/>
-                    </if>
                 </if>
+                <if condition="!contentText"><set field="contentText" value=""/></if>
+                <script>websiteContent.add([id: page.pagePath, text: contentText])</script>
             </iterate>
-            <set field="website.content" from="contentPages"/>
+            <set field="website.websiteContent" from="websiteContent"/>
+            <!-- categories and products -->
+            <entity-find entity-name="growerp.website.ProductStoreAndWebsiteCategories" list="items">
+                <econdition field-name="organizationPartyId" from="companyPartyId"/>
+                <econdition field-name="classificationId" from="classificationId"/>
+                <econditions combine="or">
+                    <econdition field-name="storeCategoryTypeEnumId" value="PsctPromotions"/>
+                    <econdition field-name="storeCategoryTypeEnumId" value="PsctHomePage"/>
+                    <econdition field-name="storeCategoryTypeEnumId" value="PsctNewProducts"/>
+                </econditions>
+            </entity-find>
+            <set field="lastItem" from="null"/>
+            <set field="products" from="[]"/>
+            <set field="categories" from="[]"/>
+            <iterate list="items" entry="item">
+                <if condition="lastItem &amp;&amp; lastItem.productCategoryId != item.productCategoryId">
+                    <set field="categoryOut.products" from="products"/>
+                    <script>categories.add(categoryOut)</script>
+                    <set field="products" from="[]"/>
+                </if>
+                <if condition="!lastItem || lastItem.productCategoryId != item.productCategoryId">
+                    <set field="categoryOut" from="[
+                                categoryId: item.productCategoryId,
+                                categoryName: item.categoryName]"/>
+                </if>
+                <if condition="item.productId">
+                    <script>products.add([productId: item.productId,
+                            productName: item.productName])</script>
+                </if>
+                <set field="lastItem" from="item"/>
+            </iterate>
+            <if condition="lastItem">
+                <set field="categoryOut.products" from="products"/>
+                <script>categories.add(categoryOut)</script>
+            </if>
+            <set field="website.websiteCategories" from="categories"/>
         </actions>
     </service>
 
     <service verb="update" noun="Website">
         <description>update the website information</description>
         <in-parameters>
-            <parameter name="website" type="Map">
-                <parameter name="id"/>
-                <parameter name="content" type="Map">
-                    <parameter name="title"/>
-                    <parameter name="about"/>
-                    <parameter name="contact"/>
-                    <parameter name="help"/>
+            <parameter name="website" type="Map" required="true">
+                <parameter name="id" required="true"/>
+                <parameter name="websiteContent" type="List">
+                    <parameter name="content" type="Map">
+                        <parameter name="id"/>
+                        <parameter name="text"/>
+                    </parameter>
+                </parameter>
+                <parameter name="websiteCategories" type="List">
+                    <parameter name="websiteCategory" type="Map">
+                        <parameter name="categoryId"/>
+                        <parameter name="categoryName"/>
+                        <parameter name="products" type="List"/>
+                        <parameter name="product" type="Map">
+                            <parameter name="productId"/>
+                            <parameter name="productName"/>
+                        </parameter>
+                    </parameter>
                 </parameter>
             </parameter>
         </in-parameters>
@@ -84,13 +140,24 @@ along with this software (see the LICENSE.md file). If not, see
             <parameter name="website" type="Map">
                 <parameter name="id"/>
                 <parameter name="hostName"/>
-                <parameter name="content" type="Map">
-                    <parameter name="title"/>
-                    <parameter name="about"/>
-                    <parameter name="contact"/>
-                    <parameter name="help"/>
+                <parameter name="websiteContent" type="List">
+                    <parameter name="content" type="Map">
+                        <parameter name="id"/>
+                        <parameter name="text"/>
+                    </parameter>
                 </parameter>
-            </parameter>
+                <parameter name="websiteCategories" type="List">
+                    <parameter name="websiteCategory" type="Map">
+                        <parameter name="categoryId"/>
+                        <parameter name="categoryName"/>
+                        <parameter name="products" type="List"/>
+                        <parameter name="product" type="Map">
+                            <parameter name="productId"/>
+                            <parameter name="productName"/>
+                        </parameter>
+                    </parameter>
+                </parameter>
+           </parameter>
         </out-parameters>
         <actions>
             <service-call out-map="context" 
@@ -100,31 +167,43 @@ along with this software (see the LICENSE.md file). If not, see
                 <econdition field-name="organizationPartyId" from="companyPartyId"/>
                 <econdition field-name="productStoreId" from="website.id"/>
             </entity-find>
-            <if condition="stores">
-                <set field="stores[0].storeName" from="website.content.title"/>
-                <entity-update value-field="stores[0]"/>
-                <entity-find entity-name="growerp.website.ProductStoreAndWebsiteContent" list="pages">
-                    <econdition field-name="productStoreId" from="website.id"/>
-                </entity-find>
-                <script><![CDATA[
-                    website.content.each {
-                        if (it.key != 'title') {
-                        def index = pages.findIndexOf{page -> page.pagePath == it.key};
-                        String location = "${pages[index].rootPageLocation}/content/${pages[index].pagePath}.md";
-                        org.moqui.resource.ResourceReference docRr = ec.resource.getLocationReference(location);
-                        if (it.value != docRr.getText())
-                            docRr.putText(it.value)
-                        }
-                    }
-                    ]]></script>
+            <if condition="stores"><then>
+                <if condition="website.websiteContent">
+                    <!-- find title -->
+                    <set field="title" from="null"/>
+                    <script>website.websiteContent.each { if (it.id == 'title') title = it.text}</script>
+                    <if condition="title != null &amp;&amp; title != stores[0].storeName">
+                        <set field="stores[0].storeName" from="title"/>
+                        <entity-update value-field="stores[0]"/>
+                    </if>
+                    <iterate list="website.websiteContent" entry="content">
+                        <if condition="content.id == 'title'"><continue/></if>
+                        <entity-find entity-name="growerp.website.ProductStoreAndWebsiteContent" list="pages">
+                            <econdition field-name="productStoreId" from="website.id"/>
+                            <econdition field-name="pagePath" from="content.id"/>
+                        </entity-find>
+                        <if condition="!pages"><return error="true" 
+                            message="Page ${content.id} not found for productStore/websiteId: ${website.id}"/></if>
+                        <set field="location" value="${pages[0].rootPageLocation}/content/${pages[0].pagePath}"/>
+                        <set field="docRr" from="ec.resource.getLocationReference(location)"/>
+                        <if condition="content.text != docRr.getText()">
+                            <script>docRr.putText(content.text)</script>
+                        </if>
+                    </iterate>
+                </if>
+                <if condition="website.websiteCategories">
+                    <iterate list="website.websiteCategories" entry="catg">
+                        <service-call name="growerp.100.CatgProdServices100.update#ProductCategory"
+                            in-map="[category: catg]"/>
+                    </iterate>
+                </if>
+                <!-- get changed website -->
                 <service-call name="growerp.100.WebsiteServices100.get#Website"
-                    in-map="[classificationId: pages[0].classificationId]"
-                    out-map="context"/>
-                <else>
-                    <log  message="Could not find company: $companyPartyId store: ${website.id}"/>
-                    <set field="website" from="[:]"/>
-                </else>
-            </if>
+                    in-map="[classificationId: stores[0].storeDomain]"
+                    out-map="context"/></then>
+            <else>
+                <log  message="Could not find company: $companyPartyId store: ${website.id}"/>
+                <set field="website" from="[:]"/></else></if>
         </actions>
     </service>
 

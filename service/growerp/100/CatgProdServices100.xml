@@ -748,7 +748,6 @@ along with this software (see the LICENSE.md file). If not, see
             <parameter name="limit" default-value="20" type="Integer"/>
             <parameter name="filter" default="null"/>
             <parameter name="search" default="null"/>
-            <parameter name="classificationId" required="true"/>
         </in-parameters>
         <out-parameters>
             <parameter name="category" type="Map">
@@ -965,7 +964,7 @@ along with this software (see the LICENSE.md file). If not, see
             </iterate>
             <!-- get added category -->
             <service-call name="growerp.100.CatgProdServices100.get#ProductCategories"
-                in-map="[categoryId: productCategoryId, classificationId: classificationId ]" out-map="context"/>
+                in-map="[categoryId: productCategoryId]" out-map="context"/>
             </actions>
     </service>
 
@@ -979,7 +978,6 @@ along with this software (see the LICENSE.md file). If not, see
                 <parameter name="image"/>
                 <parameter name="nbrOfProducts"/>
             </parameter>
-            <parameter name="classificationId" required="true"/>
         </in-parameters>
         <out-parameters>
             <parameter name="category" type="Map">
@@ -1002,6 +1000,8 @@ along with this software (see the LICENSE.md file). If not, see
                 entity-name="mantle.product.category.ProductCategory">
                 <econdition field-name="productCategoryId" from="category.categoryId"/>
                 <econdition field-name="ownerPartyId" ignore-if-empty="true"/></entity-find>
+            <if condition="!productCategories">
+                <return error="true" message="Category: ${category.categoryId} not found"/></if>
             <set field="productCategory" from="productCategories[0]"/>
             <if condition="category.categoryName">
                 <set field="productCategory.categoryName" from="category.categoryName"/></if>
@@ -1029,8 +1029,7 @@ along with this software (see the LICENSE.md file). If not, see
             </if>
             <!-- return category information -->
             <service-call name="growerp.100.CatgProdServices100.get#ProductCategories"
-                in-map="[categoryId: category.categoryId,
-                        classificationId: classificationId ]" out-map="context"/>
+                in-map="[categoryId: category.categoryId]" out-map="context"/>
         </actions>
     </service>
 
@@ -1040,7 +1039,6 @@ along with this software (see the LICENSE.md file). If not, see
             <parameter name="category" type="Map" required="true">
                 <parameter name="categoryId"/>
             </parameter>
-            <parameter name="classificationId" required="true"/>
         </in-parameters>
         <out-parameters>
             <parameter name="category" type="Map" required="true">
@@ -1095,8 +1093,7 @@ along with this software (see the LICENSE.md file). If not, see
                 <return error="true"
                     message="could not find rollup for category: ${category.categoryId}"/></else></if>
             <service-call name="growerp.100.CatgProdServices100.get#ProductCategories"
-                in-map="[categoryId: category.categoryId,
-                        classificationId: classificationId ]" out-map="context"/>
+                in-map="[categoryId: category.categoryId]" out-map="context"/>
         </actions>
     </service>
 
