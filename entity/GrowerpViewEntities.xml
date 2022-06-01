@@ -970,45 +970,17 @@ along with this software (see the LICENSE.md file). If not, see
     <alias name="productName" entity-alias="PROD"/>
 </view-entity>
 
-<view-entity entity-name="ProductStoreAndWebsiteResource" package="growerp.website">
-    <member-entity entity-alias="PS" entity-name="mantle.product.store.ProductStore"/>
-    <member-entity entity-alias="R1" entity-name="moqui.resource.DbResource"
-        join-from-alias="PS"><key-map field-name="organizationPartyId" related="resourceId"/>
+<view-entity entity-name="ResourceParentAndChildren" package="growerp.resource">
+    <member-entity entity-alias="RES" entity-name="moqui.resource.DbResource"/>
+    <member-entity entity-alias="CHILD" entity-name="moqui.resource.DbResource"
+        join-from-alias="RES"><key-map field-name="resourceId" related="parentResourceId"/>
     </member-entity>
-    <member-entity entity-alias="R2" entity-name="moqui.resource.DbResource"
-        join-from-alias="R1"><key-map field-name="resourceId" related="parentResourceId"/>
-    </member-entity>
-    <member-entity entity-alias="R3" entity-name="moqui.resource.DbResource"
-        join-from-alias="R2"><key-map field-name="resourceId" related="parentResourceId"/>
-    </member-entity>
-    <member-entity entity-alias="FILEDATA" entity-name="moqui.resource.DbResourceFile"
-        join-from-alias="R2"><key-map field-name="resourceId"/>
-    </member-entity>
-    <alias name="productStoreId" entity-alias="PS"/>
-    <alias name="organizationPartyId" entity-alias="PS"/>
-    <alias name="storeName" entity-alias="PS"/>
-    <alias name="classificationId" field="storeDomain" entity-alias="PS"/>
-    <alias name="resourceId2" field="resourceId" entity-alias="R2"/>
-    <alias name="filename2" field="filename" entity-alias="R2"/>
-    <!--alias name="parentResourceId1" field="parentResourceId" entity-alias="R1"/>
-    <alias name="resourceId1" field="resourceId" entity-alias="R1"/>
-    <alias name="parentResourceId2" field="parentResourceId" entity-alias="R2"/>
-    <alias name="resourceId2" field="resourceId" entity-alias="R2"/>
-    <alias name="parentResourceId3" field="parentResourceId" entity-alias="R3"/-->
-    <alias name="resourceId3" field="resourceId" entity-alias="R3"/>
-    <alias name="filename3" field="filename" entity-alias="R3"/>
-    <alias name="isFile3" field="isFile" entity-alias="R3"/>
-    <!--alias name="fileData" entity-alias="FILEDATA"/-->
-</view-entity>
-
-<view-entity entity-name="WikiPageAndDbResource" package="growerp.wiki">
-    <member-entity entity-alias="WPAG" entity-name="moqui.resource.wiki.WikiPage"/>
-    <member-entity entity-alias="DRES" entity-name="moqui.resource.DbResource"
-        join-from-alias="WPAG" join-optional="true">
-        <key-map field-name="wikiPageId" related="resourceId"/>
-    </member-entity>
-    <alias-all entity-alias="WPAG"/>
-    <alias-all entity-alias="DRES"/>
+    <alias name="parentResourceId" field="resourceId" entity-alias="RES"/>
+    <alias name="parentIsFile" field="isFile" entity-alias="RES"/>
+    <alias name="parentFileName" field="filename" entity-alias="RES"/>
+    <alias name="childResourceId" field="resourceId" entity-alias="CHILD"/>
+    <alias name="childIsFile" field="isFile" entity-alias="CHILD"/>
+    <alias name="childFileName" field="filename" entity-alias="CHILD"/>
 </view-entity>
 
 </entities>
