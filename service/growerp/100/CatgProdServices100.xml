@@ -668,7 +668,8 @@ along with this software (see the LICENSE.md file). If not, see
                     <parameter name="pseudoId"/>
                     <parameter name="productName"/>
                 </parameter>
-            </parameter>        </out-parameters>
+            </parameter>
+        </out-parameters>
         <actions>
             <!-- for update no owner needed in single company use -->
             <service-call out-map="context"
@@ -884,7 +885,6 @@ along with this software (see the LICENSE.md file). If not, see
                 <parameter name="products" type="List">
                     <parameter name="product" type="Map">
                         <parameter name="productId"/>
-                        <parameter name="productName"/>
                     </parameter>
                 </parameter>
             </parameter>
@@ -976,7 +976,11 @@ along with this software (see the LICENSE.md file). If not, see
                 <parameter name="categoryName"/>
                 <parameter name="description"/>
                 <parameter name="image"/>
-                <parameter name="nbrOfProducts"/>
+                <parameter name="products" type="List">
+                    <parameter name="product" type="Map">
+                        <parameter name="productId"/>
+                    </parameter>
+                </parameter>
             </parameter>
         </in-parameters>
         <out-parameters>
@@ -1011,9 +1015,9 @@ along with this software (see the LICENSE.md file). If not, see
                 <set field="productCategory.preparationAreaId" from="category.preparationAreaId"/></if>
             <entity-update value-field="productCategory"/>
             <!-- related products  delete all and add all -->
-            <if condition="category.products &amp;&amp; category.products.size() &gt; 0"><!-- should have at least one! -->
+            <if condition="category.products != null">
                 <entity-delete-by-condition entity-name="mantle.product.category.ProductCategoryMember">
-                    <econdition field-name="productCategory" from="category.categoryId"/>
+                    <econdition field-name="productCategoryId" from="category.categoryId"/>
                 </entity-delete-by-condition>
                 <iterate list="category.products" entry="product">
                     <service-call name="create#mantle.product.category.ProductCategoryMember"
