@@ -972,15 +972,31 @@ along with this software (see the LICENSE.md file). If not, see
 
 <view-entity entity-name="ResourceParentAndChildren" package="growerp.resource">
     <member-entity entity-alias="RES" entity-name="moqui.resource.DbResource"/>
+    <member-entity entity-alias="RESFILE" entity-name="moqui.resource.DbResourceFile"
+        join-from-alias="RES" join-optional="true">
+        <key-map field-name="resourceId"/></member-entity>
+    <member-entity entity-alias="RESHIST" entity-name="moqui.resource.DbResourceFileHistory"
+        join-from-alias="RESFILE" join-optional="true">
+        <key-map field-name="resourceId"/></member-entity>
     <member-entity entity-alias="CHILD" entity-name="moqui.resource.DbResource"
-        join-from-alias="RES"><key-map field-name="resourceId" related="parentResourceId"/>
-    </member-entity>
+        join-from-alias="RES">
+        <key-map field-name="resourceId" related="parentResourceId"/></member-entity>
+    <member-entity entity-alias="CHILDFILE" entity-name="moqui.resource.DbResourceFile"
+        join-from-alias="CHILD" join-optional="true">
+        <key-map field-name="resourceId"/></member-entity>
+    <member-entity entity-alias="CHILDHIST" entity-name="moqui.resource.DbResourceFileHistory"
+        join-from-alias="CHILDFILE" join-optional="true">
+        <key-map field-name="resourceId"/></member-entity>
     <alias name="parentResourceId" field="resourceId" entity-alias="RES"/>
     <alias name="parentIsFile" field="isFile" entity-alias="RES"/>
     <alias name="parentFileName" field="filename" entity-alias="RES"/>
+    <alias name="parentMimeType" field="mimeType" entity-alias="RESFILE"/>
+    <alias name="parentVersionName" field="versionName" entity-alias="RESHIST"/>
     <alias name="childResourceId" field="resourceId" entity-alias="CHILD"/>
     <alias name="childIsFile" field="isFile" entity-alias="CHILD"/>
     <alias name="childFileName" field="filename" entity-alias="CHILD"/>
+    <alias name="childMimeType" field="mimeType" entity-alias="CHILDFILE"/>
+    <alias name="childVersionName" field="versionName" entity-alias="CHILDHIST"/>
 </view-entity>
 
 </entities>

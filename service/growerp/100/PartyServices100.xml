@@ -1528,16 +1528,16 @@ along with this software (see the LICENSE.md file). If not, see
 
             <!-- create wiki space -->
             <entity-find-one entity-name="moqui.resource.wiki.WikiSpace" value-field="wikiSpace">
-                <field-map field-name="wikiSpaceId" value="WS_DEFAULT"/>
+                <field-map field-name="wikiSpaceId" value="DEFAULT_WS"/>
             </entity-find-one>
             <service-call name="create#moqui.resource.wiki.WikiSpace"
                 in-map="wikiSpace + [wikiSpaceId: null,
-                rootPageLocation: wikiSpace.rootPageLocation.replace('_NA_', topResource.resourceId)]"
+                rootPageLocation: wikiSpace.rootPageLocation.replace('DEFAULT_ROOT', topResource.resourceId)]"
                 out-map="context"/>
 
             <!-- wikipages and connect to data resource wikipageId = dbResourceId not use for now-->
             <entity-find entity-name="moqui.resource.wiki.WikiPage" list="pages">
-                <econdition field-name="wikiSpaceId" value="WS_DEFAULT"/>
+                <econdition field-name="wikiSpaceId" value="DEFAULT_WS"/>
             </entity-find>
             <iterate list="pages" entry="page">
                 <service-call name="create#moqui.resource.wiki.WikiPage"
@@ -1570,13 +1570,19 @@ along with this software (see the LICENSE.md file). If not, see
             <service-call name="create#mantle.product.store.ProductStore"
                 out-map="context" in-map="inMap" />
 
-            <!-- website url in settings to translate domain to productStoreId-->
+            <!-- update website settings-->
             <set field="hostName" from="ec.web.getHostName(false)"/>
             <if condition="hostName == '10.0.2.2'"><set field="hostName" value="localhost"/></if>
             <set field="hostName" value="${productStoreId}.${hostName}"/>
-            <service-call name="create#mantle.product.store.ProductStoreSetting"
-                in-map="productStoreId: productStoreId,
-                        settingTypeEnumId: 'PsstHostname', settingValue: hostName"/>
+            <entity-find entity-name="mantle.product.store.ProductStoreSetting" list="stores">
+                <econdition field-name="productStoreId" value="POPC_DEFAULT"/>
+            </entity-find>
+            <iterate list="stores" entry="store">
+                <service-call name="create#mantle.product.store.ProductStoreSetting"
+                    in-map="store + [ productStoreId: productStoreId,
+                    settingValue: store.settingValue.replace('DEFAULT_ROOT',
+                        topResource.resourceId).replace('localhost', hostName)]"/>
+            </iterate>
 
             <!-- create ecommerce website categories for popreststore -->
             <entity-find entity-name="mantle.product.category.ProductCategory"
@@ -1617,7 +1623,7 @@ along with this software (see the LICENSE.md file). If not, see
 
             <!-- DBResources just 2 dependent levels-->
             <entity-find entity-name="moqui.resource.DbResource" list="resources1">
-                <econdition field-name="parentResourceId" value="_NA_"/>
+                <econdition field-name="parentResourceId" value="DEFAULT_ROOT"/>
             </entity-find>
             <iterate list="resources1" entry="resource1">
                 <service-call name="create#moqui.resource.DbResource"

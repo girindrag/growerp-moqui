@@ -65,7 +65,7 @@ along with this software (see the LICENSE.md file). If not, see
             <set field="websiteContent" from="[]"/>
             <script>websiteContent.add([id: 'title', text: pages[0].storeName])</script>
             <iterate list="pages" entry="page">
-                <set field="location" value="${page.rootPageLocation}/content/${page.pagePath}"/>
+                <set field="location" value="${page.rootPageLocation}/content/${page.pagePath}.md.ftl"/>
                 <set field="contentRef" from="ec.resource.getLocationReference(location)"/>
                 <if condition="contentRef != null">
                     <set field="contentText" from="contentRef.getText()"/>
@@ -184,7 +184,7 @@ along with this software (see the LICENSE.md file). If not, see
                         </entity-find>
                         <if condition="!pages"><return error="true" 
                             message="Page ${content.id} not found for productStore/websiteId: ${website.id}"/></if>
-                        <set field="location" value="${pages[0].rootPageLocation}/content/${pages[0].pagePath}"/>
+                        <set field="location" value="${pages[0].rootPageLocation}/content/${pages[0].pagePath}.md.ftl"/>
                         <set field="docRr" from="ec.resource.getLocationReference(location)"/>
                         <if condition="content.text != docRr.getText()">
                             <script>docRr.putText(content.text)</script>

@@ -247,52 +247,61 @@ along with this software (see the LICENSE.md file). If not, see
     <moqui.resource.DbResourceFile resourceId="DEMO_CMUG_DL" rootVersionName="01" mimeType="text/html" versionName="01">
         <fileData><![CDATA[PHA+RHJpbmsgaW4gc3R5bGUgd2l0aCB0aGlzIGN1c3RvbSBwcmludGVkIGNlcmFtaWMgbXVnITwvcD4NCjxwPk11Z3MgcHJpbnRlZCBmcm9tIGhpZ2ggcmVzb2x1dGlvbiBpbWFnZXMgZm9yIHNoYXJwIHJlc3VsdHMuPC9wPg0KPHA+RGlzaHdhc2hlciBhbmQgbWljcm93YXZlIHNhZmUsIGltYWdlcyB3aWxsIG5vdCBmYWRlIG92ZXIgdGltZS48L3A+DQo8cD48L3A+]]></fileData>
     </moqui.resource.DbResourceFile>
+    <!-- website setting -->
+    <mantle.product.store.ProductStoreSetting productStoreId="POPC_DEFAULT"
+        settingValue="localhost"
+        settingTypeEnumId="PsstHostname"/>
+    <mantle.product.store.ProductStoreSetting productStoreId="POPC_DEFAULT"
+        settingValue="dbresource://DEFAULT_ROOT"
+        settingTypeEnumId="PsstContentLocation"/>
+    <mantle.product.store.ProductStoreSetting productStoreId="POPC_DEFAULT"
+        settingValue="component://growerp/template/help.html.ftl"
+        settingTypeEnumId="PsstTemplateServerContent"/>
+
     <!-- About Us -->
-    <moqui.resource.DbResource filename="about.html" isFile="Y" resourceId="default_about" parentResourceId="default_content_dir">
-        <file mimeType="text/html" versionName="01" rootVersionName="01">
+    <moqui.resource.wiki.WikiPage wikiPageId="default_about" wikiSpaceId="DEFAULT_WS" pagePath="about" publishedVersionName="01">
+        <histories historySeqId="01" versionName="01" changeDateTime="1485028800000"/>
+    </moqui.resource.wiki.WikiPage>
+    <moqui.resource.DbResource filename="about.md.ftl" isFile="Y" resourceId="default_about" parentResourceId="default_content_dir">
+        <file mimeType="text/markdown" versionName="01" rootVersionName="01">
             <fileData><![CDATA[
-            <h1>About Us</h1>
-            <p>Ziziwork Retail takes busy work to the Z! Innovative products since 2010 to make your work and life easier.</p>
+# About Page
+Default about page
             ]]></fileData>
             <histories versionName="01" versionDate="1485028800000" isDiff="N"/>
         </file>
     </moqui.resource.DbResource>
-    <moqui.resource.wiki.WikiPage wikiPageId="default_about" wikiSpaceId="WS_DEFAULT" pagePath="about" publishedVersionName="01">
-        <histories historySeqId="01" versionName="01" changeDateTime="1485028800000"/>
-    </moqui.resource.wiki.WikiPage>
 
     <!-- Contact Us -->
-    <moqui.resource.wiki.WikiPage wikiPageId="default_contact" wikiSpaceId="WS_DEFAULT" pagePath="contact" publishedVersionName="01">
+    <moqui.resource.wiki.WikiPage wikiPageId="default_contact" wikiSpaceId="DEFAULT_WS" pagePath="contact" publishedVersionName="01">
         <histories historySeqId="01" versionName="01" changeDateTime="1485028800000"/>
     </moqui.resource.wiki.WikiPage>
-    <moqui.resource.DbResource filename="contact.html" isFile="Y" resourceId="default_contact" parentResourceId="default_content_dir">
-        <file mimeType="text/html" versionName="01" rootVersionName="01">
+    <moqui.resource.DbResource filename="contact.md.ftl" isFile="Y" resourceId="default_contact" parentResourceId="default_content_dir">
+        <file mimeType="text/markdown" versionName="01" rootVersionName="01">
             <fileData><![CDATA[
-            <h1>Contact Us</h1>
-            <p>Ziziwork Retail is an imaginary demonstration company. To contact us close your eyes and imagine.</p>
+# Contact Page
+default contact page
             ]]></fileData>
             <histories versionName="01" versionDate="1485028800000" isDiff="N"/>
         </file>
     </moqui.resource.DbResource>
     
     <!-- help page -->
-    <moqui.resource.wiki.WikiPage wikiPageId="default_help" wikiSpaceId="WS_DEFAULT" pagePath="help" publishedVersionName="01">
+    <moqui.resource.wiki.WikiPage wikiPageId="default_help" wikiSpaceId="DEFAULT_WS" pagePath="help" publishedVersionName="01">
         <histories historySeqId="01" versionName="01" changeDateTime="1485028800000"/>
     </moqui.resource.wiki.WikiPage>
-    <moqui.resource.DbResource resourceId="default_help" filename="help" isFile="Y" parentResourceId="default_content_dir">
+    <moqui.resource.DbResource filename="help.md.ftl" resourceId="default_help" isFile="Y" parentResourceId="default_content_dir">
         <file mimeType="text/markdown" versionName="01" rootVersionName="01">
             <fileData><![CDATA[
-# This is the help page
-
-using markdown formatting.
-
+# Help page
+default help page
                 ]]></fileData>
             <histories versionName="01" versionDate="1485028800000" isDiff="N"/>
         </file>
     </moqui.resource.DbResource>
 
     <!-- help page -->
-    <moqui.resource.wiki.WikiPage wikiPageId="ftl_help" wikiSpaceId="WS_DEFAULT" pagePath="ftlhelp" publishedVersionName="01">
+    <!--moqui.resource.wiki.WikiPage wikiPageId="ftl_help" wikiSpaceId="DEFAULT_WS" pagePath="ftlhelp" publishedVersionName="01">
         <histories historySeqId="01" versionName="01" changeDateTime="1485028800000"/>
     </moqui.resource.wiki.WikiPage>
     <dbResources resourceId="ftl_help" filename="help.ftl" isFile="Y" parentResourceId="default_content_dir">
@@ -319,7 +328,7 @@ using markdown formatting.
             ]]></fileData>
             <histories versionName="01" versionDate="1485028800000" isDiff="N"/>
         </file>
-    </dbResources>
+    </dbResources-->
 
     <!-- NOTE: these are not complete record sets (for about, contact), just override file data from mantle-udm demo data -->
 <!--    <moqui.resource.DbResourceFile resourceId="default_about" rootVersionName="01" mimeType="text/html" versionName="01">
