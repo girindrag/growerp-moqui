@@ -154,8 +154,12 @@ along with this software (see the LICENSE.md file). If not, see
 
     <mantle.facility.Facility facilityId="DEFAULT_WH" facilityTypeEnumId="FcTpWarehouse" assetAllowIssueOverQoh="Y"
         ownerPartyId="_NA_" facilityName="Default Warehouse">
-    <locations locationTypeEnumId="FltPick" locationSeqId="0001" sequenceNum="1" areaId="01" aisleId="01" sectionId="01" levelId="01" positionId=""/>
-    <locations locationTypeEnumId="FltPick" locationSeqId="0002" sequenceNum="2" areaId="01" aisleId="01" sectionId="02" levelId="01" positionId=""/>
+        <locations locationTypeEnumId="FltPick" locationSeqId="0001" sequenceNum="1" areaId="01" aisleId="01" sectionId="01" levelId="01" positionId=""/>
+        <locations locationTypeEnumId="FltPick" locationSeqId="0002" sequenceNum="2" areaId="01" aisleId="01" sectionId="01" levelId="01" positionId=""/>
+        <locations locationTypeEnumId="FltPick" locationSeqId="0003" sequenceNum="3" areaId="01" aisleId="01" sectionId="01" levelId="01" positionId=""/>
+        <locations locationTypeEnumId="FltPick" locationSeqId="0004" sequenceNum="4" areaId="01" aisleId="01" sectionId="01" levelId="01" positionId=""/>
+        <locations locationTypeEnumId="FltPick" locationSeqId="0005" sequenceNum="5" areaId="01" aisleId="01" sectionId="01" levelId="01" positionId=""/>
+        <locations locationTypeEnumId="FltPick" locationSeqId="0006" sequenceNum="6" areaId="01" aisleId="01" sectionId="01" levelId="01" positionId=""/>
     </mantle.facility.Facility>
 
     <mantle.product.store.ProductStore productStoreId="POPC_DEFAULT" storeName="Default Store"

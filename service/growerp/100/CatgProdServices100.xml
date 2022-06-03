@@ -633,8 +633,10 @@ along with this software (see the LICENSE.md file). If not, see
                     quantityOnHandTotal: asset.quantityOnHand,
                     availableToPromiseTotal: asset.quantityOnHand,
                     facilityId: stores[0].inventoryFacilityId,
-                    assetTypeEnumId: 'AstTpFixed']"
-                out-map="context" />
+                    assetTypeEnumId: classificationId == 'AppHotel' ? 'AstTpFixed' : 'AstTpInventory']"
+                out-map="context"/>
+            <service-call name="create#mantle.product.asset.AssetDetail"
+                in-map="[assetId: assetId]"/>
             <service-call name="growerp.100.CatgProdServices100.get#Assets"
                 in-map="[assetId: assetId]" out-map="context"/>
         </actions>
@@ -809,9 +811,9 @@ along with this software (see the LICENSE.md file). If not, see
                 <set field="search" value="%${search}%"/></if>
             <entity-find  offset="start" limit="limit" list="groups"
                 entity-name="growerp.mobile.party.category.ProductCategoryParentsChildAndProducts">
-                <econdition field-name="ownerPartyId" ignore-if-empty="true"/>
+                <econdition field-name="ownerPartyId" from="companyPartyId"/>
                 <econdition field-name="parentProductCategoryId"
-                    from="rootCategoryId" ignore-if-empty="true"/>
+                    from="parentProductCategoryId"/>
                 <econdition field-name="productCategoryId"
                     from="categoryId" ignore-if-empty="true"/>
                 <econdition field-name="categoryName" operator="like"

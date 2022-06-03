@@ -14,9 +14,6 @@ along with this software (see the LICENSE.md file). If not, see
 -->
 <entity-facade-xml type="seed">
 
-    <!-- use a record like this to set a regex for hostname(s) that should map to a given store:
-    <mantle.product.store.ProductStoreSetting productStoreId="POPC_DEFAULT" settingTypeEnumId="PsstHostname" fromDate="1406670784000" settingValue=".*"/> -->
-
     <!-- TODO - move this somewhere else -->
     <mantle.product.store.ProductStoreShipOption carrierPartyId="_NA_" lastUpdatedStamp="1545005379532"
         productStoreId="POPC_DEFAULT" shipmentMethodEnumId="ShMthGround" sequenceNum="2"/>
@@ -57,6 +54,15 @@ along with this software (see the LICENSE.md file). If not, see
         <categories productCategoryId="PopcFeatured" fromDate="1265184000000" sequenceNum="6"/>
         <categories productCategoryId="DEMO_CLOTHING" fromDate="1265184000000" sequenceNum="1"/>
         <dimensions dimensionTypeId="ShippingWeight" value="0.75" valueUomId="WT_lb"/>
+
+        <mantle.product.asset.Asset assetId="DEMO_TS_M" assetTypeEnumId="AstTpInventory"
+            classEnumId="AsClsInventoryFin"
+                statusId="AstAvailable" facilityId="DEFAULT_WH" locationSeqId="0001" ownerPartyId="_NA_"
+                hasQuantity="Y" quantityOnHandTotal="10" availableToPromiseTotal="10"
+                acquireCost="7.50" acquireCostUomId="USD" receivedDate="1265184000000">
+            <mantle.product.asset.AssetDetail assetDetailId="DEMO_TS_M" effectiveDate="1265184000000"
+                    quantityOnHandDiff="100" availableToPromiseDiff="100"/>
+        </mantle.product.asset.Asset>
 
         <features productFeatureId="SizeSmall" sequenceNum="1" applTypeEnumId="PfatSelectable" fromDate="1265184000000"/>
         <features productFeatureId="SizeMedium" sequenceNum="2" applTypeEnumId="PfatSelectable" fromDate="1265184000000"/>
@@ -102,6 +108,14 @@ along with this software (see the LICENSE.md file). If not, see
         <features productFeatureId="SizeLarge" sequenceNum="3" applTypeEnumId="PfatSelectable" fromDate="1265184000000"/>
         <features productFeatureId="SizeXL" sequenceNum="4" applTypeEnumId="PfatSelectable" fromDate="1265184000000"/>
 
+        <mantle.product.asset.Asset assetId="DEMO_TS_W" assetTypeEnumId="AstTpInventory" classEnumId="AsClsInventoryFin"
+                statusId="AstAvailable" facilityId="DEFAULT_WH" locationSeqId="0002" ownerPartyId="_NA_"
+                hasQuantity="Y" quantityOnHandTotal="10" availableToPromiseTotal="10"
+                acquireCost="11.50" acquireCostUomId="USD" receivedDate="1265184000000">
+            <mantle.product.asset.AssetDetail assetDetailId="DEMO_TS_W" effectiveDate="1265184000000"
+                    quantityOnHandDiff="100" availableToPromiseDiff="100"/>
+        </mantle.product.asset.Asset>
+
         <contents productContentId="DEMO_TS_W_DL" productContentTypeEnumId="PcntDescriptionLong" locale="en_US"
                 contentLocation="dbresource://mantle/content/product/DEMO_TS_W/description.html"/>
         <contents productContentId="DEMO_TS_W_ILF" productContentTypeEnumId="PcntImageLarge" locale="" sequenceNum="1" description="Front"
@@ -121,7 +135,8 @@ along with this software (see the LICENSE.md file). If not, see
             assetTypeEnumId="AstTpInventory" assetClassEnumId="AsClsInventoryFin" copyCategoryMembers="false"/>
 
     <!-- Hoodie -->
-    <mantle.product.Product productId="DEMO_HOOD" productTypeEnumId="PtAsset" assetTypeEnumId="AstTpInventory" assetClassEnumId="AsClsInventoryFin"
+    <mantle.product.Product productId="DEMO_HOOD" productTypeEnumId="PtAsset"
+        assetTypeEnumId="AstTpInventory" assetClassEnumId="AsClsInventoryFin"
             chargeShipping="Y" returnable="Y" productName="Hoodie" description="" ownerPartyId="_NA_">
         <prices productPriceId="DEMO_HOOD_L" pricePurposeEnumId="PppPurchase" priceTypeEnumId="PptList" fromDate="1265184000000"
                 minQuantity="1" price="49.99" priceUomId="USD"/>
@@ -132,6 +147,16 @@ along with this software (see the LICENSE.md file). If not, see
         <categories productCategoryId="PopcFeatured" fromDate="1265184000000" sequenceNum="4"/>
         <categories productCategoryId="DEMO_CLOTHING" fromDate="1265184000000" sequenceNum="3"/>
         <dimensions dimensionTypeId="ShippingWeight" value="0.25" valueUomId="WT_lb"/>
+
+        <mantle.product.asset.Asset assetId="DEMO_HOOD" assetTypeEnumId="AstTpInventory"
+                classEnumId="AsClsInventoryFin"
+                statusId="AstAvailable" facilityId="DEFAULT_WH" locationSeqId="0003"
+                ownerPartyId="_NA_"
+                hasQuantity="Y" quantityOnHandTotal="10" availableToPromiseTotal="10"
+                acquireCost="11.50" acquireCostUomId="USD" receivedDate="1265184000000">
+            <mantle.product.asset.AssetDetail assetDetailId="DEMO_HOOD" effectiveDate="1265184000000"
+                    quantityOnHandDiff="100" availableToPromiseDiff="100"/>
+        </mantle.product.asset.Asset>
 
         <contents productContentId="DEMO_HOOD_DL" productContentTypeEnumId="PcntDescriptionLong" locale="en_US"
                 contentLocation="dbresource://mantle/content/product/DEMO_HOOD/description.html"/>
@@ -160,6 +185,14 @@ along with this software (see the LICENSE.md file). If not, see
         <categories productCategoryId="PopcFeatured" fromDate="1265184000000" sequenceNum="3"/>
         <categories productCategoryId="DEMO_CLOTHING" fromDate="1265184000000" sequenceNum="4"/>
         <dimensions dimensionTypeId="ShippingWeight" value="0.5" valueUomId="WT_lb"/>
+
+        <mantle.product.asset.Asset assetId="DEMO_BCAP" assetTypeEnumId="AstTpInventory" classEnumId="AsClsInventoryFin"
+                statusId="AstAvailable" facilityId="DEFAULT_WH" locationSeqId="0004" ownerPartyId="_NA_"
+                hasQuantity="Y" quantityOnHandTotal="10" availableToPromiseTotal="10"
+                acquireCost="15.50" acquireCostUomId="USD" receivedDate="1265184000000">
+            <mantle.product.asset.AssetDetail assetDetailId="DEMO_BCAP" effectiveDate="1265184000000"
+                    quantityOnHandDiff="100" availableToPromiseDiff="100"/>
+        </mantle.product.asset.Asset>
 
         <contents productContentId="DEMO_BCAP_DL" productContentTypeEnumId="PcntDescriptionLong" locale="en_US"
                 contentLocation="dbresource://mantle/content/product/DEMO_BCAP/description.html"/>
@@ -195,15 +228,13 @@ along with this software (see the LICENSE.md file). If not, see
         <categories productCategoryId="DEMO_OFFICE" fromDate="1265184000000" sequenceNum="1"/>
         <dimensions dimensionTypeId="ShippingWeight" value="0.25" valueUomId="WT_lb"/>
 
-        <!-- Adds quantity in stock to the USB product so that the checkout form can be tested -->
-        <!--
         <mantle.product.asset.Asset assetId="DEMO_USB32G" assetTypeEnumId="AstTpInventory" classEnumId="AsClsInventoryFin"
-                statusId="AstAvailable" facilityId="DEFAULT_WH" locationSeqId="01010101" ownerPartyId="_NA_"
+                statusId="AstAvailable" facilityId="DEFAULT_WH" locationSeqId="0005" ownerPartyId="_NA_"
                 hasQuantity="Y" quantityOnHandTotal="10" availableToPromiseTotal="10"
-                acquireCost="7.50" acquireCostUomId="USD" receivedDate="1265184000000">
+                acquireCost="3.50" acquireCostUomId="USD" receivedDate="1265184000000">
             <mantle.product.asset.AssetDetail assetDetailId="DEMO_USB32G" effectiveDate="1265184000000"
                     quantityOnHandDiff="100" availableToPromiseDiff="100"/>
-        </mantle.product.asset.Asset-->
+        </mantle.product.asset.Asset>
 
         <contents productContentId="DEMO_USB32G_DL" productContentTypeEnumId="PcntDescriptionLong" locale="en_US"
                 contentLocation="dbresource://mantle/content/product/DEMO_USB32G/description.html"/>
@@ -236,6 +267,15 @@ along with this software (see the LICENSE.md file). If not, see
         <categories productCategoryId="PopcFeatured" fromDate="1265184000000" sequenceNum="1"/>
         <categories productCategoryId="DEMO_OFFICE" fromDate="1265184000000" sequenceNum="2"/>
         <dimensions dimensionTypeId="ShippingWeight" value="0.75" valueUomId="WT_lb"/>
+
+        <mantle.product.asset.Asset assetId="DEMO_CMUG" assetTypeEnumId="AstTpInventory" classEnumId="AsClsInventoryFin"
+                statusId="AstAvailable" facilityId="DEFAULT_WH" locationSeqId="0006" ownerPartyId="_NA_"
+                hasQuantity="Y" quantityOnHandTotal="10" availableToPromiseTotal="10"
+                acquireCost="3.50" acquireCostUomId="USD" receivedDate="1265184000000">
+            <mantle.product.asset.AssetDetail assetDetailId="DEMO_CMUG" effectiveDate="1265184000000"
+                    quantityOnHandDiff="100" availableToPromiseDiff="100"/>
+        </mantle.product.asset.Asset>
+
         <contents productContentId="DEMO_CMUG_DL" productContentTypeEnumId="PcntDescriptionLong" locale="en_US"
                 contentLocation="dbresource://mantle/content/product/DEMO_CMUG/description.html"/>
         <contents productContentId="DEMO_CMUG_IL1" productContentTypeEnumId="PcntImageLarge" locale="" sequenceNum="1" description="Coffee Mug"
