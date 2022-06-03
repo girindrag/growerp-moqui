@@ -579,6 +579,7 @@ along with this software (see the LICENSE.md file). If not, see
     <service verb="create" noun="Asset">
         <description> Create a Asset </description>
         <in-parameters>
+            <parameter name="classificationId" required="true"/>
             <parameter name="asset" type="Map" required="true">
                 <parameter name="statusId"/>
                 <parameter name="assetTypeId"/>
@@ -618,6 +619,10 @@ along with this software (see the LICENSE.md file). If not, see
                 in-map="[docType: 'asset', statusId: asset.statusId]" out-map="status"/>
             <service-call name="growerp.100.FinDocServices100.convert#StatusId"
                 in-map="[docType: 'asset', statusId: asset.assetClassId]" out-map="assetClass"/>
+            <entity-find entity-name="mantle.product.store.ProductStore" list="stores">
+                <econdition field-name="organizationPartyId" from="ownerPartyId"/>
+                <econdition field-name="storeDomain" from="classificationId"/>
+            </entity-find>
             <service-call name="create#mantle.product.asset.Asset"
                 in-map="[
                     classEnumId: assetClass.convertedStatusId,
@@ -626,6 +631,8 @@ along with this software (see the LICENSE.md file). If not, see
                     ownerPartyId: ownerPartyId,
                     statusId: status.convertedStatusId,
                     quantityOnHandTotal: asset.quantityOnHand,
+                    availableToPromiseTotal: asset.quantityOnHand,
+                    facilityId: stores[0].inventoryFacilityId,
                     assetTypeEnumId: 'AstTpFixed']"
                 out-map="context" />
             <service-call name="growerp.100.CatgProdServices100.get#Assets"
