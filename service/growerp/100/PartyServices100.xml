@@ -1507,6 +1507,15 @@ along with this software (see the LICENSE.md file). If not, see
                     facilityName: company.organizationName + ' Inventory']"
                 out-map="context"/>
 
+            <!-- facility default locations -->
+            <entity-find entity-name="mantle.facility.FacilityLocation" list="locs">
+                <econdition field-name="facilityId" value="DEFAULT_WH"/>
+            </entity-find>
+            <iterate list="locs" entry="loc">
+                <service-call name="create#mantle.facility.FacilityLocation"
+                    in-map="loc + [facilityId: facilityId]"/>
+            </iterate>
+
             <!-- get currency -->
             <entity-find-one entity-name="mantle.ledger.config.PartyAcctgPreference"
                     value-field="aPref">
@@ -1627,7 +1636,7 @@ along with this software (see the LICENSE.md file). If not, see
             </entity-find>
             <iterate list="resources1" entry="resource1">
                 <service-call name="create#moqui.resource.DbResource"
-                    in-map="resource1 + [resourceId: null, 
+                    in-map="resource1 + [resourceId: null,
                             parentResourceId: topResource.resourceId]"
                     out-map="newResource1"/>
                 <if condition="resource1.isFile == 'Y'">
@@ -1708,6 +1717,7 @@ along with this software (see the LICENSE.md file). If not, see
                 <econdition field-name="storeDomain" from="classificationId"/>
             </entity-find>
             <set field="productStoreId" from="stores[0].productStoreId"/>
+            <set field="facilityId" from="stores[0].inventoryFacilityId"/>
 
             <!-- get root (browse) category -->
             <entity-find entity-name="mantle.product.store.ProductStoreCategory" list="browseRootList">
@@ -1871,19 +1881,20 @@ along with this software (see the LICENSE.md file). If not, see
                         <entity-find entity-name="mantle.product.asset.Asset" list="assets">
                             <econdition field-name="productId" from="product.productId"/>
                         </entity-find>
-                        <if condition="assets">
+                        <iterate list="assets" entry="asset">
                             <service-call name="create#mantle.product.asset.Asset"
-                                in-map="assets[0] + [productId: productId,
+                                in-map="asset + [   assetId: null, 
+                                                    productId: productId,
                                                     assetName: 'unusedItem',
-                                                    assetId: null, facilityId: facilityId,
+                                                    facilityId: facilityId,
                                                     ownerPartyId: companyPartyId,
                                                     acquireCostUomId: currencyId]"
                                 out-map="context"/>
-                            <entity-find-one entity-name="mantle.product.asset.AssetDetail" value-field="detail">
-                                <field-map field-name="assetDetailId" from="assets[0].assetId"/></entity-find-one>
+                            <entity-find entity-name="mantle.product.asset.AssetDetail" list="detailList">
+                                <econdition field-name="assetId" from="asset.assetId"/></entity-find>
                             <service-call name="create#mantle.product.asset.AssetDetail"
-                                in-map="detail + [assetDetailId: assetId]"/>
-                        </if>
+                                in-map="detailList[0] + [assetDetailId: null, assetId: assetId]"/>
+                        </iterate>
                     </iterate>
                 </if>
 

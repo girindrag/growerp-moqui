@@ -60,7 +60,7 @@ along with this software (see the LICENSE.md file). If not, see
                 statusId="AstAvailable" facilityId="DEFAULT_WH" locationSeqId="0001" ownerPartyId="_NA_"
                 hasQuantity="Y" quantityOnHandTotal="10" availableToPromiseTotal="10"
                 acquireCost="7.50" acquireCostUomId="USD" receivedDate="1265184000000">
-            <mantle.product.asset.AssetDetail assetDetailId="DEMO_TS_M" effectiveDate="1265184000000"
+            <mantle.product.asset.AssetDetail assetId="DEMO_TS_M" effectiveDate="1265184000000"
                     quantityOnHandDiff="100" availableToPromiseDiff="100"/>
         </mantle.product.asset.Asset>
 
@@ -112,7 +112,7 @@ along with this software (see the LICENSE.md file). If not, see
                 statusId="AstAvailable" facilityId="DEFAULT_WH" locationSeqId="0002" ownerPartyId="_NA_"
                 hasQuantity="Y" quantityOnHandTotal="10" availableToPromiseTotal="10"
                 acquireCost="11.50" acquireCostUomId="USD" receivedDate="1265184000000">
-            <mantle.product.asset.AssetDetail assetDetailId="DEMO_TS_W" effectiveDate="1265184000000"
+            <mantle.product.asset.AssetDetail assetId="DEMO_TS_W" effectiveDate="1265184000000"
                     quantityOnHandDiff="100" availableToPromiseDiff="100"/>
         </mantle.product.asset.Asset>
 
@@ -154,7 +154,7 @@ along with this software (see the LICENSE.md file). If not, see
                 ownerPartyId="_NA_"
                 hasQuantity="Y" quantityOnHandTotal="10" availableToPromiseTotal="10"
                 acquireCost="11.50" acquireCostUomId="USD" receivedDate="1265184000000">
-            <mantle.product.asset.AssetDetail assetDetailId="DEMO_HOOD" effectiveDate="1265184000000"
+            <mantle.product.asset.AssetDetail assetId="DEMO_HOOD" effectiveDate="1265184000000"
                     quantityOnHandDiff="100" availableToPromiseDiff="100"/>
         </mantle.product.asset.Asset>
 
@@ -190,7 +190,7 @@ along with this software (see the LICENSE.md file). If not, see
                 statusId="AstAvailable" facilityId="DEFAULT_WH" locationSeqId="0004" ownerPartyId="_NA_"
                 hasQuantity="Y" quantityOnHandTotal="10" availableToPromiseTotal="10"
                 acquireCost="15.50" acquireCostUomId="USD" receivedDate="1265184000000">
-            <mantle.product.asset.AssetDetail assetDetailId="DEMO_BCAP" effectiveDate="1265184000000"
+            <mantle.product.asset.AssetDetail assetId="DEMO_BCAP" effectiveDate="1265184000000"
                     quantityOnHandDiff="100" availableToPromiseDiff="100"/>
         </mantle.product.asset.Asset>
 
@@ -232,7 +232,7 @@ along with this software (see the LICENSE.md file). If not, see
                 statusId="AstAvailable" facilityId="DEFAULT_WH" locationSeqId="0005" ownerPartyId="_NA_"
                 hasQuantity="Y" quantityOnHandTotal="10" availableToPromiseTotal="10"
                 acquireCost="3.50" acquireCostUomId="USD" receivedDate="1265184000000">
-            <mantle.product.asset.AssetDetail assetDetailId="DEMO_USB32G" effectiveDate="1265184000000"
+            <mantle.product.asset.AssetDetail assetId="DEMO_USB32G" effectiveDate="1265184000000"
                     quantityOnHandDiff="100" availableToPromiseDiff="100"/>
         </mantle.product.asset.Asset>
 
@@ -272,7 +272,7 @@ along with this software (see the LICENSE.md file). If not, see
                 statusId="AstAvailable" facilityId="DEFAULT_WH" locationSeqId="0006" ownerPartyId="_NA_"
                 hasQuantity="Y" quantityOnHandTotal="10" availableToPromiseTotal="10"
                 acquireCost="3.50" acquireCostUomId="USD" receivedDate="1265184000000">
-            <mantle.product.asset.AssetDetail assetDetailId="DEMO_CMUG" effectiveDate="1265184000000"
+            <mantle.product.asset.AssetDetail assetId="DEMO_CMUG" effectiveDate="1265184000000"
                     quantityOnHandDiff="100" availableToPromiseDiff="100"/>
         </mantle.product.asset.Asset>
 
