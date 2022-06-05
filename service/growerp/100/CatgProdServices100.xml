@@ -775,7 +775,7 @@ along with this software (see the LICENSE.md file). If not, see
     </service>
     
     <service verb="get" noun="ProductCategories" authenticate="false">
-        <description> get a single or all categories to group products by drinks , salads, deserts etc</description>
+        <description> get a single or all categories to group products</description>
         <in-parameters>
             <parameter name="companyPartyId"/>
             <parameter name="categoryId"/>
@@ -893,8 +893,10 @@ along with this software (see the LICENSE.md file). If not, see
                         image: imageFile,
                         ]"/>
                 </if>
-                <script>products.add([productId: group.productId,
-                        productName: group.productName])</script>
+                <if condition="group.productId">
+                    <script>products.add([productId: group.productId,
+                            productName: group.productName])</script>
+                </if>
                 <set field="lastItem" from="group"/>
             </iterate>
             <if condition="lastItem">
