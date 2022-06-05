@@ -333,9 +333,27 @@ default contact page
     <moqui.resource.DbResource filename="help.md.ftl" resourceId="default_help" isFile="Y" parentResourceId="default_content_dir">
         <file mimeType="text/markdown" versionName="01" rootVersionName="01">
             <fileData><![CDATA[
-# Help page
-default help page
-                ]]></fileData>
+# Help Center
+
+### Delivery Rates
+
+---
+
+We deliver worldwide from $2.99 for standard shipping. Express shipping cost $6.99 and comes with tracking.
+Contact us for information about international orders.
+
+### Customer Pick Up
+
+---
+
+If you don't have a mail box then drop by our warehouses here in Thailand
+
+### How To Pay
+
+---
+
+Paying is simple. All you need is a credit card and you're good to go. We accept Master Card and visa. 
+]]></fileData>
             <histories versionName="01" versionDate="1485028800000" isDiff="N"/>
         </file>
     </moqui.resource.DbResource>
