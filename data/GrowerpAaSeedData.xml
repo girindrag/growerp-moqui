@@ -206,8 +206,8 @@ along with this software (see the LICENSE.md file). If not, see
         storeCategoryTypeEnumId="PsctHomePage" fromDate="1265184000000" thruDate=""/>
 
     <mantle.product.category.ProductCategory productCategoryId="PopcBrowseRoot" ownerPartyId="_NA_"
-    description="Used on the E-Commerce website, products in this category will appear in the 'root' section"/>
-        productCategoryTypeEnumId="PctCatalog" categoryName="Root"/>
+        productCategoryTypeEnumId="PctCatalog" categoryName="Root"
+        description="Used on the E-Commerce website, products in this category will appear in the 'root' section"/>
     <mantle.product.store.ProductStoreCategory productStoreId="POPC_DEFAULT" productCategoryId="PopcBrowseRoot"
         storeCategoryTypeEnumId="PsctBrowseRoot" fromDate="1265184000000" thruDate=""/>
 

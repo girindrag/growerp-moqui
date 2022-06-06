@@ -1601,7 +1601,7 @@ along with this software (see the LICENSE.md file). If not, see
                 'PopcBrowseRoot': ['PsctBrowseRoot'],
                 ]"/>
             <iterate list="catgs" entry="catg">
-                <!-- only do lowercase categoryId's -->
+                <!-- only do lowercase categoryId's connected to productStore-->
                 <if condition="catg.productCategoryId == catg.productCategoryId.toUpperCase()">
                     <continue/></if>
                 <if condition="catg.productCategoryId == 'PopcAllProducts'">
@@ -1678,12 +1678,11 @@ along with this software (see the LICENSE.md file). If not, see
             </iterate>
 
             <!-- hotel app not using categories but need one for products -->
-            <entity-find list="categories" limit="1"
+            <!--entity-find list="categories" limit="1"
                     entity-name="mantle.product.category.ProductCategory">
                 <econdition field-name="ownerPartyId" from="ownerPartyId"/>
                 <econdition  field-name="categoryName" value="Room Types"/>
             </entity-find>
-            <!-- already exist? -->
             <if condition="classificationId == 'AppHotel' &amp;&amp; !categories">
                 <service-call name="create#mantle.product.category.ProductCategory"
                 in-map="[categoryName: 'Room Types',
@@ -1695,7 +1694,7 @@ along with this software (see the LICENSE.md file). If not, see
                     name="create#mantle.product.category.ProductCategoryRollup"
                     in-map="[parentProductCategoryId: rootProductCategoryId,
                             productCategoryId: productCategoryId]"/>
-            </if>
+            </if-->
         </actions>
     </service>
 

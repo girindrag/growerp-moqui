@@ -295,7 +295,7 @@ along with this software (see the LICENSE.md file). If not, see
             <!-- connect to category; allProducts first-->
             <entity-find entity-name="mantle.product.category.ProductCategory" list="catgs">
                 <econdition field-name="ownerPartyId" from="companyPartyId"/>
-                <econdition field-name="productCategoryTypeEnumId" value="PsctRoot"/>
+                <econdition field-name="productCategoryTypeEnumId" value="PctRoot"/>
             </entity-find>
             <script>productCategories.add([categoryId: catgs[0].productCategoryId])</script>
             <iterate list="productCategories" entry="productCategory">
@@ -959,6 +959,7 @@ along with this software (see the LICENSE.md file). If not, see
                     description: category.description,
                     productCategoryTypeEnumId: 'PctCatalog',
                     ownerPartyId: ownerPartyId]" out-map="context"/>
+            <!-- add to root category -->
             <service-call
                 name="create#mantle.product.category.ProductCategoryRollup"
                     in-map="[parentProductCategoryId: rootProductCategoryId,
@@ -972,17 +973,6 @@ along with this software (see the LICENSE.md file). If not, see
                 <service-call
                 name="create#mantle.product.category.ProductCategoryRollup"
                     in-map="[parentProductCategoryId: browseRoot[0].productCategoryId,
-                        productCategoryId: productCategoryId]"/>
-            </if>
-            <!-- connect also to viewAll category -->
-            <entity-find entity-name="mantle.product.store.ProductStoreCategory" list="PsctViewAllow">
-                <econdition field-name="productStoreId" from="productStore.productStoreId"/>
-                <econdition field-name="storeCategoryTypeEnumId" value="PsctViewAllow"/>
-            </entity-find>
-            <if condition="PsctViewAllow">
-                <service-call
-                name="create#mantle.product.category.ProductCategoryRollup"
-                    in-map="[parentProductCategoryId: PsctViewAllow[0].productCategoryId,
                         productCategoryId: productCategoryId]"/>
             </if>
             <!-- image -->
@@ -1008,7 +998,7 @@ along with this software (see the LICENSE.md file). If not, see
         <description> Update a category to group products by drinks , salads, deserts etc</description>
         <in-parameters>
             <parameter name="category" type="Map" required="true">
-                <parameter name="categoryId"/>
+                <parameter name="categoryId" required="true"/>
                 <parameter name="categoryName"/>
                 <parameter name="description"/>
                 <parameter name="image"/>
