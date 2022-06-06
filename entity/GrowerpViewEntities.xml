@@ -659,18 +659,18 @@ along with this software (see the LICENSE.md file). If not, see
     <view-entity entity-name="ProductAndCategoryAndPrices" package="growerp.mobile.product">
         <member-entity entity-alias="PROD" entity-name="mantle.product.Product"/>
         <member-entity entity-alias="LISTPRICE" entity-name="mantle.product.ProductPrice"
-                join-from-alias="PROD"><key-map field-name="productId"/>
+                join-from-alias="PROD" join-optional="true"><key-map field-name="productId"/>
             <entity-condition><date-filter from-field-name="listPriceFromDate" thru-field-name="listPriceThruDate"/>
             <econdition field-name="listPriceTypeEnumId" value="PptList"/></entity-condition></member-entity>
         <member-entity entity-alias="PRICE" entity-name="mantle.product.ProductPrice"
-                join-from-alias="PROD"><key-map field-name="productId"/>
+                join-from-alias="PROD" join-optional="true"><key-map field-name="productId"/>
             <entity-condition><date-filter from-field-name="priceFromDate" thru-field-name="priceThruDate"/>
             <econdition field-name="priceTypeEnumId" value="PptCurrent"/></entity-condition></member-entity>
         <member-entity entity-alias="MEM" entity-name="mantle.product.category.ProductCategoryMember"
                 join-from-alias="PROD" join-optional="true"><key-map field-name="productId"/>
             <entity-condition><date-filter/></entity-condition></member-entity>
         <member-entity entity-alias="CATG" entity-name="mantle.product.category.ProductCategory"
-                join-from-alias="MEM"><key-map field-name="productCategoryId"/></member-entity>
+                join-from-alias="MEM" join-optional="true"><key-map field-name="productCategoryId"/></member-entity>
         <alias name="productId" entity-alias="PROD"/>
         <alias name="pseudoId" entity-alias="PROD"/>
         <alias name="productTypeEnumId" entity-alias="PROD"/>

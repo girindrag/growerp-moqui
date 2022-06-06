@@ -42,7 +42,7 @@ along with this software (see the LICENSE.md file). If not, see
                         <parameter name="categoryName"/>
                     </parameter>
                 </parameter>
-                <parameter name="useWarehouse"/>
+                <parameter name="useWarehouse" type="Boolean"/>
                 <parameter name="assetCount"/>
                 <parameter name="image"/>
             </parameter>
@@ -60,7 +60,7 @@ along with this software (see the LICENSE.md file). If not, see
                             <parameter name="categoryName"/>
                         </parameter>
                     </parameter>
-                    <parameter name="useWarehouse"/>
+                    <parameter name="useWarehouse" type="Boolean"/>
                     <parameter name="image"/>
                 </parameter>    
             </parameter>
@@ -136,6 +136,11 @@ along with this software (see the LICENSE.md file). If not, see
             <set field="products" from="[]"/>
             <set field="categories" from="[]"/>
             <set field="lastItem" from="null"/>
+            <!-- get root category, do not display -->
+            <entity-find entity-name="mantle.product.category.ProductCategory" list="catgs">
+                <econdition field-name="ownerPartyId" from="companyPartyId"/>
+                <econdition field-name="productCategoryTypeEnumId" value="PctRoot"/>
+            </entity-find>
             <iterate entry="product" list="productList">
                 <if condition="lastItem &amp;&amp; lastItem.productId != product.productId">
                     <set field="productOut.categories" from="categories"/>
@@ -190,10 +195,13 @@ along with this software (see the LICENSE.md file). If not, see
                         assetCount: assetCount ? assetCount[0].totalAssets : null,
                         image: imageFile]"/>
                 </if>
-                <if condition="product.categoryId != catgs[0].productCategoryId">
+                <if condition="product.categoryId &amp;&amp; 
+                        product.categoryId != catgs[0].productCategoryId">
                     <script><!-- ignore root category allProducts -->
-                        categories.add([categoryId: product.categoryId, categoryName: product.categoryName])
-                    </script></if>
+                        categories.add([categoryId: product.categoryId,
+                                categoryName: product.categoryName])
+                    </script>
+                </if>
                 <set field="lastItem" from="product"/>
             </iterate>
             <if condition="lastItem">
@@ -225,7 +233,7 @@ along with this software (see the LICENSE.md file). If not, see
                         <parameter name="categoryId"/>
                     </parameter>
                 </parameter>
-                <parameter name="useWarehouse"/>
+                <parameter name="useWarehouse" type="Boolean"/>
                 <parameter name="image"/>
             </parameter>
         </in-parameters>
@@ -244,7 +252,7 @@ along with this software (see the LICENSE.md file). If not, see
                         <parameter name="categoryName"/>
                     </parameter>
                 </parameter>
-                <parameter name="useWarehouse"/>
+                <parameter name="useWarehouse" type="Boolean"/>
                 <parameter name="image"/>
             </parameter>
         </out-parameters>
@@ -276,15 +284,15 @@ along with this software (see the LICENSE.md file). If not, see
             <set field="priceMap" from="[productId: productId,
                         priceTypeEnumId: 'PptList',
                         priceUomId: pref.baseCurrencyUomId,
-                        price: product.price,
+                        price: product.listPrice,
                         quantityUomId: 'OTH_ea',
                         fromDate: ec.user.nowTimestamp,
                         pricePurposeEnumId: 'PppPurchase']"/>
             <service-call name="create#mantle.product.ProductPrice" 
                 in-map="priceMap"/>
             <service-call name="create#mantle.product.ProductPrice" 
-                in-map="priceMap + [priceTypeEnumId: 'PptList',
-                                    price: product.listPrice,
+                in-map="priceMap + [priceTypeEnumId: 'PptCurrent',
+                                    price: product.price,
                                     ]"/>
             <if condition="product.categories">
                 <set field="productCategories" from="product.categories"/>
@@ -333,7 +341,7 @@ along with this software (see the LICENSE.md file). If not, see
                         <parameter name="categoryName"/>
                     </parameter>
                 </parameter>
-                <parameter name="useWarehouse"/>
+                <parameter name="useWarehouse" type="Boolean"/>
                 <parameter name="image"/>
             </parameter>
         </in-parameters>
@@ -352,7 +360,7 @@ along with this software (see the LICENSE.md file). If not, see
                         <parameter name="categoryName"/>
                     </parameter>
                 </parameter>
-                <parameter name="useWarehouse"/>
+                <parameter name="useWarehouse" type="Boolean"/>
                 <parameter name="image"/>
             </parameter>
         </out-parameters>
@@ -462,7 +470,7 @@ along with this software (see the LICENSE.md file). If not, see
                         <parameter name="categoryName"/>
                     </parameter>
                 </parameter>
-                <parameter name="useWarehouse"/>
+                <parameter name="useWarehouse" type="Boolean"/>
                 <parameter name="image"/>
             </parameter>
         </out-parameters>
