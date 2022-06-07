@@ -1902,10 +1902,19 @@ along with this software (see the LICENSE.md file). If not, see
                         copied from receive#EntireShipment and then modified"
             </description>
         <in-parameters>
-            <parameter name="finDoc" format="Map">
+            <parameter name="finDoc" type="Map" required="true">
                 <parameter name="docType"/>
                 <parameter name="sales" type="Boolean"/>
                 <parameter name="shipmentId"/>
+                <parameter name="items" type="List">
+                    <parameter name="item" type="Map">
+                        <parameter name="location" type="Map">
+                            <parameter name="locationId"/>
+                        </parameter>
+                        <parameter name="productId"/>
+                        <parameter name="quantity"/>
+                    </parameter>
+                </parameter>
             </parameter>
         </in-parameters>
         <out-parameters>
@@ -1921,6 +1930,10 @@ along with this software (see the LICENSE.md file). If not, see
                     <parameter name="item" type="Map">
                         <parameter name="productId"/>
                         <parameter name="quantity"/>
+                        <parameter name="location" type="Map">
+                            <parameter name="locationId"/>
+                            <parameter name="locationName"/>
+                        </parameter>
                     </parameter>
                 </parameter>
             </parameter>
@@ -1944,7 +1957,7 @@ along with this software (see the LICENSE.md file). If not, see
                     from="sid.quantity - (sid.quantityAcceptedTotal ?: 0) - (sid.quantityRejectedTotal ?: 0)"/>
                 <set field="finDocItem"
                     from="finDoc.items.find {element -> element.productId == sid.productId}"/>
-                <if condition="!finDocItem.location.locationSeqId"><!-- if empty create new location -->
+                <if condition="!finDocItem.location.locationId"><!-- if empty create new location -->
                     <service-call name="create#mantle.facility.FacilityLocation"
                         in-map="[description: finDocItem.location.locationName ?: '${sid.pseudoId}(${nowDate})',
                                 facilityId: facilityId]" out-map="context"/>
