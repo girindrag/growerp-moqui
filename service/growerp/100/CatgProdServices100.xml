@@ -593,8 +593,8 @@ along with this software (see the LICENSE.md file). If not, see
                     assetTypeId: item.assetTypeEnumId,
                     assetClassId: assetClass.convertedStatusId,
                     assetName: item.assetName,
-                    quantityOnHand: item.quantityOnHandTotal? item.quantityOnHandTotal.toString() : '0',
-                    availableToPromise: item.availableToPromiseTotal? item.availableToPromiseTotal.toString() : '0',
+                    quantityOnHand: item.quantityOnHandTotal ? item.quantityOnHandTotal.toString() : '0',
+                    availableToPromise: item.availableToPromiseTotal ? item.availableToPromiseTotal.toString() : '0',
                     receivedDate: item.receivedDate ? item.receivedDate.toString().substring(0,19) + 'Z' : null,
                     expectedEndOfLifeDate: item.expectedEndOfLife ? item.expectedEndOfLife.toString().substring(0,19) + 'Z' : null,
                     product: [productId: item.productId, pseudoId: item.pseudoId,
@@ -670,7 +670,10 @@ along with this software (see the LICENSE.md file). If not, see
                     assetTypeEnumId: classificationId == 'AppHotel' ? 'AstTpFixed' : 'AstTpInventory']"
                 out-map="context"/>
             <service-call name="create#mantle.product.asset.AssetDetail"
-                in-map="[assetId: assetId]"/>
+                in-map="[assetId: assetId, quantityOnHandDiff: asset.quantityOnHand,
+                            availableToPromiseDiff: asset.quantityOnHand,
+                                effdateDate: ec.user.nowTimestamp,
+                                productId: asset.product.productId]"/>
             <service-call name="growerp.100.CatgProdServices100.get#Assets"
                 in-map="[assetId: assetId]" out-map="context"/>
         </actions>
