@@ -127,9 +127,12 @@ along with this software (see the LICENSE.md file). If not, see
                     <econdition field-name="description" ignore-case="true"
                         operator="like" from="search" ignore-if-empty="true"/>
                 </econditions>
+                <econdition field-name="listPrice" operator="is-not-null"/>
                 <date-filter from-field-name="productFromDate"
                     thru-field-name="productThruDate" ignore="productId"/>
                 <date-filter/><!-- price thrudate-->
+                <date-filter from-field-name="listPriceFromDate" thru-field-name="listPriceThruDate"/>
+                <date-filter from-field-name="priceFromDate" thru-field-name="priceThruDate"/>
                 <order-by field-name="productName"/>
             </entity-find>
             <!-- create product list -->
@@ -189,8 +192,8 @@ along with this software (see the LICENSE.md file). If not, see
                         productTypeId: prodConvert.convertedStatusId,
                         assetClassId: product.assetClassEnumId,
                         description: product.description?:'',
-                        price: product.price ? product.price.toString() : '',
-                        listPrice: product.listPrice ? product.listPrice.toString() : '',
+                        price: product.price ? product.price.toString() : null,
+                        listPrice: product.listPrice ? product.listPrice.toString() : null,
                         useWarehouse: product.requireInventory == 'Y' ? true : false,
                         assetCount: assetCount ? assetCount[0].totalAssets : null,
                         image: imageFile]"/>
