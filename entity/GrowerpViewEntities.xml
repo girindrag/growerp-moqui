@@ -611,51 +611,6 @@ along with this software (see the LICENSE.md file). If not, see
         <alias entity-alias="CM" name="emailAddressAlt" field="infoString"/>
    </view-entity>
    
-    <view-entity entity-name="CategoryAndProductAndPrice" package="growerp.mobile.product">
-        <member-entity entity-alias="CATG" entity-name="mantle.product.category.ProductCategory"/>
-        <member-entity entity-alias="MEM" entity-name="mantle.product.category.ProductCategoryMember"
-                join-from-alias="CATG" join-optional="true">
-            <key-map field-name="productCategoryId"/>
-            <entity-condition><date-filter/></entity-condition></member-entity>
-        <member-entity entity-alias="PROD" entity-name="mantle.product.Product"
-                join-from-alias="MEM" join-optional="true">
-            <key-map field-name="productId"/></member-entity><!-- no from- to thrudate cond, see all!-->
-        <member-entity entity-alias="LISTPRICE" entity-name="mantle.product.ProductPrice"
-                join-from-alias="PROD" join-optional="true"><key-map field-name="productId"/>
-            <entity-condition><date-filter from-field-name="listPriceFromDate" thru-field-name="listPriceThruDate"/>
-            <econdition field-name="listPriceTypeEnumId" value="PptList"/></entity-condition></member-entity>
-        <member-entity entity-alias="PRICE" entity-name="mantle.product.ProductPrice"
-                join-from-alias="PROD" join-optional="true"><key-map field-name="productId"/>
-            <entity-condition><date-filter from-field-name="priceFromDate" thru-field-name="priceThruDate"/>
-            <econdition field-name="priceTypeEnumId" value="PptCurrent"/></entity-condition></member-entity>
-        <alias name="categoryId" field="productCategoryId" entity-alias="CATG"/>
-        <alias name="categoryName" entity-alias="CATG"/>
-        <alias name="fromDate" entity-alias="MEM"/>
-        <alias name="thruDate" entity-alias="MEM"/>
-        <alias name="productId" entity-alias="PROD"/>
-        <alias name="pseudoId" entity-alias="PROD"/>
-        <alias name="productTypeEnumId" entity-alias="PROD"/>
-        <alias name="assetTypeEnumId" entity-alias="PROD"/>
-        <alias name="assetClassEnumId" entity-alias="PROD"/>
-        <alias name="productName" entity-alias="PROD"/>
-        <alias name="description" entity-alias="PROD"/>
-        <alias name="ownerPartyId" entity-alias="PROD"/>
-        <alias name="requireInventory" entity-alias="PROD"/>
-        <alias name="productFromDate" field="salesIntroductionDate" entity-alias="PROD"/>
-        <alias name="productThruDate" field="salesDiscontinuationDate" entity-alias="PROD"/>
-        <alias name="productPriceId" entity-alias="PRICE"/>
-        <alias name="listPrice" field="price" entity-alias="LISTPRICE"/>
-        <alias name="listPriceUomId" field="priceUomId" entity-alias="LISTPRICE"/>
-        <alias name="listPriceTypeEnumId" field="priceTypeEnumId" entity-alias="LISTPRICE"/>
-        <alias name="listPriceFromDate" field="fromDate" entity-alias="LISTPRICE"/>
-        <alias name="listPriceThruDate" field="thruDate" entity-alias="LISTPRICE"/>
-        <alias name="price" entity-alias="PRICE"/>
-        <alias name="priceUomId" entity-alias="PRICE"/>
-        <alias name="priceTypeEnumId" entity-alias="PRICE"/>
-        <alias name="priceFromDate" field="fromDate" entity-alias="PRICE"/>
-        <alias name="priceThruDate" field="thruDate" entity-alias="PRICE"/>
-    </view-entity>
-
     <view-entity entity-name="ProductAndCategoryAndPrices" package="growerp.mobile.product">
         <member-entity entity-alias="PROD" entity-name="mantle.product.Product"/>
         <member-entity entity-alias="LISTPRICE" entity-name="mantle.product.ProductPrice"

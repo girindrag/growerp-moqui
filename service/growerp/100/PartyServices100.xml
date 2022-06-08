@@ -2042,7 +2042,8 @@ along with this software (see the LICENSE.md file). If not, see
                                 out-map="context"/>
 
                         <!-- do not put fixed asset in inventory we do not want the normal reserve process to work -->
-                        <service-call name="create#mantle.product.asset.Asset" in-map="
+                        <service-call name="create#mantle.product.asset.Asset" out-map="context"
+                            in-map="
                             productId: product.productId,
                             classEnumId: product.assetClassEnumId,
                             hasQuantity: 'N',
@@ -2130,9 +2131,9 @@ along with this software (see the LICENSE.md file). If not, see
                         rentalThruDate: nowDate.plus(11), 
                         orderName: 'fifth generated Hotel order']
                     ]"/>
-    <!--
-                <if condition="classificationId == 'AppAdmin'"><set field="ordersIn" from="ordersAdmin"/></if>
-                <if condition="classificationId == 'AppHotel'"><set field="ordersIn" from="ordersHotel"/></if>
+    
+                <!--if condition="classificationId == 'AppAdmin'"><set field="ordersIn" from="ordersAdmin"/></if-->
+                <if condition="classificationId == 'AppHotel'"><set field="ordersIn" from="ordersHotel"/>
                 <entity-find entity-name="growerp.mobile.CompanyPersonAndLoginGroup" list="customers">
                     <econdition field-name="ownerPartyId" from="companyPartyId"/>
                     <econdition field-name="userGroupId" value="GROWERP_M_CUSTOMER"/>
@@ -2164,7 +2165,7 @@ along with this software (see the LICENSE.md file). If not, see
                                     roleTypeId: 'CustomerContactPerson']"/>
                         </else>
                     </if>
-                    <entity-find entity-name="growerp.mobile.product.CategoryAndProductAndPrice" list="products">
+                    <entity-find entity-name="growerp.mobile.product.ProductAndCategoryAndPrices" list="products">
                         <econdition field-name="ownerPartyId" from="companyPartyId"/>
                         <econdition field-name="productName" operator="like" value="${order.productName}%"/>
                         <date-filter from-field-name="productFromDate" thru-field-name="productThruDate"/>
@@ -2178,7 +2179,7 @@ along with this software (see the LICENSE.md file). If not, see
                                             requiredByDate: order.reservationDate,
                                             quantity: order.quantity]"
                         out-map="context"/>
-                    <while condition="order.quantity">
+                    <while condition="order.quantity--">
                         <service-call name="create#growerp.product.AssetRental"
                             in-map="[ productId: products[0].productId,
                             orderId: orderId, orderItemSeqId: orderItemSeqId,
@@ -2191,7 +2192,7 @@ along with this software (see the LICENSE.md file). If not, see
                         name="growerp.100.FinDocServices100.update#Order"/>
                     <set field="index" from="index + 1"/>
                 </iterate>
-            -->
+            </if><!-- orders only used for hotel, admin disabled -->
                 <!-- tasks -->
                 <entity-find entity-name="growerp.mobile.CompanyPersonAndLoginGroup" list="employees">
                     <econdition field-name="ownerPartyId" from="companyPartyId"/>
