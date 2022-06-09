@@ -201,6 +201,10 @@ along with this software (see the LICENSE.md file). If not, see
                         <parameter name="firstName"/>
                         <parameter name="lastName"/>
                         <parameter name="email"/>
+                        <parameter name="companyPaymentMethod" type="Map">
+                            <parameter name="ccPaymentMethodId"/>
+                            <parameter name="ccDescription"/>
+                        </parameter>
                     </parameter>
                     <parameter name="grandTotal"/>
                     <parameter name="classificationId"/>
@@ -225,7 +229,7 @@ along with this software (see the LICENSE.md file). If not, see
                         </parameter>
                     </parameter>
                 </parameter>
-            </parameter>    
+            </parameter>
             <parameter name="finDoc" type="Map">
                 <parameter name="docType"/>
                 <parameter name="sales" type="Boolean"/>
@@ -246,6 +250,10 @@ along with this software (see the LICENSE.md file). If not, see
                     <parameter name="firstName"/>
                     <parameter name="lastName"/>
                     <parameter name="email"/>
+                    <parameter name="companyPaymentMethod" type="Map">
+                        <parameter name="ccPaymentMethodId"/>
+                        <parameter name="ccDescription"/>
+                    </parameter>
                 </parameter>
                 <parameter name="grandTotal"/>
                 <parameter name="classificationId"/>
@@ -868,6 +876,9 @@ along with this software (see the LICENSE.md file). If not, see
                 <parameter name="otherUser" type="Map">
                     <parameter name="companyPartyId"/>
                     <parameter name="partyId"/>
+                    <parameter name="companyPaymentMethod" type="Map">
+                        <parameter name="ccPaymentMethodId"/>
+                    </parameter>
                 </parameter>
                 <parameter name="grandTotal"/>
                 <parameter name="classificationId"/>
@@ -912,6 +923,10 @@ along with this software (see the LICENSE.md file). If not, see
                     <parameter name="firstName"/>
                     <parameter name="lastName"/>
                     <parameter name="email"/>
+                    <parameter name="companyPaymentMethod" type="Map">
+                        <parameter name="ccPaymentMethodId"/>
+                        <parameter name="ccDescription"/>
+                    </parameter>
                 </parameter>
                 <parameter name="grandTotal"/>
                 <parameter name="classificationId"/>
@@ -1102,7 +1117,7 @@ along with this software (see the LICENSE.md file). If not, see
             <service-call out-map="context" in-map="[wantOwner: true]"
                name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner"/>
             <if condition="payment.sales == true">
-                <then>
+                <then><!-- incoming sales payment -->
                     <set field="fromPartyId" from="payment.otherUser.companyPartyId"/>
                     <set field="toPartyId" from="companyPartyId"/>
                     <set field="contactRole" value="CustomerContactPerson"/>
@@ -1247,10 +1262,7 @@ along with this software (see the LICENSE.md file). If not, see
                     <parameter name="companyName"/>
                     <parameter name="partyId"/>
                     <parameter name="companyPaymentMethod" type="Map">
-                        <parameter name="creditCardType"/>
-                        <parameter name="creditCardNumber"/>
-                        <parameter name="expireMonth"/>
-                        <parameter name="expireYear"/>
+                        <parameter name="ccPaymentMethodId"/>
                     </parameter>
                 </parameter>
                 <parameter name="grandTotal"/>
@@ -1294,6 +1306,10 @@ along with this software (see the LICENSE.md file). If not, see
                     <parameter name="firstName"/>
                     <parameter name="lastName"/>
                     <parameter name="email"/>
+                    <parameter name="companyPaymentMethod" type="Map">
+                        <parameter name="ccPaymentMethodId"/>
+                        <parameter name="ccDescription"/>
+                    </parameter>
                 </parameter>
                 <parameter name="grandTotal"/>
                 <parameter name="classificationId"/>
@@ -1796,6 +1812,7 @@ along with this software (see the LICENSE.md file). If not, see
             </else>
         </if>
         <set field="paymentOld.amount" from="payment.grandTotal"/>
+        <!-- first item stores the itemType needed for posting -->
         <if condition="payment.items">
             <entity-find entity-name="mantle.ledger.config.ItemTypeAndGlAccount" list="glAccounts">
                 <econdition field-name="organizationPartyId" from="companyPartyId"/>
@@ -1806,7 +1823,8 @@ along with this software (see the LICENSE.md file). If not, see
             </if>
         </if>
         <!-- payment instrument changed? -->
-        <if condition="paymentOld.paymentInstrumentEnumId != 'Pi${payment.paymentInstrument}'">
+        <set field="newInstrument" value="Pi${payment.paymentInstrument}"/>
+        <if condition="paymentOld.paymentInstrumentEnumId != newInstrument">
             <!-- credit card removed -->
             <if condition="paymentOld.paymentInstrumentEnumId == 'PiCreditCard'">
                 <set field="paymentOld.paymentMethodId" from="null"/>
@@ -1835,7 +1853,7 @@ along with this software (see the LICENSE.md file). If not, see
                     </else>
                 </if>
             </if>
-            <set field="paymentOld.paymentInstrumentEnumId" from="'Pi' + payment.paymentInstrument"/>
+            <set field="paymentOld.paymentInstrumentEnumId" value="Pi${payment.paymentInstrument}"/>
         </if>
         <!-- finally update -->
         <entity-update value-field="paymentOld"/>
@@ -1893,7 +1911,7 @@ along with this software (see the LICENSE.md file). If not, see
                 in-map="[acctgTransId: entries[0].acctgTransId]"/>
             <service-call name="update#mantle.account.payment.Payment"
                 in-map="[paymentId: paymentOld.paymentId, statusId: 'PmntConfirmed']"/>
-        </if>          
+        </if>
     </actions>
 </service>
 
