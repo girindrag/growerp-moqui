@@ -121,7 +121,8 @@ along with this software (see the LICENSE.md file). If not, see
                 contentLocation="dbresource://mantle/content/product/DEMO_TS_W/img_TShirtWomanBack.jpg"/>
     </mantle.product.Product>
     <dbResources resourceId="MCNT_PROD_DEMO_TS_W" filename="DEMO_TS_W" isFile="N" parentResourceId="MCNT_PRODUCT"/>
-    <dbResources resourceId="DEMO_TS_W_ILF" filename="img_TShirtWomanFront.jpg" isFile="Y" parentResourceId="MCNT_PROD_DEMO_TS_W"/>
+    <dbResources resourceId="DEMO_TS_W_ILF" filename="img_TShirtWomanFront.jpg" isFile="Y" 
+        parentResourceId="MCNT_PROD_DEMO_TS_W"/>
     <dbResources resourceId="DEMO_TS_W_ILB" filename="img_TShirtWomanBack.jpg" isFile="Y" parentResourceId="MCNT_PROD_DEMO_TS_W"/>
     <dbResources resourceId="DEMO_TS_W_DL" filename="description.html" isFile="Y" parentResourceId="MCNT_PROD_DEMO_TS_W"/>
     <moqui.resource.DbResourceFile resourceId="DEMO_TS_W_DL" rootVersionName="01" mimeType="text/html" versionName="01">

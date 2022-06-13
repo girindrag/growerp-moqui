@@ -667,7 +667,7 @@ along with this software (see the LICENSE.md file). If not, see
     <service verb="register" noun="User"  authenticate="anonymous-all" >
         <description>registration on the e-commerce webapp for a specific company just for non-employees</description>
         <in-parameters>
-            <parameter name="ownerPartyId">
+            <parameter name="ownerPartyId" required="true">
                 <description>Party Id of the organization</description></parameter>
             <parameter name="classificationId">
                 <description>The App id the user want to register for, valid entries: AppAdmin, AppHotel etc </description></parameter>
@@ -676,8 +676,8 @@ along with this software (see the LICENSE.md file). If not, see
                 <parameter name="email"/>
                 <parameter name="firstName"/>
                 <parameter name="lastName"/>
-                <parameter name="loginDisabled" type="Boolean"/>
-                <parameter name="loginName"/>
+                <parameter name="loginDisabled" type="Boolean" default-value="false"/>
+                <parameter name="loginName" default="email"/>
                 <parameter name="userGroupId"/>
                 <parameter name="groupDescription"/>
                 <parameter name="language"/>
@@ -708,7 +708,7 @@ along with this software (see the LICENSE.md file). If not, see
                 <parameter name="email"/>
                 <parameter name="firstName"/>
                 <parameter name="lastName"/>
-                <parameter name="loginDisabled" type="Boolean"/>
+                <parameter name="loginDisabled" type="Boolean" default-value="'N'"/>
                 <parameter name="loginName"/>
                 <parameter name="userGroupId"/>
                 <parameter name="groupDescription"/>
@@ -736,8 +736,9 @@ along with this software (see the LICENSE.md file). If not, see
         </out-parameters>
         <actions>
             <!-- check input parameters because anonymous access -->
-            <entity-find-one entity-name="mantle.party.Party" value-field="party">
-                <field-map field-name="partyId" from="ownerPartyId"/>
+            <entity-find-one entity-name="growerp.party.CompanyPreferenceAndRole"
+                value-field="party"><field-map field-name="partyId" from="ownerPartyId"/>
+                <field-map field-name="roleTypeId" value="OrgInternal"/>
             </entity-find-one>
             <if condition="!party"><return message="Not a valid ownerId"/></if>
             <entity-find-one entity-name="mantle.party.PartyClassification"
@@ -746,6 +747,29 @@ along with this software (see the LICENSE.md file). If not, see
             </entity-find-one>
             <if condition="!classification">
                 <return message="Not a valid classificationId: ${classificationId}"/></if>
+            <if condition="!user.companyName &amp;&amp; !user.companyPartyId">
+                <return error="true"
+                    message="Company name required for new lead, customer or supplier"/>
+            </if>
+            <!-- create account, not active when no login provided -->
+            <set field="disabled" value="N"/>
+            <if condition="!user.loginName">
+                <set field="disabled" value="Y"/>
+                <set field="loginName" from="user.email"/>
+                <else>
+                    <set field="loginName" from="user.loginName"/>
+                </else>
+            </if>
+            <set field="newPassword" from="org.moqui.util.StringUtilities.getRandomString(6) + '9!'"/>
+            <log message="=====password: $newPassword"/>
+            <set field="newPasswordVerify" from="newPassword"/>
+            <service-call name="mantle.party.PartyServices.create#Account" 
+                in-map="context + [roleTypeId: roleTypeId, loginAfterCreate: false,
+                        firstName: user.firstName, lastName: user.lastName,
+                        username: loginName, ownerPartyId: ownerPartyId,
+                        emailAddress: user.email, disabled: disabled]"
+                out-map="userAccount" />
+            <set field="userPartyId" from="userAccount.partyId"/>
             <!-- roles -->
             <if condition="user.userGroupId == 'GROWERP_M_LEAD' ||
                     user.userGroupId == 'GROWERP_M_CUSTOMER'">
@@ -753,29 +777,6 @@ along with this software (see the LICENSE.md file). If not, see
             <else-if condition="user.userGroupId == 'GROWERP_M_SUPPLIER'">
                 <set field="roleTypeId" value="Supplier"/></else-if>
             <else><return message="Not a valid userGroupId: ${user.userGroupId}"/></else></if>
-            <!-- create account, not active when no login provided -->
-            <set field="disabled" value="N"/>
-            <if condition="!user.loginName"><set field="disabled" value="Y"/></if>
-            <set field="newPassword" from="org.moqui.util.StringUtilities.getRandomString(6) + '9!'"/>
-            <set field="newPasswordVerify" from="newPassword"/>
-            <service-call name="mantle.party.PartyServices.create#Account" 
-                in-map="context + [roleTypeId: roleTypeId, loginAfterCreate: false,
-                        firstName: user.firstName, lastName: user.lastName,
-                        username: user.loginName,
-                        emailAddress: user.email, disabled: disabled]"
-                out-map="userAccount" />
-            <set field="userPartyId" from="userAccount.partyId"/>
-            <!-- update owner on userPartyId -->
-            <entity-find-one entity-name="mantle.party.Party"
-                    value-field="party" for-update="true">
-                <field-map field-name="partyId" from="userPartyId"/>
-            </entity-find-one>
-            <set field="party.ownerPartyId" from="ownerPartyId"/>
-            <entity-update value-field="party"/>
-            <if condition="!user.companyName &amp;&amp; !user.companyPartyId">
-                <return error="true"
-                    message="Company name required for new lead, customer or supplier"/>
-            </if>
             <!-- company -->
             <if condition="user.companyPartyId">
                 <!-- existing company -->
