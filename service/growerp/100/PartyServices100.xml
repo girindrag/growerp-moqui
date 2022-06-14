@@ -761,7 +761,6 @@ along with this software (see the LICENSE.md file). If not, see
                 </else>
             </if>
             <set field="newPassword" from="org.moqui.util.StringUtilities.getRandomString(6) + '9!'"/>
-            <log message="=====password: $newPassword"/>
             <set field="newPasswordVerify" from="newPassword"/>
             <service-call name="mantle.party.PartyServices.create#Account" 
                 in-map="context + [roleTypeId: roleTypeId, loginAfterCreate: false,
@@ -1677,6 +1676,27 @@ along with this software (see the LICENSE.md file). If not, see
                     </if>
                 </iterate>
             </iterate>
+
+            <!-- data documents for elasticsearch -->
+            <set field="dataDocumentId" value="P$productStoreId"/>
+            <service-call name="org.moqui.impl.EntityServices.clone#DataDocument"
+                in-map="[dataDocumentId: 'MantleProduct',
+                        newDataDocumentId: dataDocumentId,
+                        newIndexName: 'popc']"/>
+            <entity-find-one entity-name="moqui.entity.document.DataDocumentCondition" value-field="dataDoc">
+                <field-map field-name="dataDocumentId" value="PopcProduct"/></entity-find-one>
+            <service-call name="create#moqui.entity.document.DataDocumentCondition"
+                in-map="dataDoc + [dataDocumentId: dataDocumentId, fieldValue: productStoreId]"/>
+            <!-- add to data feed -->
+            <service-call name="create#moqui.entity.feed.DataFeedDocument"
+                in-map="[dataFeedId: 'PopCommerceSearch', dataDocumentId: dataDocumentId]"/>
+            <!-- add to productStore -->
+            <service-call name="update#mantle.product.store.ProductStore"
+                in-map="productStoreId: productStoreId, productDataDocumentId: dataDocumentId"/>
+            <!-- update index -->
+            <!--service-call name="org.moqui.search.SearchServices.index#DataFeedDocuments"
+                in-map="[dataFeedId: 'PopCommerceSearch', dataDocumentId: dataDocumentId,
+                            batchSize: 100]"/-->
 
             <!-- hotel app not using categories but need one for products -->
             <!--entity-find list="categories" limit="1"

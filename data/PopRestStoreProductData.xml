@@ -415,7 +415,8 @@ Paying is simple. All you need is a credit card and you're good to go. We accept
     </moqui.resource.DbResourceFile>
 
     <!-- Product for eCommerce Search -->
-    <org.moqui.impl.EntityServices.cloneDataDocument dataDocumentId="MantleProduct" newDataDocumentId="PopcProduct" newIndexName="popc"/>
+    <org.moqui.impl.EntityServices.cloneDataDocument dataDocumentId="MantleProduct"
+         newDataDocumentId="PopcProduct" newIndexName="popc"/>
     <moqui.entity.document.DataDocumentCondition dataDocumentId="PopcProduct" conditionSeqId="01"
             fieldNameAlias="productStoreId" fieldValue="POPC_DEFAULT" postQuery="Y"/>
     <!-- NOTE: popc ecommerce search screen creates own links like /popc/Product/Detail/${productId} -->
