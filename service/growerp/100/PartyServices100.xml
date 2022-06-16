@@ -761,6 +761,7 @@ along with this software (see the LICENSE.md file). If not, see
                 </else>
             </if>
             <set field="newPassword" from="org.moqui.util.StringUtilities.getRandomString(6) + '9!'"/>
+            <log message="========$newPassword"/>
             <set field="newPasswordVerify" from="newPassword"/>
             <service-call name="mantle.party.PartyServices.create#Account" 
                 in-map="context + [roleTypeId: roleTypeId, loginAfterCreate: false,
@@ -1571,6 +1572,15 @@ along with this software (see the LICENSE.md file). If not, see
             </if>
             <service-call name="create#mantle.product.store.ProductStore"
                 out-map="context" in-map="inMap" />
+
+            <!-- store shipping options -->
+            <entity-find entity-name="mantle.product.store.ProductStoreShipOption" list="options">
+                <econdition field-name="productStoreId" value="POPC_DEFAULT"/>
+            </entity-find>
+            <iterate list="options" entry="option">
+                <service-call name="create#mantle.product.store.ProductStoreShipOption"
+                    in-map="option + [productStoreId: productStoreId]"/>
+            </iterate>
 
             <!-- update website settings-->
             <set field="hostName" from="ec.web.getHostName(false)"/>

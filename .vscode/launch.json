@@ -9,8 +9,14 @@
             "type": "firefox",
             "request": "launch",
             "reAttach": true,
-            "url": "http://100001.localhost:8080/store",
-            "webRoot": "/home/dell/growerpMoqui/runtime/component/PopRestStore/screen/store/components"
-        },
+            "url": "http://100000.localhost:8080/store",
+            "webRoot": "/home/dell/growerpMoqui/runtime/component/PopRestStore/screen/store/components",
+            "pathMappings": [
+                {
+                    "url": "http://100000.localhost:8080/store/components",
+                    "path": "/home/dell/growerpMoqui/runtime/component/PopRestStore/screen/store/components"
+                },
+            ]
+        }
     ]
 }
