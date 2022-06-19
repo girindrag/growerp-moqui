@@ -701,6 +701,7 @@ along with this software (see the LICENSE.md file). If not, see
                     <parameter name="ccDescription"/>
                 </parameter>
             </parameter>
+            <parameter name="newPassword"/>
         </in-parameters>
         <out-parameters>
             <parameter name="user" type="Map">
@@ -760,8 +761,9 @@ along with this software (see the LICENSE.md file). If not, see
                     <set field="loginName" from="user.loginName"/>
                 </else>
             </if>
-            <set field="newPassword" from="org.moqui.util.StringUtilities.getRandomString(6) + '9!'"/>
-            <log message="========$newPassword"/>
+            <if condition="!newPassword">
+                <set field="newPassword" from="org.moqui.util.StringUtilities.getRandomString(6) + '9!'"/>
+            </if>
             <set field="newPasswordVerify" from="newPassword"/>
             <service-call name="mantle.party.PartyServices.create#Account" 
                 in-map="context + [roleTypeId: roleTypeId, loginAfterCreate: false,
