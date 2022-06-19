@@ -61,6 +61,7 @@ along with this software (see the LICENSE.md file). If not, see
                         </parameter>
                     </parameter>
                     <parameter name="useWarehouse" type="Boolean"/>
+                    <parameter name="assetCount"/>
                     <parameter name="image"/>
                 </parameter>    
             </parameter>
@@ -224,9 +225,10 @@ along with this software (see the LICENSE.md file). If not, see
     <service verb="create" noun="Product">
         <description> Create a Product with a price in a category</description>
         <in-parameters>
+            <parameter name="classificationId" required="true"/>
             <parameter name="product" required="true" type="Map">
                 <parameter name="productTypeId"/>
-                <parameter name="assetClassId"/>
+                <parameter name="assetClassId" default-value="Hotel Room"/>
                 <parameter name="productName"/>
                 <parameter name="description"/>
                 <parameter name="price"/>
@@ -237,6 +239,7 @@ along with this software (see the LICENSE.md file). If not, see
                     </parameter>
                 </parameter>
                 <parameter name="useWarehouse" type="Boolean"/>
+                <parameter name="assetCount"/>
                 <parameter name="image"/>
             </parameter>
         </in-parameters>
@@ -256,7 +259,9 @@ along with this software (see the LICENSE.md file). If not, see
                     </parameter>
                 </parameter>
                 <parameter name="useWarehouse" type="Boolean"/>
+                <parameter name="assetCount"/>
                 <parameter name="image"/>
+
             </parameter>
         </out-parameters>
         <actions>
@@ -276,7 +281,7 @@ along with this software (see the LICENSE.md file). If not, see
                 ownerPartyId: ownerPartyId,
                 productTypeEnumId: prodConvert.convertedStatusId,
                 assetTypeEnumId: 'AstTpInventory',
-                requireInventory: product.useWarehouse == 'true' ? 'Y' : 'N',
+                requireInventory: product.useWarehouse == true ? 'Y' : 'N',
                 assetClassEnumId: convertedStatusId ? 
                     convertedStatusId : 'AsClsInventoryFin']" out-map="context"/>
             <!-- product price and currency -->
@@ -315,6 +320,15 @@ along with this software (see the LICENSE.md file). If not, see
                                 productId: productId,
                                 fromDate: ec.user.nowTimestamp]"/>
             </iterate>
+            <!-- asset count -->
+            <if condition="product.assetCount != null &amp;&amp; Integer.parseInt(product.assetCount) > 0">
+                <set field="newProduct" from="[productId: productId]"/>
+                <set field="inMap" from="[assetName: 'set by productDialog',
+                        quantityOnHand: product.assetCount,
+                        product: newProduct,
+                        statusId: 'Available']"/>
+                <service-call name="growerp.100.CatgProdServices100.create#Asset"
+                    in-map="[asset: inMap, classificationId: classificationId]"/></if>
             <!-- product Image -->
             <if condition="product.image">
                 <service-call name="growerp.100.ImageServices100.upload#Image"
@@ -330,6 +344,7 @@ along with this software (see the LICENSE.md file). If not, see
     <service verb="update" noun="Product">
         <description> Update an existing Product</description>
         <in-parameters>
+            <parameter name="classificationId" required="true"/>
             <parameter name="product" required="true" type="Map">
                 <parameter name="productId"/>
                 <parameter name="productTypeId"/>
@@ -345,6 +360,7 @@ along with this software (see the LICENSE.md file). If not, see
                     </parameter>
                 </parameter>
                 <parameter name="useWarehouse" type="Boolean"/>
+                <parameter name="assetCount"/>
                 <parameter name="image"/>
             </parameter>
         </in-parameters>
@@ -364,6 +380,7 @@ along with this software (see the LICENSE.md file). If not, see
                     </parameter>
                 </parameter>
                 <parameter name="useWarehouse" type="Boolean"/>
+                <parameter name="assetCount"/>
                 <parameter name="image"/>
             </parameter>
         </out-parameters>
@@ -378,7 +395,7 @@ along with this software (see the LICENSE.md file). If not, see
             <if condition="!prods"><return error="true" message="product ${product.productId} not found!}"/></if>
             <set field="oldProduct" from="prods[0]"/>
             <!-- require inventory flag -->
-            <set field="requireInventory" from="product.useWarehouse == 'true' ? 'Y' : 'N'"/>
+            <set field="requireInventory" from="product.useWarehouse == true ? 'Y' : 'N'"/>
             <!-- product fields -->
             <service-call name="growerp.100.FinDocServices100.convert#StatusId"
                 in-map="[docType: 'product', statusId: product.productTypeId]" out-map="prodConvert"/>
@@ -441,6 +458,23 @@ along with this software (see the LICENSE.md file). If not, see
                                 productCategoryId: category.categoryId,
                                 fromDate: ec.user.nowTimestamp]"/>
             </iterate>
+            <!-- asset count -->
+            <entity-find entity-name="mantle.product.asset.Asset" list="assets" for-update="true">
+                <econdition field-name="productId" from="product.productId"/>
+            </entity-find>
+            <if condition="assets &amp;&amp; product.assetCount != assets[0].quantityOnHandTotal">
+                    <set field="assets[0].quantityOnHandTotal" from="product.assetCount"/>
+                    <entity-update value-field="assets[0]"/>
+                <else-if condition="product.assetCount != null &amp;&amp; Integer.parseInt(product.assetCount) > 0">
+                    <set field="newProduct" from="[productId: product.productId]"/>
+                    <set field="inMap" from="[assetName: 'set by productDialog',
+                            quantityOnHand: product.assetCount,
+                            product: newProduct,
+                            statusId: 'Available']"/>
+                    <service-call name="growerp.100.CatgProdServices100.create#Asset"
+                        in-map="[asset: inMap, classificationId: classificationId]"/>
+                </else-if>
+            </if>
             <!-- update image -->
             <if condition="product.image">
                 <service-call name="growerp.100.ImageServices100.upload#Image"
@@ -474,6 +508,7 @@ along with this software (see the LICENSE.md file). If not, see
                     </parameter>
                 </parameter>
                 <parameter name="useWarehouse" type="Boolean"/>
+                <parameter name="assetCount"/>
                 <parameter name="image"/>
             </parameter>
         </out-parameters>
