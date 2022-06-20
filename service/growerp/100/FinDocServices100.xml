@@ -1667,14 +1667,14 @@ along with this software (see the LICENSE.md file). If not, see
                     <service-call in-map="context + [statusId: invStatusId]" out-map="context"
                         name="mantle.account.InvoiceServices.create#EntireOrderPartInvoice"/>
                     <!-- create payment -->
-                    <set field="effectiveDate" from="ec.user.nowTimestamp"/>
-                    <service-call in-map="context" out-map="context"
-                        name="mantle.order.OrderServices.add#OrderPartPayment"/>
-                    <entity-find-one entity-name="mantle.account.payment.Payment"
-                        value-field="payment" for-update="true"/>
-                    <set field="payment.statusId" value="PmntAuthorized"/>
-                    <service-call
-                        name="update#mantle.account.payment.Payment" in-map="payment"/>
+                    <entity-find entity-name="mantle.account.payment.Payment" list="payments">
+                        <econdition field-name="orderId" from="order.orderId"/>
+                    </entity-find>
+                    <if condition="!payments"><!-- not already exist? credit card will...-->
+                        <set field="effectiveDate" from="ec.user.nowTimestamp"/>
+                        <service-call in-map="context + [statusId: 'PmntAuthorized']" out-map="context"
+                            name="mantle.order.OrderServices.add#OrderPartPayment"/>
+                    </if>
                     <!-- create shipment  -->
                     <entity-find entity-name="mantle.facility.Facility" list="facilities" limit="1">
                         <econdition field-name="ownerPartyId" from="companyPartyId"/>
