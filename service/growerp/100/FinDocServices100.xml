@@ -206,6 +206,17 @@ along with this software (see the LICENSE.md file). If not, see
                             <parameter name="ccDescription"/>
                         </parameter>
                     </parameter>
+                    <parameter name="shipmentMethod"/>
+                    <parameter name="address" type="Map">
+                        <parameter name="addressId"/>
+                        <parameter name="address1"/>
+                        <parameter name="address2"/>
+                        <parameter name="postalCode"/>
+                        <parameter name="city"/>
+                        <parameter name="province"/>
+                        <parameter name="country"/>
+                    </parameter>
+                    <parameter name="telephoneNr"/>
                     <parameter name="grandTotal"/>
                     <parameter name="classificationId"/>
                     <parameter name="items" type="List">
@@ -255,6 +266,16 @@ along with this software (see the LICENSE.md file). If not, see
                         <parameter name="ccDescription"/>
                     </parameter>
                 </parameter>
+                <parameter name="address" type="Map">
+                    <parameter name="addressId"/>
+                    <parameter name="address1"/>
+                    <parameter name="address2"/>
+                    <parameter name="postalCode"/>
+                    <parameter name="city"/>
+                    <parameter name="province"/>
+                    <parameter name="country"/>
+                </parameter>
+                <parameter name="telephoneNr"/>
                 <parameter name="grandTotal"/>
                 <parameter name="classificationId"/>
                 <parameter name="items" type="List">
@@ -745,6 +766,12 @@ along with this software (see the LICENSE.md file). If not, see
                                         ]"/>
                             </else>
                         </if>
+                        <set field="address" from="[
+                                    address1: item.address1,
+                                    address2: item.address2,
+                                    city: item.city,
+                                    postalCode: item.postalCode,
+                                    country: item.country]"/>
                         <service-call name="growerp.100.FinDocServices100.convert#StatusId"
                             in-map="[sales: sales, docType: docType, statusId: item.statusId]" out-map="context"/>
                         <set field="finDocOut" from="[
@@ -753,9 +780,12 @@ along with this software (see the LICENSE.md file). If not, see
                             orderId: item.orderId,
                             shipmentId: item.shipmentId,
                             statusId: convertedStatusId,
+                            shipmentMethod: item.shipmentMethod,
                             creationDate: item.entryDate 
                                 ? item.entryDate.toString().substring(0,19) + 'Z' : null,
                             otherUser: userOut,
+                            telephoneNr: item.telephoneNr,
+                            address: address,
                             ]"/>
                         <set field="finDocItems" from="[]"/>
                     </if>

@@ -112,6 +112,23 @@ along with this software (see the LICENSE.md file). If not, see
 
     <view-entity entity-name="ShipmentAndPartiesAndWarehouse" package="growerp.warehouse">
         <member-entity entity-alias="SHIP" entity-name="mantle.shipment.Shipment"/>
+        <member-entity entity-alias="ROUTE" entity-name="mantle.shipment.ShipmentRouteSegment"
+            join-from-alias="SHIP"><key-map field-name="shipmentId"/></member-entity>
+        <member-entity entity-alias="METHOD" entity-name="moqui.basic.Enumeration"
+            join-from-alias="ROUTE">
+            <key-map field-name="shipmentMethodEnumId" related="enumId"/></member-entity>
+        <member-entity entity-alias="TELEPHONE" entity-name="mantle.party.contact.TelecomNumber"
+            join-from-alias="ROUTE" join-optional="true">
+            <key-map field-name="destTelecomContactMechId" related="contactMechId"/></member-entity>
+        <member-entity entity-alias="PA" entity-name="mantle.party.contact.PostalAddress"
+            join-from-alias="ROUTE" join-optional="true">
+            <key-map field-name="destPostalContactMechId" related="contactMechId"/></member-entity>
+        <member-entity entity-alias="COUNTRY" entity-name="moqui.basic.Geo"
+            join-from-alias="PA" join-optional="true">
+            <key-map field-name="countryGeoId" related="geoId"/>
+            <entity-condition>
+                <econdition field-name="geoTypeEnumId" value="GEOT_COUNTRY"/>
+            </entity-condition></member-entity>
         <member-entity entity-alias="SITEM" entity-name="mantle.shipment.ShipmentItem"
             join-from-alias="SHIP"><key-map field-name="shipmentId"/></member-entity>
         <member-entity entity-alias="SIS" entity-name="mantle.shipment.ShipmentItemSource"
@@ -164,8 +181,21 @@ along with this software (see the LICENSE.md file). If not, see
         <member-entity entity-alias="CACCOUNT" entity-name="moqui.security.UserAccount"
             join-from-alias="CPERSON" join-optional="true">
             <key-map field-name="partyId"/></member-entity>
-
         <alias name="shipmentId" entity-alias="SHIP"/>
+        <alias name="shipmentMethod" field="description" entity-alias="METHOD"/>
+
+        <alias name="contactMechId" entity-alias="PA"/>
+        <alias name="address1" entity-alias="PA"/>
+        <alias name="address2" entity-alias="PA"/>
+        <alias name="city" entity-alias="PA"/>
+        <alias name="stateProvince" entity-alias="PA"/>
+        <alias name="stateProvinceGeoId" entity-alias="PA"/>
+        <alias name="postalCode" entity-alias="PA"/>
+        <alias name="countryId" field="countryGeoId" entity-alias="PA"/>
+        <alias name="country" field="geoName" entity-alias="COUNTRY"/>
+        <alias name="geoTypeEnumId" entity-alias="COUNTRY"/>
+
+        <alias name="telephoneNr" field="contactNumber" entity-alias="TELEPHONE"/>
         <alias name="toPartyId" entity-alias="SHIP"/>
         <alias name="fromPartyId" entity-alias="SHIP"/>
         <alias name="statusId" entity-alias="SHIP"/>
@@ -471,7 +501,7 @@ along with this software (see the LICENSE.md file). If not, see
             </entity-condition></member-entity>
         <member-entity entity-alias="PA" entity-name="mantle.party.contact.PostalAddress"
                 join-from-alias="PCM" join-optional="true">
-            <key-map field-name="contactMechId"/></member-entity>        
+            <key-map field-name="contactMechId"/></member-entity>
         <member-entity entity-alias="COUNTRY" entity-name="moqui.basic.Geo"
                 join-from-alias="PA" join-optional="true">
             <key-map field-name="countryGeoId" related="geoId"/>
@@ -864,6 +894,28 @@ along with this software (see the LICENSE.md file). If not, see
     <alias name="contactMechPurposeId" entity-alias="PCM"/>
     <alias name="fromDate" entity-alias="PCM"/>
     <alias name="thruDate" entity-alias="PCM"/>
+    <alias name="contactMechId" entity-alias="PA"/>
+    <alias name="address1" entity-alias="PA"/>
+    <alias name="address2" entity-alias="PA"/>
+    <alias name="postalCode" entity-alias="PA"/>
+    <alias name="city" entity-alias="PA"/>
+    <alias name="provinceName" field="geoName" entity-alias="PROVINCEGEO"/>
+    <alias name="province" field="stateProvince" entity-alias="PA"/>
+    <alias name="provinceId" field="stateProvinceGeoId" entity-alias="PA"/>
+    <alias name="city" entity-alias="PA"></alias>
+    <alias name="countryId" field="countryGeoId" entity-alias="PA"></alias>
+    <alias name="countryName"  field="geoName" entity-alias="COUNTRYGEO"/>
+</view-entity>
+
+<view-entity entity-name="ContactMechPostalAddressGeo" package="growerp.party.contact">
+    <member-entity entity-alias="PA" entity-name="mantle.party.contact.PostalAddress"/>
+    <member-entity entity-alias="COUNTRYGEO" entity-name="moqui.basic.Geo"
+            join-from-alias="PA">
+        <key-map field-name="countryGeoId" related="geoId"/></member-entity>
+    <member-entity entity-alias="PROVINCEGEO" entity-name="moqui.basic.Geo"
+            join-from-alias="PA" join-optional="true">
+        <key-map field-name="stateProvinceGeoId" related="geoId"/>
+    </member-entity>
     <alias name="contactMechId" entity-alias="PA"/>
     <alias name="address1" entity-alias="PA"/>
     <alias name="address2" entity-alias="PA"/>
