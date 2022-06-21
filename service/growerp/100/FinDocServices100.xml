@@ -421,6 +421,7 @@ along with this software (see the LICENSE.md file). If not, see
                             orderId: item.orderId,
                             paymentId: item.paymentId,
                             description: item.orderName,
+                            salesChannel: item.salesChannel,
                             statusId: convertedStatusId,
                             creationDate: item.entryDate
                                 ? item.entryDate.toString().substring(0,19) + 'Z': null,

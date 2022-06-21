@@ -17,6 +17,9 @@ along with this software (see the LICENSE.md file). If not, see
 
     <view-entity entity-name="OrderHeaderPartItemPartiesAndReservation" package="growerp.order">
         <member-entity entity-alias="ORHD" entity-name="mantle.order.OrderHeader"/>
+        <member-entity entity-alias="SC" entity-name="moqui.basic.Enumeration"
+            join-from-alias="ORHD">
+            <key-map field-name="salesChannelEnumId" related="enumId"/></member-entity>
         <member-entity entity-alias="OPRT" entity-name="mantle.order.OrderPart"
             join-from-alias="ORHD">
             <key-map field-name="orderId"/></member-entity>
@@ -76,6 +79,7 @@ along with this software (see the LICENSE.md file). If not, see
         <alias name="entryDate" entity-alias="ORHD"/>
         <alias name="grandTotal" entity-alias="ORHD"/>
         <alias name="placedDate" entity-alias="ORHD"/>
+        <alias name="salesChannel" field="description" entity-alias="SC"/>
         <alias name="statusId" entity-alias="OPRT"/>
         
         <alias name="vendorPartyId" entity-alias="OPRT"/>
