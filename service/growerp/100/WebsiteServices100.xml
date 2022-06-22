@@ -86,7 +86,7 @@ along with this software (see the LICENSE.md file). If not, see
                 <econdition field-name="classificationId" from="classificationId"/>
                 <econditions combine="or"><!-- just show deals and new products -->
                     <econdition field-name="storeCategoryTypeEnumId" value="PsctPromotions"/>
-                    <econdition field-name="storeCategoryTypeEnumId" value="PsctNewProducts"/>
+                    <econdition field-name="storeCategoryTypeEnumId" value="PsctFeatured"/>
                 </econditions>
             </entity-find>
             <set field="lastItem" from="null"/>

@@ -18,7 +18,7 @@ along with this software (see the LICENSE.md file). If not, see
     <view-entity entity-name="OrderHeaderPartItemPartiesAndReservation" package="growerp.order">
         <member-entity entity-alias="ORHD" entity-name="mantle.order.OrderHeader"/>
         <member-entity entity-alias="SC" entity-name="moqui.basic.Enumeration"
-            join-from-alias="ORHD">
+            join-from-alias="ORHD" join-optional="true">
             <key-map field-name="salesChannelEnumId" related="enumId"/></member-entity>
         <member-entity entity-alias="OPRT" entity-name="mantle.order.OrderPart"
             join-from-alias="ORHD">
@@ -119,7 +119,7 @@ along with this software (see the LICENSE.md file). If not, see
         <member-entity entity-alias="ROUTE" entity-name="mantle.shipment.ShipmentRouteSegment"
             join-from-alias="SHIP"><key-map field-name="shipmentId"/></member-entity>
         <member-entity entity-alias="METHOD" entity-name="moqui.basic.Enumeration"
-            join-from-alias="ROUTE">
+            join-from-alias="ROUTE" join-optional="true">
             <key-map field-name="shipmentMethodEnumId" related="enumId"/></member-entity>
         <member-entity entity-alias="TELEPHONE" entity-name="mantle.party.contact.TelecomNumber"
             join-from-alias="ROUTE" join-optional="true">
