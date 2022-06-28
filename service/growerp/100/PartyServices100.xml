@@ -1586,7 +1586,13 @@ along with this software (see the LICENSE.md file). If not, see
 
             <!-- update website settings-->
             <set field="hostName" from="ec.web.getHostName(false)"/>
-            <if condition="hostName == '10.0.2.2'"><set field="hostName" value="localhost"/></if>
+            <if condition="hostName == '10.0.2.2' || hostname == '127.0.0.1'">
+                <set field="hostName" value="localhost"/></if>
+            <if condition="hostName == 'localhost'">
+                <set field="hostName" value="localhost:8080"/></if>
+            <if condition="hostName.indexOf('.', hostName.indexOf('.') + 1) != -1"><!-- two dots? -->
+                <set field="hostName" from="hostName.substring(hostName.indexOf('.')+1)"/>
+            </if>
             <set field="hostName" value="${productStoreId}.${hostName}"/>
             <entity-find entity-name="mantle.product.store.ProductStoreSetting" list="stores">
                 <econdition field-name="productStoreId" value="POPC_DEFAULT"/>

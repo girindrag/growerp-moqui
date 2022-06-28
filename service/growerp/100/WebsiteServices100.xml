@@ -60,10 +60,19 @@ along with this software (see the LICENSE.md file). If not, see
                 <set field="website" from="[:]"/>
                 <return error="true" message="No product store found for company $companyPartyId appl: $classificationId"/>
             </if>
-            <set field="hostName" from="ec.web.getHostName(false)"/>
+            <entity-find entity-name="mantle.product.store.ProductStoreSetting" list="hostNames">
+                <econdition field-name="productStoreId" from="pages[0].productStoreId"/>
+                <econdition field-name="settingTypeEnumId" value="PsstHostname"/>
+            </entity-find>
+            <if condition="hostNames">
+                <set field="hostName" from="hostNames[0].settingValue"/>
+                <else>
+                    <set field="hostName" value="????"/>
+                </else>
+            </if>
             <if condition="hostName == '10.0.2.2'">
-                <set field="hostName" value="localhost:8080"/></if>
-            <set field="hostName" value="${pages[0].productStoreId}.${hostName}/store"/>
+                <set field="hostName" value="${pages[0].productStoreId}.localhost:8080"/></if>
+            <set field="hostName" value="${hostName}/store"/>
             <set field="website" from="[
                     id: pages[0].productStoreId,
                     hostName: hostName,
