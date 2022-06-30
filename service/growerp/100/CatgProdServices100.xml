@@ -990,6 +990,7 @@ along with this software (see the LICENSE.md file). If not, see
         </parameter>
         </out-parameters>
         <actions>
+            <log message="======input category create catmap: $category"/>
             <service-call out-map="context" in-map="[wantOwner: true]"
                 name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner"/>
             <service-call  name="growerp.100.PartyServices100.verifyAndGet#ProductStore"
@@ -1003,6 +1004,7 @@ along with this software (see the LICENSE.md file). If not, see
                 <return error="true" message="Root category not found for companyId: $companyPartyId"/></if>
             <set field="rootProductCategoryId" from="rootList[0].productCategoryId"/>
             <!-- create -->
+            <log message="=====create category with name: ${category.categoryName}"/>
             <service-call name="create#mantle.product.category.ProductCategory"
                 in-map="[categoryName: category.categoryName,
                     description: category.description,
