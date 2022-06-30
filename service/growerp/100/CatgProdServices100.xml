@@ -964,7 +964,7 @@ along with this software (see the LICENSE.md file). If not, see
                                             salads, deserts etc</description>
         <in-parameters>
             <parameter name="category" type="Map" required="true">
-                <parameter name="categoryName" required="true"/>
+                <parameter name="categoryName"/>
                 <parameter name="description"/>
                 <parameter name="image"/>
                 <parameter name="products" type="List">
