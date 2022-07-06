@@ -292,9 +292,6 @@ along with this software (see the LICENSE.md file). If not, see
     <mantle.product.store.ProductStoreSetting productStoreId="POPC_DEFAULT"
         settingValue="dbresource://DEFAULT_ROOT"
         settingTypeEnumId="PsstContentLocation"/>
-    <mantle.product.store.ProductStoreSetting productStoreId="POPC_DEFAULT"
-        settingValue="component://growerp/template/help.html.ftl"
-        settingTypeEnumId="PsstTemplateServerContent"/>
 
     <!-- About Us -->
     <moqui.resource.wiki.WikiPage wikiPageId="default_about" wikiSpaceId="DEFAULT_WS" pagePath="about" publishedVersionName="01" sequenceNum="1">
