@@ -1841,6 +1841,7 @@ along with this software (see the LICENSE.md file). If not, see
                             list="categories">
                         <econdition field-name="ownerPartyId" value="_NA_"/>
                     </entity-find>
+                    <set field="sequenceNum" value="1" type="Integer"/>
                     <iterate list="categories" entry="category">
                         <if condition="category.productCategoryId.toUpperCase() != category.productCategoryId">
                             <continue/></if>
@@ -1858,7 +1859,8 @@ along with this software (see the LICENSE.md file). If not, see
                         <service-call 
                             name="create#mantle.product.category.ProductCategoryRollup"
                             in-map="[parentProductCategoryId: browseRootProductCategoryId,
-                                    productCategoryId: productCategoryId]"/>
+                                    productCategoryId: productCategoryId,
+                                    sequenceNum: sequenceNum++]"/>
                     </iterate>
                     <!-- create translation table for categories-->
                     <entity-find entity-name="mantle.product.category.ProductCategory"

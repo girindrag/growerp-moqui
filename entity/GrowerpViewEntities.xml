@@ -1036,6 +1036,7 @@ along with this software (see the LICENSE.md file). If not, see
     <alias name="wikiSpaceId" entity-alias="WS"/>
     <alias name="rootPageLocation" entity-alias="WS"/>
     <alias name="wikiPageId" entity-alias="WP"/>
+    <alias name="sequenceNum" entity-alias="WP"/>
     <alias name="pagePath" entity-alias="WP"/>
     <alias name="parentWikiPageId" entity-alias="WP"/>
 </view-entity>
@@ -1061,7 +1062,7 @@ along with this software (see the LICENSE.md file). If not, see
     <alias name="productName" entity-alias="PROD"/>
 </view-entity>
 
-<view-entity entity-name="ResourceParentAndChildren" package="growerp.resource">
+<view-entity entity-name="ProductStoreAndWebsiteCategories" package="growerp.resource">
     <member-entity entity-alias="RES" entity-name="moqui.resource.DbResource"/>
     <member-entity entity-alias="RESFILE" entity-name="moqui.resource.DbResourceFile"
         join-from-alias="RES" join-optional="true">

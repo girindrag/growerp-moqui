@@ -297,7 +297,7 @@ along with this software (see the LICENSE.md file). If not, see
         settingTypeEnumId="PsstTemplateServerContent"/>
 
     <!-- About Us -->
-    <moqui.resource.wiki.WikiPage wikiPageId="default_about" wikiSpaceId="DEFAULT_WS" pagePath="about" publishedVersionName="01">
+    <moqui.resource.wiki.WikiPage wikiPageId="default_about" wikiSpaceId="DEFAULT_WS" pagePath="about" publishedVersionName="01" sequenceNum="1">
         <histories historySeqId="01" versionName="01" changeDateTime="1485028800000"/>
     </moqui.resource.wiki.WikiPage>
     <moqui.resource.DbResource filename="about.md.ftl" isFile="Y" resourceId="default_about" parentResourceId="default_content_dir">
@@ -322,7 +322,7 @@ Sylvester / warehouse technician
     </moqui.resource.DbResource>
 
     <!-- Contact Us -->
-    <moqui.resource.wiki.WikiPage wikiPageId="default_contact" wikiSpaceId="DEFAULT_WS" pagePath="contact" publishedVersionName="01">
+    <moqui.resource.wiki.WikiPage wikiPageId="default_contact" wikiSpaceId="DEFAULT_WS" pagePath="contact" publishedVersionName="01" sequenceNum="2">
         <histories historySeqId="01" versionName="01" changeDateTime="1485028800000"/>
     </moqui.resource.wiki.WikiPage>
     <moqui.resource.DbResource filename="contact.md.ftl" isFile="Y" resourceId="default_contact" parentResourceId="default_content_dir">
@@ -338,7 +338,7 @@ You can reach us by Email
     </moqui.resource.DbResource>
     
     <!-- help page -->
-    <moqui.resource.wiki.WikiPage wikiPageId="default_help" wikiSpaceId="DEFAULT_WS" pagePath="help" publishedVersionName="01">
+    <moqui.resource.wiki.WikiPage wikiPageId="default_help" wikiSpaceId="DEFAULT_WS" pagePath="help" publishedVersionName="01" sequenceNum="3">
         <histories historySeqId="01" versionName="01" changeDateTime="1485028800000"/>
     </moqui.resource.wiki.WikiPage>
     <moqui.resource.DbResource filename="help.md.ftl" resourceId="default_help" isFile="Y" parentResourceId="default_content_dir">

@@ -23,10 +23,11 @@ along with this software (see the LICENSE.md file). If not, see
             <parameter name="website" type="Map" default-value="AppAdmin">
                 <parameter name="id"/><!-- productStoreId -->
                 <parameter name="hostName"/>
+                <parameter name="title"/>
                 <parameter name="websiteContent" type="List">
                     <parameter name="content" type="Map">
-                        <parameter name="id"/>
-                        <parameter name="text"/>
+                        <parameter name="path"/>
+                        <parameter name="title"/>
                     </parameter>
                 </parameter>
                 <parameter name="websiteCategories" type="List">
@@ -55,6 +56,7 @@ along with this software (see the LICENSE.md file). If not, see
                 <econdition field-name="organizationPartyId" from="companyPartyId"/>
                 <econdition field-name="classificationId" from="classificationId"/>
                 <econdition field-name="pagePath" operator="is-not-null"/>
+                <order-by field-name="sequenceNum"/>
             </entity-find>
             <if condition="!pages">
                 <set field="website" from="[:]"/>
@@ -77,8 +79,9 @@ along with this software (see the LICENSE.md file). If not, see
                     id: pages[0].productStoreId,
                     hostName: hostName,
                     ]"/>
+            <set field="website.title" from="pages[0].storeName"/>
+            <!-- content -->
             <set field="websiteContent" from="[]"/>
-            <script>websiteContent.add([id: 'title', text: pages[0].storeName])</script>
             <iterate list="pages" entry="page">
                 <set field="location" value="${page.rootPageLocation}/content/${page.pagePath}.md.ftl"/>
                 <set field="contentRef" from="ec.resource.getLocationReference(location)"/>
@@ -86,7 +89,17 @@ along with this software (see the LICENSE.md file). If not, see
                     <set field="contentText" from="contentRef.getText()"/>
                 </if>
                 <if condition="!contentText"><set field="contentText" value=""/></if>
-                <script>websiteContent.add([id: page.pagePath, text: contentText])</script>
+                <script>
+                    String title = '';
+                    contentText.eachLine {
+                        if (it.startsWith('# ') || it.startsWith('## ')) {
+                            title = it.substring(it.indexOf(' ') + 1);
+                            return;
+                        }
+                    }
+                </script>
+                <script>websiteContent.add([path: page.pagePath, title: title,
+                        text: contentText, seqId: page.sequenceNum])</script>
             </iterate>
             <set field="website.websiteContent" from="websiteContent"/>
             <!-- categories and products -->
@@ -125,7 +138,8 @@ along with this software (see the LICENSE.md file). If not, see
                 <script>categories.add(categoryOut)</script>
             </if>
             <!-- productCategories -->
-            <entity-find entity-name="mantle.product.store.ProductStoreCategory" list="browseRootCategories">
+            <entity-find entity-name="mantle.product.store.ProductStoreCategory"
+                    list="browseRootCategories">
                 <econdition field-name="productStoreId" from="pages[0].productStoreId"/>
                 <econdition field-name="storeCategoryTypeEnumId" value="PsctBrowseRoot"/>
             </entity-find>
@@ -133,11 +147,13 @@ along with this software (see the LICENSE.md file). If not, see
                     list="storeCategories">
                 <econdition field-name="parentProductCategoryId"
                         from="browseRootCategories[0].productCategoryId"/>
+                <order-by field-name="sequenceNum"/>
             </entity-find>
             <set field="categories" from="[]"/>
             <iterate list="storeCategories" entry="category">
                 <set field="categoryOut" from="[categoryId: category.productCategoryId,
-                                                categoryName: category.categoryName]"/>
+                                                categoryName: category.categoryName,
+                                                seqId: category.sequenceNum]"/>
                 <script>categories.add(categoryOut)</script>
             </iterate>
             <set field="website.productCategories" from="categories"/>
@@ -149,10 +165,13 @@ along with this software (see the LICENSE.md file). If not, see
         <in-parameters>
             <parameter name="website" type="Map" required="true">
                 <parameter name="id" required="true"/>
+                <parameter name="title"/>
                 <parameter name="websiteContent" type="List">
                     <parameter name="content" type="Map">
-                        <parameter name="id"/>
+                        <parameter name="path"/>
+                        <parameter name="title"/><!-- if path found and title empty, page will be deleted -->
                         <parameter name="text"/>
+                        <parameter name="seqId"/>
                     </parameter>
                 </parameter>
                 <parameter name="websiteCategories" type="List">
@@ -177,10 +196,13 @@ along with this software (see the LICENSE.md file). If not, see
             <parameter name="website" type="Map">
                 <parameter name="id"/>
                 <parameter name="hostName"/>
+                <parameter name="title"/>
                 <parameter name="websiteContent" type="List">
                     <parameter name="content" type="Map">
-                        <parameter name="id"/>
+                        <parameter name="path"/>
+                        <parameter name="title"/>
                         <parameter name="text"/>
+                        <parameter name="seqId"/>
                     </parameter>
                 </parameter>
                 <parameter name="websiteCategories" type="List">
@@ -210,29 +232,100 @@ along with this software (see the LICENSE.md file). If not, see
                 <econdition field-name="organizationPartyId" from="companyPartyId"/>
                 <econdition field-name="productStoreId" from="website.id"/>
             </entity-find>
-            <if condition="stores"><then>
+            <if condition="!stores"><then>
+                <log  message="Could not find company: $companyPartyId store: ${website.id}"/>
+                <set field="website" from="[:]"/></then>
+            <else>
+                <!-- update title -->
+                <if condition="website.title &amp;&amp; website.title != stores[0].storeName">
+                    <set field="stores[0].storeName" from="website.title"/>
+                    <entity-update value-field="stores[0]"/></if>
+
                 <if condition="website.websiteContent">
-                    <!-- find title -->
-                    <set field="title" from="null"/>
-                    <script>website.websiteContent.each { if (it.id == 'title') title = it.text}</script>
-                    <if condition="title != null &amp;&amp; title != stores[0].storeName">
-                        <set field="stores[0].storeName" from="title"/>
-                        <entity-update value-field="stores[0]"/>
-                    </if>
-                    <iterate list="website.websiteContent" entry="content">
-                        <if condition="content.id == 'title'"><continue/></if>
-                        <entity-find entity-name="growerp.website.ProductStoreAndWebsiteContent" list="pages">
-                            <econdition field-name="productStoreId" from="website.id"/>
-                            <econdition field-name="pagePath" from="content.id"/>
+                <!-- update content.text or delete -->
+                <iterate list="website.websiteContent" entry="content">
+                    <log message="======process path: ${content.path}"/>
+                    <entity-find entity-name="growerp.website.ProductStoreAndWebsiteContent" list="pages">
+                        <econdition field-name="productStoreId" from="website.id"/>
+                        <econdition field-name="pagePath" from="content.path"/>
+                    </entity-find>
+                    <!-- change sequence -->
+                    <if condition="pages">
+                        <log message="====update? seq  id: ${pages[0].wikiPageId} ${content.seqId} ${pages[0].sequenceNum}"/>
+                        <if condition="content.seqId != pages[0].sequenceNum">
+                            <service-call name="update#moqui.resource.wiki.WikiPage"
+                                in-map="wikiPageId: pages[0].wikiPageId, sequenceNum: content.seqId"/></if>
+                        <!-- update content.text or delete -->
+                        <if condition="content.text == ''"><continue/></if>
+                        <log message="====process text for ${content.path}"/>
+                        <set field="root" from="pages[0].rootPageLocation"/>
+                        <set field="pagePath" from="pages[0].pagePath"/>
+                      <else>
+                        <if condition="content.path != ''">
+                            <return error="true" message="Could not find page with path: ${content.path}"/>
+                        </if> 
+                        <!-- wikipage with version and higest seq num-->
+                        <entity-find entity-name="moqui.resource.wiki.WikiPage" list="wikiPages">
+                            <econdition field-name="wikiSpaceId" from="stores[0].wikiSpaceId"/>
+                            <econdition field-name="pagePath" operator="is-not-null"/>
                         </entity-find>
-                        <if condition="!pages"><return error="true" 
-                            message="Page ${content.id} not found for productStore/websiteId: ${website.id}"/></if>
-                        <set field="location" value="${pages[0].rootPageLocation}/content/${pages[0].pagePath}.md.ftl"/>
+                        <set field="seq" value="0" type="Integer"/>
+                        <iterate list="wikiPages" entry="wikiPage">
+                            <if condition="wikiPage.sequenceNum &gt; seq">
+                                <set field="seq" from="wikiPage.sequenceNum"/></if></iterate>
+                                <service-call name="create#moqui.resource.wiki.WikiPage"
+                                    out-map="context"
+                                    in-map="[wikiSpaceId: stores[0].wikiSpaceId,
+                                            pagePath:  '==temp==',
+                                            sequenceNum: seq + 1,
+                                            publishedVersionName: '01']"/>
+                                <service-call name="update#moqui.resource.wiki.WikiPage"
+                                    in-map="[wikiPageId: wikiPageId,
+                                            pagePath:  wikiPageId]"/>
+                        <!-- get top resource location -->
+                        <entity-find entity-name="mantle.product.store.ProductStoreSetting" list="topResource">
+                            <econdition field-name="productStoreId" from="stores[0].productStoreId"/>
+                            <econdition field-name="settingTypeEnumId" value="PsstContentLocation"/>
+                        </entity-find>
+                        <!-- get content resource location -->
+                        <entity-find entity-name="moqui.resource.DbResource" list="topResourceContent">
+                            <econdition field-name="parentResourceId" from="topResource[0].settingValue.substring(13)"/>
+                            <econdition field-name="filename" value="content"/>
+                        </entity-find>
+                        <!-- create db resource -->
+                        <service-call name="create#moqui.resource.DbResource" out-map="context"
+                            in-map="[parentResourceId: topResourceContent[0].resourceId,
+                                    isFile: 'Y', filename: wikiPageId + '.md.ftl']"/>
+                        <log message="=======created resource: ${resourceId}"/>
+                        <!-- file -->
+                        <service-call name="create#moqui.resource.DbResourceFile"
+                            in-map="[resourceId: resourceId,
+                                        mimeType: 'text/markdown',
+                                        versionName: '01',
+                                        rootVersionName: '01',
+                                        fileData: content.text]"/>
+                        <!-- history -->
+                        <set field="nowDate" from="ec.user.nowTimestamp"/>
+                        <service-call name="create#moqui.resource.DbResourceFileHistory"
+                            in-map="[resourceId: resourceId,
+                                    versionName: '01', isDiff: 'N',
+                                    versionDate: nowDate]"/>
+                        <continue/>
+                        </else>
+                    </if>
+                    <if condition="content.title == '' &amp;&amp; content.path"><!-- found but no title should be deleted -->
+                        <!-- delete -->
+                        <service-call name="org.moqui.impl.WikiServices.delete#WikiPage"
+                            in-map="[wikiSpaceId: stores[0].wikiSpaceId,
+                                        pagePath: content.path]"/>
+                      <else><!-- update -->
+                        <set field="location" value="${root}/content/${pagePath}.md.ftl"/>
                         <set field="docRr" from="ec.resource.getLocationReference(location)"/>
                         <if condition="content.text != docRr.getText()">
-                            <script>docRr.putText(content.text)</script>
-                        </if>
-                    </iterate>
+                            <script>docRr.putText(content.text)</script></if>
+                      </else>
+                    </if>
+                </iterate>
                 </if>
                 <!-- website categories -->
                 <if condition="website.websiteCategories">
@@ -252,19 +345,18 @@ along with this software (see the LICENSE.md file). If not, see
                         <econdition field-name="parentProductCategoryId" from="browseRootCategories[0].productCategoryId"/>
                     </entity-delete-by-condition>
                     <!-- add all -->
+                    <set field="sequenceNum" value="1" type="Integer"/>
                     <iterate list="website.productCategories" entry="catg">
                         <service-call name="create#mantle.product.category.ProductCategoryRollup"
                             in-map="[parentProductCategoryId: browseRootCategories[0].productCategoryId,
-                                    productCategoryId: catg.categoryId]"/>
+                                    productCategoryId: catg.categoryId, sequenceNum: sequenceNum++]"/>
                     </iterate>
                 </if>
                 <!-- get changed website -->
                 <service-call name="growerp.100.WebsiteServices100.get#Website"
                     in-map="[classificationId: stores[0].storeDomain]"
-                    out-map="context"/></then>
-            <else>
-                <log  message="Could not find company: $companyPartyId store: ${website.id}"/>
-                <set field="website" from="[:]"/></else></if>
+                    out-map="context"/>
+            </else></if>
         </actions>
     </service>
 
