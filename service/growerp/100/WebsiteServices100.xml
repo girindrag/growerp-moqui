@@ -50,20 +50,19 @@ along with this software (see the LICENSE.md file). If not, see
             </parameter>
         </out-parameters>
         <actions>
-            <service-call out-map="context" 
+            <service-call out-map="context" in-map="[wantOwner: true]"
                 name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner"/>
+            <entity-find entity-name="mantle.product.store.ProductStore" list="stores">
+                <econdition field-name="organizationPartyId" from="ownerPartyId"/>
+                <econdition field-name="storeDomain" from="classificationId"/>
+            </entity-find>
             <entity-find entity-name="growerp.website.ProductStoreAndWebsiteContent" list="pages">
-                <econdition field-name="organizationPartyId" from="companyPartyId"/>
-                <econdition field-name="classificationId" from="classificationId"/>
+                <econdition field-name="organizationPartyId" from="ownerPartyId"/>
                 <econdition field-name="pagePath" operator="is-not-null"/>
                 <order-by field-name="sequenceNum"/>
             </entity-find>
-            <if condition="!pages">
-                <set field="website" from="[:]"/>
-                <return error="true" message="No product store found for company $companyPartyId appl: $classificationId"/>
-            </if>
             <entity-find entity-name="mantle.product.store.ProductStoreSetting" list="hostNames">
-                <econdition field-name="productStoreId" from="pages[0].productStoreId"/>
+                <econdition field-name="productStoreId" from="stores[0].productStoreId"/>
                 <econdition field-name="settingTypeEnumId" value="PsstHostname"/>
             </entity-find>
             <if condition="hostNames">
@@ -73,13 +72,13 @@ along with this software (see the LICENSE.md file). If not, see
                 </else>
             </if>
             <if condition="hostName == '10.0.2.2'">
-                <set field="hostName" value="${pages[0].productStoreId}.localhost:8080"/></if>
+                <set field="hostName" value="${stores[0].productStoreId}.localhost:8080"/></if>
             <set field="hostName" value="${hostName}/store"/>
             <set field="website" from="[
-                    id: pages[0].productStoreId,
+                    id: stores[0].productStoreId,
                     hostName: hostName,
                     ]"/>
-            <set field="website.title" from="pages[0].storeName"/>
+            <set field="website.title" from="stores[0].storeName"/>
             <!-- content -->
             <set field="websiteContent" from="[]"/>
             <iterate list="pages" entry="page">
@@ -140,7 +139,7 @@ along with this software (see the LICENSE.md file). If not, see
             <!-- productCategories -->
             <entity-find entity-name="mantle.product.store.ProductStoreCategory"
                     list="browseRootCategories">
-                <econdition field-name="productStoreId" from="pages[0].productStoreId"/>
+                <econdition field-name="productStoreId" from="stores[0].productStoreId"/>
                 <econdition field-name="storeCategoryTypeEnumId" value="PsctBrowseRoot"/>
             </entity-find>
             <entity-find entity-name="growerp.mobile.party.category.ProductCategoryParentsAndChild"
@@ -244,14 +243,12 @@ along with this software (see the LICENSE.md file). If not, see
                 <if condition="website.websiteContent">
                 <!-- update content.text or delete -->
                 <iterate list="website.websiteContent" entry="content">
-                    <log message="======process path: ${content.path}"/>
                     <entity-find entity-name="growerp.website.ProductStoreAndWebsiteContent" list="pages">
                         <econdition field-name="productStoreId" from="website.id"/>
                         <econdition field-name="pagePath" from="content.path"/>
                     </entity-find>
                     <!-- change sequence -->
                     <if condition="pages">
-                        <log message="====update? seq  id: ${pages[0].wikiPageId} ${content.seqId} ${pages[0].sequenceNum}"/>
                         <if condition="content.seqId != pages[0].sequenceNum">
                             <service-call name="update#moqui.resource.wiki.WikiPage"
                                 in-map="wikiPageId: pages[0].wikiPageId, sequenceNum: content.seqId"/></if>
@@ -296,7 +293,6 @@ along with this software (see the LICENSE.md file). If not, see
                         <service-call name="create#moqui.resource.DbResource" out-map="context"
                             in-map="[parentResourceId: topResourceContent[0].resourceId,
                                     isFile: 'Y', filename: wikiPageId + '.md.ftl']"/>
-                        <log message="=======created resource: ${resourceId}"/>
                         <!-- file -->
                         <service-call name="create#moqui.resource.DbResourceFile"
                             in-map="[resourceId: resourceId,
@@ -345,6 +341,9 @@ along with this software (see the LICENSE.md file). If not, see
                         <econdition field-name="parentProductCategoryId" from="browseRootCategories[0].productCategoryId"/>
                     </entity-delete-by-condition>
                     <!-- add all -->
+                    <if condition="website.productCategories[0].categoryId == 'allDelete'">
+                        <set field="website.productCategories" from="[]"/>
+                    </if>
                     <set field="sequenceNum" value="1" type="Integer"/>
                     <iterate list="website.productCategories" entry="catg">
                         <service-call name="create#mantle.product.category.ProductCategoryRollup"

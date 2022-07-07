@@ -1630,7 +1630,7 @@ along with this software (see the LICENSE.md file). If not, see
                 </if>
                 <service-call name="create#mantle.product.category.ProductCategory"
                     out-map="context" in-map="catg + [
-                        productCategoryId: null,
+                        productCategoryId: null, pseudoId: null,
                         ownerPartyId: companyPartyId,
                         productCategoryTypeEnumId: productCategoryTypeEnumId,
                         ]" />
@@ -1847,7 +1847,8 @@ along with this software (see the LICENSE.md file). If not, see
                             <continue/></if>
                         <!-- create category -->
                         <service-call name="create#mantle.product.category.ProductCategory"
-                            in-map="category + [productCategoryId: null, ownerPartyId: companyPartyId]"
+                            in-map="category + [productCategoryId: null, pseudoId: null,
+                                                ownerPartyId: companyPartyId]"
                             out-map="context"/>
                         <set field="catgTrans[category.productCategoryId]" from="productCategoryId"/>
                         <!-- connect to root -->
@@ -1883,7 +1884,8 @@ along with this software (see the LICENSE.md file). If not, see
                     </entity-find>
                     <iterate list="products" entry="product">
                         <service-call name="create#mantle.product.Product"
-                            in-map="product + [productId: null, ownerPartyId: companyPartyId,
+                            in-map="product + [productId: null, pseudoId: null,
+                                    ownerPartyId: companyPartyId,
                                     pseudoId: null]" out-map="context"/>
                         <set field="prodTrans[product.productId]" from="productId"/>
                         <!-- content -->
