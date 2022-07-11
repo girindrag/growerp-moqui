@@ -20,8 +20,12 @@ along with this software (see the LICENSE.md file). If not, see
             <parameter name="type" required="true"/>
             <parameter name="id" required="true"/>
             <parameter name="file" type="org.apache.commons.fileupload.FileItem"/>
+            <parameter name="description"/>
             <parameter name="base64"/>
         </in-parameters>
+        <out-parameters>
+            <parameter name="contentId"/>
+        </out-parameters>
         <actions>
             <service-call out-map="context" in-map="[wantOwner: true]"
                 name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner"/>
@@ -177,7 +181,18 @@ along with this software (see the LICENSE.md file). If not, see
                             productCategoryId: id,
                             categoryContentTypeEnumId: 'PcctImageLarge',
                             contentLocation: contentLocation + 'large']" />
-                    </if>
+                </if>
+                <if condition="type == 'productStore'">
+                    
+                    <service-call name="create#growerp.store.ProductStoreContent"
+                        out-map="context"
+                        in-map="[
+                            productStoreId: id,
+                            description: description,
+                            contentTypeEnumId: 'PrstImageLarge',
+                            contentLocation: contentLocation + 'large']" />
+                    <set field="contentId" from="productStoreContentId"/>
+                </if>
             </actions>
     </service>
 

@@ -74,6 +74,7 @@ along with this software (see the LICENSE.md file). If not, see
                         ignore-if-empty="true"/>
                 <econdition field-name="roleTypeId" from="notRoleTypeId"
                        operator="not-equals" ignore-if-empty="true"/>
+                <econdition field-name="disabled" operator="not-equals" value="Y"/>
                 <order-by field-name="organizationName"/>
             </entity-find>
             <set field="companies" from="[]" />
@@ -1729,27 +1730,39 @@ along with this software (see the LICENSE.md file). If not, see
                 </iterate>
             </iterate>
 
-            <!-- data documents for elasticsearch -->
-            <set field="dataDocumentId" value="P$productStoreId"/>
-            <service-call name="org.moqui.impl.EntityServices.clone#DataDocument"
-                in-map="[dataDocumentId: 'MantleProduct',
-                        newDataDocumentId: dataDocumentId,
-                        newIndexName: 'popc']"/>
-            <entity-find-one entity-name="moqui.entity.document.DataDocumentCondition" value-field="dataDoc">
-                <field-map field-name="dataDocumentId" value="PopcProduct"/></entity-find-one>
-            <service-call name="create#moqui.entity.document.DataDocumentCondition"
-                in-map="dataDoc + [dataDocumentId: dataDocumentId, fieldValue: productStoreId]"/>
-            <!-- add to data feed -->
-            <service-call name="create#moqui.entity.feed.DataFeedDocument"
-                in-map="[dataFeedId: 'PopCommerceSearch', dataDocumentId: dataDocumentId]"/>
-            <!-- add to productStore -->
-            <service-call name="update#mantle.product.store.ProductStore"
-                in-map="productStoreId: productStoreId, productDataDocumentId: dataDocumentId"/>
-            <!-- update index -->
-            <!--service-call name="org.moqui.search.SearchServices.index#DataFeedDocuments"
-                in-map="[dataFeedId: 'PopCommerceSearch', dataDocumentId: dataDocumentId,
-                            batchSize: 100]"/-->
+            <!-- productStore images -->
+            <entity-find entity-name="growerp.store.ProductStoreContent" list="storeImages">
+                <econdition field-name="productStoreId" value="POPC_DEFAULT"/>
+            </entity-find>
+            <iterate list="storeImages" entry="image">
+                <service-call name="create#growerp.store.ProductStoreContent"
+                    in-map="image + [productStoreContentId: null, productStoreId: productStoreId]"/>
+            </iterate>
 
+            <!-- search function -->
+            <!--entity-find entity-name="moqui.entity.document.DataDocumentCondition" list="conds">
+                <econdition field-name="dataDocumentId" value="PopcProduct"/>
+                <order-by field-name="-conditionSeqId"/></entity-find>
+            <service-call name="create#moqui.entity.document.DataDocumentCondition"
+                in-map="conds[0] + [conditionSeqId: '02', ]"/>
+            <moqui.entity.document.DataDocumentCondition dataDocumentId="PopcProduct" conditionSeqId="01"
+            fieldNameAlias="productStoreId" fieldValue="POPC_DEFAULT" postQuery="Y"/-->
+            <entity-find-one entity-name="moqui.entity.feed.DataFeed" value-field="dataFeed">
+                <field-map field-name="dataFeedId" value="PopCommerceSearch"/></entity-find-one>
+            <service-call name="create#moqui.entity.feed.DataFeed"
+                in-map="dataFeed + [dataFeedId: productStoreId]"/>
+
+            <service-call name="create#moqui.entity.feed.DataFeedDocument"
+                in-map="[dataFeedId: productStoreId, dataDocumentId: 'PopcProduct']"/>
+
+            <!-- add to productStore-->
+            <service-call name="update#mantle.product.store.ProductStore"
+                in-map="productStoreId: productStoreId, productDataDocumentId: 'PopcProduct'"/>
+
+            <!-- update index -->
+            <script>jobRunId = ec.service.job("IndexDataFeedDocuments").parameter("dataFeedId", productStoreId)
+                    .parameter("dataDocumentId", 'PopcProduct')
+                    .parameter("batchSize", 100).run()</script>
             <!-- hotel app not using categories but need one for products -->
             <!--entity-find list="categories" limit="1"
                     entity-name="mantle.product.category.ProductCategory">

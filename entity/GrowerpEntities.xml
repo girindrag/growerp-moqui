@@ -135,4 +135,23 @@ along with this software (see the LICENSE.md file). If not, see
             <key-map field-name="chatRoomId"/></relationship>
     </entity>
 
+    <entity entity-name="ProductStoreContent" package="growerp.store" cache="never">
+        <field name="productStoreContentId" type="id" is-pk="true"/>
+        <field name="productStoreId" type="id"/>
+        <field name="contentLocation" type="text-medium"/>
+        <field name="contentTypeEnumId" type="id"/>
+        <field name="description" type="text-long"/>
+        <field name="contentDate" type="date-time" default="ec.user.nowTimestamp"/>
+        <field name="userId" type="id" default="ec.user.userId"/>
+        <relationship type="one" related="mantle.product.store.ProductStore"/>
+        <relationship type="one" title="ProductStoreContentType" related="moqui.basic.Enumeration" short-alias="type">
+            <key-map field-name="contentTypeEnumId"/></relationship>
+        <seed-data>
+            <moqui.basic.EnumerationType description="Product Store Content Type" enumTypeId="ProductStoreContentType"/>
+            <moqui.basic.Enumeration enumId="PrstImageSmall" description="Image" enumTypeId="ProductStoreContentType"/>
+            <moqui.basic.Enumeration enumId="PrstImageMedium" description="Image" enumTypeId="ProductStoreContentType"/>
+            <moqui.basic.Enumeration enumId="PrstImageLarge" description="Image" enumTypeId="ProductStoreContentType"/>
+        </seed-data>
+    </entity>
+
 </entities>

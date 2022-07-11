@@ -293,6 +293,10 @@ along with this software (see the LICENSE.md file). If not, see
         settingValue="dbresource://DEFAULT_ROOT"
         settingTypeEnumId="PsstContentLocation"/>
 
+    <!-- product store image example -->
+    <growerp.store.ProductStoreContent productStoreContentId="PRODSTORE_LOGO" description="GrowERP logo" productStoreId="POPC_DEFAULT"
+        contentLocation="dbresource://GrowERP/images/growerp_logo.jpg" contentTypeEnumId="PrstImageLarge"/>
+
     <!-- About Us -->
     <moqui.resource.wiki.WikiPage wikiPageId="default_about" wikiSpaceId="DEFAULT_WS" pagePath="about" publishedVersionName="01" sequenceNum="1">
         <histories historySeqId="01" versionName="01" changeDateTime="1485028800000"/>
@@ -300,7 +304,8 @@ along with this software (see the LICENSE.md file). If not, see
     <moqui.resource.DbResource filename="about.md.ftl" isFile="Y" resourceId="default_about" parentResourceId="default_content_dir">
         <file mimeType="text/markdown" versionName="01" rootVersionName="01">
             <fileData><![CDATA[
-## About POP Shop  
+![](/getImage/growerp)
+## About POP Shop
 GrowERP Shop is the official supplier of GrowERP merchandise. Established in early 2016, GrowERP Shop has an
 extensive supplier network that allows us to source only the best clothing, drinkware and technology for all your POP needs. Is uses on the backend the Moqui system which act as our brain!  
 
@@ -313,6 +318,20 @@ particularly enjoy wearing high-vis jackets and a nifty helmet.
 "Working at GrowERP Shop is okay"  
 
 Sylvester / warehouse technician
+            ]]></fileData>
+            <histories versionName="01" versionDate="1485028800000" isDiff="N"/>
+        </file>
+    </moqui.resource.DbResource>
+
+    <!-- home screen -->
+    <moqui.resource.wiki.WikiPage wikiPageId="default_home" wikiSpaceId="DEFAULT_WS" pagePath="home" publishedVersionName="01" sequenceNum="1">
+        <histories historySeqId="01" versionName="01" changeDateTime="1485028800000"/>
+    </moqui.resource.wiki.WikiPage>
+    <moqui.resource.DbResource filename="home.md.ftl" isFile="Y" resourceId="default_home" parentResourceId="default_content_dir">
+        <file mimeType="text/markdown" versionName="01" rootVersionName="01">
+            <fileData><![CDATA[
+## Home   
+Welcome to the ${storeInfo.productStore.storeName} Shop!
             ]]></fileData>
             <histories versionName="01" versionDate="1485028800000" isDiff="N"/>
         </file>
