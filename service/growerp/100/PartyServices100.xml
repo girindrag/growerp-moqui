@@ -1025,7 +1025,7 @@ along with this software (see the LICENSE.md file). If not, see
                             locale: language
                         ]"/>
             <!--update user group -->
-            <service-call name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner" 
+            <service-call name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner"
                 in-map="[userPartyId: user.partyId]" out-map="company"/>
             <if condition="!user.userGroupId">
                 <return error="true" message="userGroupId not supplied to update user"/></if>
@@ -1231,9 +1231,10 @@ along with this software (see the LICENSE.md file). If not, see
     </service>
 
     <service verb="delete" noun="User">
-        <description>Deactivate a user.</description>
+        <description>Deactivate a owner companies logged in user and optionally delete owner company too.</description>
         <in-parameters>
             <parameter name="partyId" required="true"/>
+            <parameter name="deleteCompanyToo" type="Boolean"/>
         </in-parameters>
         <out-parameters>
             <parameter name="user" type="Map">
@@ -1268,21 +1269,54 @@ along with this software (see the LICENSE.md file). If not, see
             </parameter>
         </out-parameters>
         <actions>
-            <!-- check if this user has an admin account -->
+            <service-call out-map="context"
+                name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner"/>
+            <entity-find-one entity-name="mantle.party.Party" value-field="party">
+                <field-map field-name="ownerPartyId" from="ownerPartyId"/>
+                <field-map field-name="partyId" from="partyId"/>
+            </entity-find-one>
+            <if condition="!party">
+                <return error="true" message="Could not find partyId: $partyId"/></if>
+            <!-- disable user -->
+            <service-call name="update#mantle.party.Party"
+                in-map="[partyId: partyId, disabled: 'Y']"/>
+            <!-- disable account change email for re-use-->
+            <entity-find entity-name="moqui.security.UserAccount"
+                    list="accounts" for-update="true">
+                <econdition field-name="partyId"/></entity-find>
+                <entity-update value-field="(accounts[0] + 
+                    [disabled: 'Y',
+                    username: partyId + '-' + accounts[0].username,
+                    emailAddress: partyId + '-' + accounts[0].emailAddress])"/>
             <service-call name="growerp.100.PartyServices100.get#User"
-                in-map="[userPartyId: partyId]" out-map="oldValue"/>
-            <if condition="oldValue.user.userGroupId == 'GROWERP_M_ADMIN'">
-                <!-- check if only a single admin: cannot change -->
-                <service-call name="growerp.100.GeneralServices100.get#RelatedCompanyAndOwner" 
-                    in-map="[userPartyId: partyId]" out-map="company"/>
-                <entity-find entity-name="growerp.mobile.CompanyPersonAndLoginGroup" list="admins">
-                    <econdition field-name="userGroupId" value="GROWERP_M_ADMIN"/>
-                    <econdition field-name="companyPartyId" from="company.companyPartyId" />
-                    <date-filter/></entity-find>
-                <if condition="admins.size() == 1">
-                    <return error="true" message="You need at least a single Admin in your company: cannot delete this one!"/></if>
+                in-map="[userPartyId: userPartyId]" out-map="loggedInParty"/>
+            <!-- check if this user has an admin account and 
+                if company needs deleting and deletes his own userlogin
+                then can delete company too -->
+            <if condition="loggedInParty.user.userGroupId == 'GROWERP_M_ADMIN' 
+                    &amp;&amp; deleteCompanyToo == true
+                    &amp;&amp; partyId == userPartyId">
+                <service-call name="update#mantle.party.Party"
+                        in-map="[partyId: companyPartyId, disabled: 'Y']"/>
+                <!-- disable all owned parties -->
+                <entity-find entity-name="mantle.party.Party" list="parties">
+                    <econdition field-name="ownerPartyId" from="ownerPartyId"/>
+                </entity-find>
+                <iterate list="parties" entry="party">
+                    <entity-update value-field="(party + [disabled: 'Y'])"/>
+                    <!-- disable all owned accounts -->
+                    <entity-find entity-name="moqui.security.UserAccount"
+                            list="accounts" for-update="true">
+                        <econdition field-name="partyId" from="party.partyId"/>
+                    </entity-find>
+                    <if condition="accounts">
+                        <entity-update value-field="(accounts[0] + 
+                                [disabled: 'Y',
+                                username: partyId + '-' + accounts[0].username,
+                                emailAddress: partyId + '-' + accounts[0].emailAddress])"/>
+                    </if>
+                </iterate>
             </if>
-            <service-call name="update#mantle.party.Party" in-map="[partyId: partyId, disabled: 'Y']"/>
             <service-call name="growerp.100.PartyServices100.get#User"
                 in-map="[userPartyId: partyId]" out-map="context"/>
         </actions>

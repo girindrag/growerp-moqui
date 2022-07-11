@@ -19,7 +19,7 @@ along with this software (see the LICENSE.md file). If not, see
                     when single company, just provide companyPartyId but no ownerPartyId(unless wantOwner).
         </description>
         <in-parameters>
-            <parameter name="userPartyId"/><!-- of this particular user -->
+            <parameter name="userPartyId"/><!-- of this particular user, optional -->
             <parameter name="wantOwner" default="false" type="Boolean">
                 <description>when have single company but still want ownerPartyId set this to true</description>
             </parameter>

@@ -4,6 +4,4 @@
         <depends-on name="moqui-fop"/>
         <depends-on name="mantle-udm"/>
         <depends-on name="mantle-usl"/>
-        <depends-on name="PopRestStore"/>
-        <depends-on name="PopCommerce"/>
 </component>
