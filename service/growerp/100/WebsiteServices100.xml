@@ -92,11 +92,12 @@ along with this software (see the LICENSE.md file). If not, see
                     String title = '';
                     contentText.eachLine {
                         if (it.startsWith('# ') || it.startsWith('## ')) {
-                            title = it.substring(it.indexOf(' ') + 1);
-                            return;
+                            if (title == '')
+                                title = it.substring(it.indexOf(' ') + 1);
                         }
                     }
                 </script>
+                <log message="=====title: $title"/>
                 <!-- 'x' just to indicate that the content is text otherwise is image-->
                 <script>websiteContent.add([path: page.pagePath, title: title,
                         text: "x", seqId: page.sequenceNum])</script>
@@ -389,8 +390,8 @@ along with this software (see the LICENSE.md file). If not, see
                     String title = '';
                     contentText.eachLine {
                         if (it.startsWith('# ') || it.startsWith('## ')) {
-                            title = it.substring(it.indexOf(' ') + 1);
-                            return;
+                            if (title == '')
+                                title = it.substring(it.indexOf(' ') + 1);
                         }
                     }
                 </script>

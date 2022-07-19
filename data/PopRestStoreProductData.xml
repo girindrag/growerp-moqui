@@ -305,7 +305,7 @@ along with this software (see the LICENSE.md file). If not, see
         <file mimeType="text/markdown" versionName="01" rootVersionName="01">
             <fileData><![CDATA[
 ![](/getImage/growerp)
-## About POP Shop
+# About
 GrowERP Shop is the official supplier of GrowERP merchandise. Established in early 2016, GrowERP Shop has an
 extensive supplier network that allows us to source only the best clothing, drinkware and technology for all your POP needs. Is uses on the backend the Moqui system which act as our brain!  
 
@@ -330,7 +330,7 @@ Sylvester / warehouse technician
     <moqui.resource.DbResource filename="home.md.ftl" isFile="Y" resourceId="default_home" parentResourceId="default_content_dir">
         <file mimeType="text/markdown" versionName="01" rootVersionName="01">
             <fileData><![CDATA[
-## Home   
+# Home   
 Welcome to the ${storeInfo.productStore.storeName} Shop!
             ]]></fileData>
             <histories versionName="01" versionDate="1485028800000" isDiff="N"/>
@@ -362,20 +362,20 @@ You can reach us by Email
             <fileData><![CDATA[
 # Help Center
 
-### Delivery Rates
+## Delivery Rates
 
 ---
 
 We deliver worldwide from $2.99 for standard shipping. Express shipping cost $6.99 and comes with tracking.
 Contact us for information about international orders.
 
-### Customer Pick Up
+## Customer Pick Up
 
 ---
 
 If you don't have a mail box then drop by our warehouses here in Thailand
 
-### How To Pay
+## How To Pay
 
 ---
 
