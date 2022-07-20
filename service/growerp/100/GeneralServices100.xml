@@ -305,7 +305,7 @@ along with this software (see the LICENSE.md file). If not, see
                         <parameter name="ccPaymentMethodId"/>
                         <parameter name="ccDescription"/>
                     </parameter>
-                </parameter>    
+                </parameter>
                 <parameter name="company" type="Map">
                     <parameter name="partyId"/>
                     <parameter name="companyName"/>
@@ -470,7 +470,7 @@ along with this software (see the LICENSE.md file). If not, see
                         <parameter name="ccPaymentMethodId"/>
                         <parameter name="ccDescription"/>
                     </parameter>
-                </parameter>    
+                </parameter>
                 <parameter name="company" type="Map">
                     <parameter name="partyId"/>
                     <parameter name="companyName"/>
@@ -524,8 +524,6 @@ along with this software (see the LICENSE.md file). If not, see
                     <parameter name="whLocations"/>
                 </parameter>
             </parameter>
-            <parameter name="passwordChange" default="false">
-                <description>'true' when a password chanmge was requested</description></parameter>
         </out-parameters>
         <actions>
             <entity-find-one entity-name="moqui.security.UserAccount" 
@@ -562,10 +560,13 @@ along with this software (see the LICENSE.md file). If not, see
                 </if>
             </if>
 
-            <if condition="!passwordChange">
+            <if condition="passwordChange">
+                <set field="authenticate" from="[apiKey: 'passwordChange']"/>
+              <else>
                 <script>ec.user.loginUser(username, password)</script>
                 <service-call name="growerp.100.GeneralServices100.get#Authenticate"
                      out-map="context"/>
+              </else>
             </if>
         </actions>
     </service>
@@ -588,6 +589,92 @@ along with this software (see the LICENSE.md file). If not, see
             <parameter name="newPassword" required="true"/>
             <parameter name="oldPassword"/>
         </in-parameters>
+        <out-parameters>
+            <parameter name="authenticate" type="Map">
+                <parameter name="user" type="Map">
+                    <parameter name="partyId"/>
+                    <parameter name="email"/>
+                    <parameter name="firstName"/>
+                    <parameter name="lastName"/>
+                    <parameter name="loginDisabled" type="bool"/>
+                    <parameter name="loginName"/>
+                    <parameter name="userGroupId"/>
+                    <parameter name="groupDescription"/>
+                    <parameter name="language"/>
+                    <parameter name="companyPartyId"/>
+                    <parameter name="companyName"/>
+                    <parameter name="image"/>
+                    <parameter name="userId"/>
+                    <parameter name="locale"/>
+                    <parameter name="telephoneNr"/>
+                    <parameter name="companyAddress" type="Map">
+                        <parameter name="addressId"/>
+                        <parameter name="address1"/>
+                        <parameter name="address2"/>
+                        <parameter name="city"/>
+                        <parameter name="postalCode"/>
+                        <parameter name="province"/>
+                        <parameter name="country"/>
+                    </parameter>
+                    <parameter name="companyPaymentMethod" type="Map">
+                        <parameter name="ccPaymentMethodId"/>
+                        <parameter name="ccDescription"/>
+                    </parameter>
+                </parameter>
+                <parameter name="company" type="Map">
+                    <parameter name="partyId"/>
+                    <parameter name="companyName"/>
+                    <parameter name="currencyId"/>
+                    <parameter name="currencyName"/>
+                    <parameter name="vatPerc">
+                        <description>Percentage used for VAT if applicable</description></parameter>
+                    <parameter name="salesPerc">
+                        <description>Percentage used for sales tax</description></parameter>
+                    <parameter name="address" type="Map">
+                        <parameter name="addressId"/>
+                        <parameter name="address1"/>
+                        <parameter name="address2"/>
+                        <parameter name="city"/>
+                        <parameter name="postalCode"/>
+                        <parameter name="province"/>
+                        <parameter name="provinceId"/>
+                        <parameter name="country"/>
+                        <parameter name="countryId"/>
+                    </parameter>
+                    <parameter name="image"/>
+                    <parameter name="paymentMethod">
+                        <parameter name="ccPaymentMethodId"/>
+                        <parameter name="ccDescription"/>
+                    </parameter>
+                    <parameter name="telephoneNr"/>
+                </parameter>
+                <parameter name="apiKey"/>
+                <parameter name="sessionToken"/>
+                <parameter name="statistics" type="Map">
+                    <parameter name="admins"/>
+                    <parameter name="employees"/>
+                    <parameter name="suppliers"/>
+                    <parameter name="leads"/>
+                    <parameter name="customers"/>
+                    <parameter name="openSlsOrders"/>
+                    <parameter name="openPurOrders"/>
+                    <parameter name="opportunities"/>
+                    <parameter name="myOpportunities"/>
+                    <parameter name="categories"/>
+                    <parameter name="products"/>
+                    <parameter name="assets"/>
+                    <parameter name="salesInvoicesNotPaidCount"/>
+                    <parameter name="salesInvoicesNotPaidAmount"/>
+                    <parameter name="purchInvoicesNotPaidCount"/>
+                    <parameter name="purchInvoicesNotPaidAmount"/>
+                    <parameter name="allTasks"/>
+                    <parameter name="notInvoicedHours"/>
+                    <parameter name="outgoingShipments"/>
+                    <parameter name="incomngShipments"/>
+                    <parameter name="whLocations"/>
+                </parameter>
+            </parameter>
+        </out-parameters>
         <actions>
             <if condition="ec.user.userAccount"><!-- only possible with a loggedin user -->
                 <service-call out-map="context"
@@ -606,6 +693,9 @@ along with this software (see the LICENSE.md file). If not, see
             <service-call name="update#moqui.security.UserAccount"
                     in-map="[username:username, disabled:'N', disabledDateTime:null,
                     successiveFailedLogins:0]"/>
+            <script>ec.user.loginUser(username, newPassword)</script>
+            <service-call name="growerp.100.GeneralServices100.get#Authenticate"
+                    out-map="context"/>
         </actions>
     </service>
 

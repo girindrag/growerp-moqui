@@ -97,7 +97,6 @@ along with this software (see the LICENSE.md file). If not, see
                         }
                     }
                 </script>
-                <log message="=====title: $title"/>
                 <!-- 'x' just to indicate that the content is text otherwise is image-->
                 <script>websiteContent.add([path: page.pagePath, title: title,
                         text: "x", seqId: page.sequenceNum])</script>

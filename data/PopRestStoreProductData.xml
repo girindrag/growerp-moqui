@@ -330,7 +330,7 @@ Sylvester / warehouse technician
     <moqui.resource.DbResource filename="home.md.ftl" isFile="Y" resourceId="default_home" parentResourceId="default_content_dir">
         <file mimeType="text/markdown" versionName="01" rootVersionName="01">
             <fileData><![CDATA[
-# Home   
+# Home
 Welcome to the ${storeInfo.productStore.storeName} Shop!
             ]]></fileData>
             <histories versionName="01" versionDate="1485028800000" isDiff="N"/>
