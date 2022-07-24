@@ -248,6 +248,10 @@ along with this software (see the LICENSE.md file). If not, see
     <mantle.product.feature.ProductFeature productFeatureId="ColorYellow" productFeatureTypeEnumId="PftColor" description="Yellow" abbrev="YL"/>
     <mantle.product.feature.ProductFeature productFeatureId="ColorWhite" productFeatureTypeEnumId="PftColor" description="White" abbrev="WH"/>
 
+    <!-- poprest store data -->
+    <moqui.basic.Enumeration enumCode="product_store_id_from_hostname" description="Product Store ID From Hostname" enumId="PsstHostname" enumTypeId="ProductStoreSettingType"/>
+    <moqui.basic.Enumeration enumCode="template_server_content" description="Template Server Content" enumId="PsstContentLocation" enumTypeId="ProductStoreSettingType"/>
+
     <dbResources resourceId="GROWERP_LOGO" filename="growerp_logo.jpg" isFile="Y"
         parentResourceId="growerp_images" /> 
     <moqui.resource.DbResourceFile resourceId="GROWERP_LOGO" rootVersionName="01"

@@ -48,6 +48,7 @@ along with this software (see the LICENSE.md file). If not, see
                         <parameter name="categoryName"/>
                     </parameter>
                 </parameter>
+                <parameter name="colorJson"/>
             </parameter>
         </out-parameters>
         <actions>
@@ -165,6 +166,18 @@ along with this software (see the LICENSE.md file). If not, see
                 <script>categories.add(categoryOut)</script>
             </iterate>
             <set field="website.productCategories" from="categories"/>
+            <!-- colors -->
+            <!-- get top resource location -->
+            <entity-find-one entity-name="mantle.product.store.ProductStoreSetting"
+                    value-field="topResource">
+                <field-map field-name="productStoreId" from="stores[0].productStoreId"/>
+                <field-map field-name="settingTypeEnumId" value="PsstContentLocation"/>
+            </entity-find-one>
+            <set field="location" value="${topResource.settingValue}/content/websiteColor.json"/>
+            <set field="contentRef" from="ec.resource.getLocationReference(location)"/>
+            <if condition="contentRef != null">
+                <set field="website.colorJson" from="contentRef.getText()"/>
+            </if>
         </actions>
     </service>
 
@@ -199,6 +212,7 @@ along with this software (see the LICENSE.md file). If not, see
                         <parameter name="categoryId"/>
                     </parameter>
                 </parameter>
+                <parameter name="colorJson"/>
             </parameter>
         </in-parameters>
         <out-parameters>
@@ -232,6 +246,7 @@ along with this software (see the LICENSE.md file). If not, see
                     </parameter>
                 </parameter>
            </parameter>
+           <parameter name="colorJson"/>
         </out-parameters>
         <actions>
             <service-call out-map="context" 
@@ -331,6 +346,19 @@ along with this software (see the LICENSE.md file). If not, see
                                     productCategoryId: catg.categoryId, sequenceNum: sequenceNum++]"/>
                     </iterate>
                 </if>
+                <!-- colors -->
+                <if condition="website.colorJson">
+                    <!-- get top resource location -->
+                    <entity-find-one entity-name="mantle.product.store.ProductStoreSetting"
+                            value-field="topResource">
+                        <field-map field-name="productStoreId" from="stores[0].productStoreId"/>
+                        <field-map field-name="settingTypeEnumId" value="PsstContentLocation"/>
+                    </entity-find-one>
+                    <set field="root" from="topResource.settingValue"/>  
+                    <set field="location" value="${root}/content/websiteColor.json"/>
+                    <set field="docRr" from="ec.resource.getLocationReference(location)"/>
+                    <script>docRr.putText(website.colorJson)</script>
+                </if>
                 <!-- get changed website -->
                 <service-call name="growerp.100.WebsiteServices100.get#Website"
                     in-map="[classificationId: stores[0].storeDomain]"
@@ -341,7 +369,7 @@ along with this software (see the LICENSE.md file). If not, see
     </service>
 
     <service verb="get" noun="WebsiteContent">
-        <description>update the website information text and images</description>
+        <description>get the content, text and images from the website</description>
         <in-parameters>
             <parameter name="classificationId" required="true"/>
             <parameter name="content" type="Map" required="true">
