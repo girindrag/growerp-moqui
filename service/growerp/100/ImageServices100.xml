@@ -94,10 +94,10 @@ along with this software (see the LICENSE.md file). If not, see
                 fileStreamLarge = attachmentReferenceLarge.openStream()
                 img = ImageIO.read(fileStreamLarge);
                 os = new ByteArrayOutputStream();
-                new BufferedImage( 50, 50, img.type ).with { i ->
+                new BufferedImage( 100, 100, img.type ).with { i ->
                     createGraphics().with {
                         setRenderingHint( KEY_INTERPOLATION, VALUE_INTERPOLATION_BICUBIC )
-                        drawImage( img, 0, 0, 50, 50, null )
+                        drawImage( img, 0, 0, 100, 100, null )
                         dispose()
                     }
                     ImageIO.write( i, 'png', os )
