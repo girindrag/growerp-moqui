@@ -68,9 +68,9 @@ along with this software (see the LICENSE.md file). If not, see
 
         <contents productContentId="DEMO_TS_M_DL" productContentTypeEnumId="PcntDescriptionLong" locale="en_US"
                 contentLocation="dbresource://mantle/content/product/DEMO_TS_M/description.html"/>
-        <contents productContentId="DEMO_TS_M_ILF" productContentTypeEnumId="PcntImageLarge" locale="" sequenceNum="1" description="Front"
+        <contents productContentId="DEMO_TS_M_ILF" productContentTypeEnumId="PcntImageSmall" locale="" sequenceNum="1" description="Front"
                 contentLocation="dbresource://mantle/content/product/DEMO_TS_M/img_TShirtManFront.jpg"/>
-        <contents productContentId="DEMO_TS_M_ILB" productContentTypeEnumId="PcntImageLarge" locale="" sequenceNum="2" description="Back"
+        <contents productContentId="DEMO_TS_M_ILB" productContentTypeEnumId="PcntImageSmall" locale="" sequenceNum="2" description="Back"
                 contentLocation="dbresource://mantle/content/product/DEMO_TS_M/img_TShirtManBack.jpg"/>
     </mantle.product.Product>
     <dbResources resourceId="MCNT_PROD_DEMO_TS_M" filename="DEMO_TS_M" isFile="N" parentResourceId="MCNT_PRODUCT"/>
@@ -115,9 +115,9 @@ along with this software (see the LICENSE.md file). If not, see
 
         <contents productContentId="DEMO_TS_W_DL" productContentTypeEnumId="PcntDescriptionLong" locale="en_US"
                 contentLocation="dbresource://mantle/content/product/DEMO_TS_W/description.html"/>
-        <contents productContentId="DEMO_TS_W_ILF" productContentTypeEnumId="PcntImageLarge" locale="" sequenceNum="1" description="Front"
+        <contents productContentId="DEMO_TS_W_ILF" productContentTypeEnumId="PcntImageSmall" locale="" sequenceNum="1" description="Front"
                 contentLocation="dbresource://mantle/content/product/DEMO_TS_W/img_TShirtWomanFront.jpg"/>
-        <contents productContentId="DEMO_TS_W_ILB" productContentTypeEnumId="PcntImageLarge" locale="" sequenceNum="2" description="Back"
+        <contents productContentId="DEMO_TS_W_ILB" productContentTypeEnumId="PcntImageSmall" locale="" sequenceNum="2" description="Back"
                 contentLocation="dbresource://mantle/content/product/DEMO_TS_W/img_TShirtWomanBack.jpg"/>
     </mantle.product.Product>
     <dbResources resourceId="MCNT_PROD_DEMO_TS_W" filename="DEMO_TS_W" isFile="N" parentResourceId="MCNT_PRODUCT"/>
@@ -158,9 +158,9 @@ along with this software (see the LICENSE.md file). If not, see
 
         <contents productContentId="DEMO_HOOD_DL" productContentTypeEnumId="PcntDescriptionLong" locale="en_US"
                 contentLocation="dbresource://mantle/content/product/DEMO_HOOD/description.html"/>
-        <contents productContentId="DEMO_HOOD_ILF" productContentTypeEnumId="PcntImageLarge" locale="" sequenceNum="1" description="Front"
+        <contents productContentId="DEMO_HOOD_ILF" productContentTypeEnumId="PcntImageSmall" locale="" sequenceNum="1" description="Front"
                 contentLocation="dbresource://mantle/content/product/DEMO_HOOD/img_hoodieFront.jpg"/>
-        <contents productContentId="DEMO_HOOD_ILB" productContentTypeEnumId="PcntImageLarge" locale="" sequenceNum="2" description="Back"
+        <contents productContentId="DEMO_HOOD_ILB" productContentTypeEnumId="PcntImageSmall" locale="" sequenceNum="2" description="Back"
                 contentLocation="dbresource://mantle/content/product/DEMO_HOOD/img_hoodieBack.jpg"/>
     </mantle.product.Product>
     <dbResources resourceId="MCNT_PROD_DEMO_HOOD" filename="DEMO_HOOD" isFile="N" parentResourceId="MCNT_PRODUCT"/>
@@ -194,13 +194,13 @@ along with this software (see the LICENSE.md file). If not, see
 
         <contents productContentId="DEMO_BCAP_DL" productContentTypeEnumId="PcntDescriptionLong" locale="en_US"
                 contentLocation="dbresource://mantle/content/product/DEMO_BCAP/description.html"/>
-        <contents productContentId="DEMO_BCAP_ILA" productContentTypeEnumId="PcntImageLarge" locale="" sequenceNum="1" description="Angled"
+        <contents productContentId="DEMO_BCAP_ILA" productContentTypeEnumId="PcntImageSmall" locale="" sequenceNum="1" description="Angled"
                 contentLocation="dbresource://mantle/content/product/DEMO_BCAP/img_baseballCapAngled.jpg"/>
-        <contents productContentId="DEMO_BCAP_ILF" productContentTypeEnumId="PcntImageLarge" locale="" sequenceNum="2" description="Front"
+        <contents productContentId="DEMO_BCAP_ILF" productContentTypeEnumId="PcntImageSmall" locale="" sequenceNum="2" description="Front"
                 contentLocation="dbresource://mantle/content/product/DEMO_BCAP/img_baseballCapFront.jpg"/>
-        <contents productContentId="DEMO_BCAP_ILS" productContentTypeEnumId="PcntImageLarge" locale="" sequenceNum="3" description="Side"
+        <contents productContentId="DEMO_BCAP_ILS" productContentTypeEnumId="PcntImageSmall" locale="" sequenceNum="3" description="Side"
                 contentLocation="dbresource://mantle/content/product/DEMO_BCAP/img_baseballCapSide.jpg"/>
-        <contents productContentId="DEMO_BCAP_ILB" productContentTypeEnumId="PcntImageLarge" locale="" sequenceNum="4" description="Back"
+        <contents productContentId="DEMO_BCAP_ILB" productContentTypeEnumId="PcntImageSmall" locale="" sequenceNum="4" description="Back"
                 contentLocation="dbresource://mantle/content/product/DEMO_BCAP/img_baseballCapBack.jpg"/>
     </mantle.product.Product>
     <dbResources resourceId="MCNT_PROD_DEMO_BCAP" filename="DEMO_BCAP" isFile="N" parentResourceId="MCNT_PRODUCT"/>
@@ -236,11 +236,11 @@ along with this software (see the LICENSE.md file). If not, see
 
         <contents productContentId="DEMO_USB32G_DL" productContentTypeEnumId="PcntDescriptionLong" locale="en_US"
                 contentLocation="dbresource://mantle/content/product/DEMO_USB32G/description.html"/>
-        <contents productContentId="DEMO_USB32G_ILOP" productContentTypeEnumId="PcntImageLarge" locale="" sequenceNum="1" description="USB Open Partial"
+        <contents productContentId="DEMO_USB32G_ILOP" productContentTypeEnumId="PcntImageSmall" locale="" sequenceNum="1" description="USB Open Partial"
                 contentLocation="dbresource://mantle/content/product/DEMO_USB32G/img_USBOpenPartial.jpg"/>
-        <contents productContentId="DEMO_USB32G_ILC" productContentTypeEnumId="PcntImageLarge" locale="" sequenceNum="2" description="USB Closed"
+        <contents productContentId="DEMO_USB32G_ILC" productContentTypeEnumId="PcntImageSmall" locale="" sequenceNum="2" description="USB Closed"
                 contentLocation="dbresource://mantle/content/product/DEMO_USB32G/img_USBClosed.jpg"/>
-        <contents productContentId="DEMO_USB32G_ILO" productContentTypeEnumId="PcntImageLarge" locale="" sequenceNum="3" description="USB Open"
+        <contents productContentId="DEMO_USB32G_ILO" productContentTypeEnumId="PcntImageSmall" locale="" sequenceNum="3" description="USB Open"
                 contentLocation="dbresource://mantle/content/product/DEMO_USB32G/img_USBOpen.jpg"/>
     </mantle.product.Product>
     <dbResources resourceId="MCNT_PROD_DEMO_USB32G" filename="DEMO_USB32G" isFile="N" parentResourceId="MCNT_PRODUCT"/>
@@ -276,7 +276,7 @@ along with this software (see the LICENSE.md file). If not, see
 
         <contents productContentId="DEMO_CMUG_DL" productContentTypeEnumId="PcntDescriptionLong" locale="en_US"
                 contentLocation="dbresource://mantle/content/product/DEMO_CMUG/description.html"/>
-        <contents productContentId="DEMO_CMUG_IL1" productContentTypeEnumId="PcntImageLarge" locale="" sequenceNum="1" description="Coffee Mug"
+        <contents productContentId="DEMO_CMUG_IL1" productContentTypeEnumId="PcntImageSmall" locale="" sequenceNum="1" description="Coffee Mug"
                 contentLocation="dbresource://mantle/content/product/DEMO_CMUG/img_coffeeMug.jpg"/>
     </mantle.product.Product>
     <dbResources resourceId="MCNT_PROD_DEMO_CMUG" filename="DEMO_CMUG" isFile="N" parentResourceId="MCNT_PRODUCT"/>

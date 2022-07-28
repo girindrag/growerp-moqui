@@ -433,8 +433,10 @@ along with this software (see the LICENSE.md file). If not, see
                 <if condition="!image">
                     <return error="true" message="Could not find image with path: ${content.path}"/>
                 </if>
-                <service-call name="growerp.100.ImageServices100.download#Image"
-                    in-map="[contentLocation: image.contentLocation]" out-map="context"/>
+                <if condition="image.contentLocation">
+                    <service-call name="growerp.100.ImageServices100.download#Image"
+                        in-map="[contentLocation: image.contentLocation]" out-map="context"/>
+                </if>
                 <set field="content" from="[path: image.productStoreContentId, title: image.description,
                         image: imageFile]"/>
               </else>
@@ -549,6 +551,10 @@ along with this software (see the LICENSE.md file). If not, see
               <else>
                 <!-- prodstore image -->
                 <if condition="content.image">
+                    <entity-delete-by-condition
+                        entity-name="growerp.store.ProductStoreContent">
+                        <econdition field-name="productStoreContentId" from="content.path"/>
+                    </entity-delete-by-condition>
                     <service-call name="growerp.100.ImageServices100.upload#Image"
                         in-map="[type: 'productStore', id: stores[0].productStoreId,
                             description: content.title,
@@ -556,7 +562,21 @@ along with this software (see the LICENSE.md file). If not, see
                         out-map="context"/>
                     <set field="content.path" from="contentId"/>
                     <else>
-                        <return error="true" message="No image found?"/>
+                        <if condition="content.title &amp;&amp; content.path">
+                            <entity-find-one entity-name="growerp.store.ProductStoreContent"
+                                    value-field="storeImage" for-update="true">
+                                <field-map field-name="productStoreContentId" from="content.path"/>
+                            </entity-find-one>
+                            <entity-update value-field="(storeImage + [description: content.title])"/>
+                            <else>
+                                <service-call name="create#growerp.store.ProductStoreContent"
+                                    in-map="[productStoreId: stores[0].productStoreId,
+                                            description: content.title,
+                                            contentTypeEnumId: 'PrstImageLarge']"
+                                    out-map="context"/>
+                                <set field="content.path" from="productStoreContentId"/>
+                            </else>
+                        </if>
                     </else>
                 </if>
               </else>
