@@ -12,15 +12,10 @@ You should have received a copy of the CC0 Public Domain Dedication
 along with this software (see the LICENSE.md file). If not, see
 <http://creativecommons.org/publicdomain/zero/1.0/>.
 -->
-<screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
-    xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-2.1.xsd">
-    <!-- see the mantle.account.InvoiceServices.send#InvoiceStoreEmail service for email parameter prep and call to send this email -->
-    <parameter name="startDate"/>
-    <actions>
-        <service-call name="growerp.mobile.MobileXportServices.get#ExportOrders"
-                in-map="[startDate:startDate]" out-map="context"/>
-    </actions>
+<screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-2.1.xsd">
     <widgets>
-        <render-mode><text type="text"><![CDATA[ ${fileText} ]]></text></render-mode>
+        <render-mode><text type="html"><![CDATA[<html><body>]]></text></render-mode>
+        <container><label text="Categories GrowERP:  CSV file attached\n Regards,\n GrowERP Team" type="h3"/></container>
+        <render-mode><text type="html"><![CDATA[</body></html>]]></text></render-mode>
     </widgets>
 </screen>

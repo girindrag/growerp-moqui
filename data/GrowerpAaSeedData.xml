@@ -85,54 +85,18 @@ along with this software (see the LICENSE.md file). If not, see
         bodyScreenLocation="component://growerp/screen/email/Welcome.xml"
         fromAddress="support@growerp.org" fromName="GrowERP system" ccAddresses="" bccAddresses="support@growerp.org" subject="Welcome and Password!" sendPartial="Y"/>
     <!-- export -->
-    <moqui.basic.email.EmailTemplate emailTemplateId="GrowerpExportOrders" description="GrowERP orders export Order"
+    <moqui.basic.email.EmailTemplate emailTemplateId="GrowerpExportCategories"
+            description="GrowERP export Categories"
             emailServerId="SYSTEM" webappName="webroot"
             fromAddress="noreply@growerp.com" fromName="Support GrowERP" sendPartial="Y"
-            subject="Export Orders CSV file"
-            bodyScreenLocation="component://growerp/screen/email/OrdersExportBody.xml">
-        <attachments fileName="order.csv"
-                attachmentLocation="component://growerp/screen/email/OrdersExport.xml"
+            subject="Export Categories data"
+            bodyScreenLocation="component://growerp/screen/email/CategoriesExportBody.xml">
+        <attachments fileName="categories.csv"
+                attachmentLocation="component://growerp/screen/email/CategoriesExportAtt.xml"
                 screenRenderMode="text"/>
     </moqui.basic.email.EmailTemplate>
-    <moqui.basic.email.EmailTemplate emailTemplateId="GrowerpExportCustomers" description="GrowERP export Customers"
-            emailServerId="SYSTEM" webappName="webroot"
-            fromAddress="noreply@growerp.com" fromName="Support GrowERP" sendPartial="Y"
-            subject="Export Customers CSV file"
-            bodyScreenLocation="component://growerp/screen/email/CustomersExportBody.xml">
-        <attachments fileName="customer.csv"
-                attachmentLocation="component://growerp/screen/email/CustomersExport.xml"
-                screenRenderMode="text"/>
-    </moqui.basic.email.EmailTemplate>
-    <moqui.basic.email.EmailTemplate emailTemplateId="GrowerpExportCatgsProducts"
-            description="GrowERP export Categories and Products"
-            emailServerId="SYSTEM" webappName="webroot"
-            fromAddress="noreply@growerp.com" fromName="Support GrowERP" sendPartial="Y"
-            subject="Export Categories and products file"
-            bodyScreenLocation="component://growerp/screen/email/CatgsProductsExportBody.xml">
-        <attachments fileName="CatgsProducts.csv"
-                attachmentLocation="component://growerp/screen/email/CatgsProductsExport.xml"
-                screenRenderMode="text"/>
-    </moqui.basic.email.EmailTemplate>
-    <!-- Paypal account -->
-    <!--mantle.account.method.PaymentGatewayConfig paymentGatewayConfigId="PaypalDemo"/>
-    <mantle.account.method.PaymentMethod PaymentMethodId="PayPalDemo" paymentMethodTypeEnumId="PmtPayPalAccount"
-            paymentGatewayConfigId="PaypalDemo"/-->
-
-    <!-- ========== Scheduled ServiceJob Data ========== -->
-    <!-- Handy cron strings: [0 0 2 * * ?] every night at 2:00 am, [0 0/15 * * * ?] every 15 minutes, [0 0/2 * * * ?] every 2 minutes -->
-
-    <!--moqui.service.job.ServiceJob jobName="send_regular_mail_daily" description="send regular email to existing users"
-            serviceName="growerp.mobile.ScheduledJobs.sendRegular#Email" cronExpression="0 0 2 * * ?" paused="N">
-        <parameters parameterName="daysToKeep" parameterValue="90"/>
-    </moqui.service.job.ServiceJob>
-
-    <moqui.service.job.ServiceJob jobName="deactivate_inactive_users_daily" description="scan/remove active users for not using the system"
-            serviceName="growerp.mobile.ScheduledJobs.deActivate#InactiveUsers" cronExpression="0 0 3 * * ?" paused="N">
-        <parameters parameterName="daysToKeep" parameterValue="90"/>
-    </moqui.service.job.ServiceJob-->
-
-    <!-- update seed data -->
-    <!--<growerp.InstallServices.deleteAssetClass/> existing classes used in accounting -->
+    
+     <!--<growerp.InstallServices.deleteAssetClass/> existing classes used in accounting -->
     <moqui.basic.Enumeration description="Hotel Room" enumId="AsClsRoom" enumTypeId="AssetClass"/>
     <moqui.basic.Enumeration description="Restaurant Table" enumId="AsClsTable" enumTypeId="AssetClass"/>
     <moqui.basic.Enumeration description="Restaurant Table Area" enumId="AsClsTableArea" enumTypeId="AssetClass"/>

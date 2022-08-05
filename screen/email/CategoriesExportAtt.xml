@@ -15,9 +15,10 @@ along with this software (see the LICENSE.md file). If not, see
 <screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
     xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/xml-screen-2.1.xsd">
     <!-- see the mantle.account.InvoiceServices.send#InvoiceStoreEmail service for email parameter prep and call to send this email -->
+    <parameter name="classificationId"/>
     <actions>
-        <service-call name="growerp.mobile.MobileXportServices.get#ExportCustomers"
-                in-map="[startDate:startDate]" out-map="context"/>
+        <service-call name="growerp.100.ExportServices100.get#ExportCategories"
+            in-map="[classificationId: classificationId]" out-map="context"/>
     </actions>
     <widgets>
         <render-mode><text type="text"><![CDATA[ ${fileText} ]]></text></render-mode>

@@ -1757,14 +1757,39 @@ along with this software (see the LICENSE.md file). If not, see
             <!-- add to productStore-->
             <service-call name="update#mantle.product.store.ProductStore"
                 in-map="productStoreId: productStoreId, productDataDocumentId: 'P' + productStoreId"/>
-            <!-- index documents -->
-            <!--service-call name="org.moqui.search.SearchServices.index#DataFeedDocuments"
-                in-map="[dataFeedId: 'PopCommerceSearch', dataDocumentId: 'P' + productStoreId]"/-->
+            <!-- index documents (copied from -->
+            <entity-find entity-name="moqui.entity.feed.DataFeedDocument" list="dfDocList" cache="false">
+                <econdition field-name="dataFeedId" value="PopCommerceSearch"/>
+                <econdition field-name="dataDocumentId" value="P$productStoreId"/>
+            </entity-find>
 
-            <!-- update index -->
-            <script>jobRunId = ec.service.job("IndexDataFeedDocuments").parameter("dataFeedId", 'PopCommerceSearch')
-                //    .parameter("dataDocumentId", 'P' + productStoreId)
-                    .parameter("batchSize", 100).run()</script>
+            <if condition="!dfDocList"><return error="true" message="No DataDocuments found for DataFeed ID ${dataFeedId}${dataDocumentId ? ' and DataDocument ID ' + dataDocumentId : ''}"/></if>
+
+            <set field="documentsIndexed" from="0"/>
+            <script><![CDATA[
+                import org.moqui.context.ExecutionContext
+                import java.util.concurrent.Future
+
+                ExecutionContext ec = context.ec
+                def elasticClient = ec.factory.elastic.getClient(clusterName)
+                if (elasticClient == null) {
+                    ec.message.addMessage("No Elastic Client found for cluster name ${clusterName}, not indexing documents", "danger")
+                    return
+                }
+                String feedReceiveServiceName = df.feedReceiveServiceName ?: 'org.moqui.search.SearchServices.index#DataDocuments'
+
+                for (Map dfDoc in dfDocList) {
+                    // make sure the index exists
+                    Map dataDocument = ec.entity.fastFindOne("moqui.entity.document.DataDocument", true, false, dfDoc.dataDocumentId)
+                    if (dataDocument?.indexName) elasticClient.checkCreateDataDocumentIndexes((String) dataDocument.indexName)
+
+                    int docListSize = ec.entity.entityDataDocument.feedDataDocuments(dfDoc.dataDocumentId, null,
+                            fromUpdateStamp, thruUpdatedStamp, feedReceiveServiceName, batchSize)
+                    documentsIndexed += docListSize
+                }
+            ]]></script>
+
+            <message>Indexed ${documentsIndexed} documents for feed ${dataFeedId} in ${System.currentTimeMillis() - startTime}ms</message>
             <!-- hotel app not using categories but need one for products -->
             <!--entity-find list="categories" limit="1"
                     entity-name="mantle.product.category.ProductCategory">
