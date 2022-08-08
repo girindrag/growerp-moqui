@@ -95,6 +95,16 @@ along with this software (see the LICENSE.md file). If not, see
                 attachmentLocation="component://growerp/screen/email/CategoriesExportAtt.xml"
                 screenRenderMode="text"/>
     </moqui.basic.email.EmailTemplate>
+    <moqui.basic.email.EmailTemplate emailTemplateId="GrowerpExportProducts"
+            description="GrowERP export Products"
+            emailServerId="SYSTEM" webappName="webroot"
+            fromAddress="noreply@growerp.com" fromName="Support GrowERP" sendPartial="Y"
+            subject="Export Products data"
+            bodyScreenLocation="component://growerp/screen/email/ProductsExportBody.xml">
+        <attachments fileName="products.csv"
+                attachmentLocation="component://growerp/screen/email/ProductsExportAtt.xml"
+                screenRenderMode="text"/>
+    </moqui.basic.email.EmailTemplate>
     
      <!--<growerp.InstallServices.deleteAssetClass/> existing classes used in accounting -->
     <moqui.basic.Enumeration description="Hotel Room" enumId="AsClsRoom" enumTypeId="AssetClass"/>

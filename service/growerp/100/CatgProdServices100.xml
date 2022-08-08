@@ -959,28 +959,6 @@ along with this software (see the LICENSE.md file). If not, see
         </actions>
     </service>
 
-    <service verb="create" noun="ProductCategories">
-        <description> Import a list of categories</description>
-        <in-parameters>
-            <parameter name="categoryList" required="true" type="Map">
-                <parameter name="categories" type="List">
-                    <parameter name="category" type="Map">
-                        <parameter name="categoryName"/>
-                        <parameter name="description"/>
-                        <parameter name="image"/>
-                    </parameter>
-                </parameter>
-            </parameter>
-            <parameter name="classificationId" required="true"/>
-        </in-parameters>
-        <actions>
-            <iterate list="categoryList.categories" entry="category">
-                <service-call name="growerp.100.CatgProdServices100.create#ProductCategory"
-                    in-map="[category: category, classificationId: classificationId]"/>
-            </iterate>
-            <message public="true" type="success">Categories Upload completed</message>
-        </actions>
-    </service>
     <service verb="create" noun="ProductCategory">
         <description> Create a category to group products by drinks , 
                                             salads, deserts etc</description>
