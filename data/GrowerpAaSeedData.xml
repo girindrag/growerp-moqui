@@ -72,38 +72,48 @@ along with this software (see the LICENSE.md file). If not, see
 
     <!-- email templates -->
     <!-- EmailTemplate for general notifications -->
-    <moqui.basic.email.EmailTemplate emailTemplateId="NOTIFICATION" description="Default Notification" emailServerId="SYSTEM"
-        emailTypeEnumId="EMT_NOTIFICATION" bodyScreenLocation="classpath://screen/NotificationEmail.xml" webappName="webroot"
-        fromAddress="support@growerp.com" fromName="GrowERP system" ccAddresses="" bccAddresses="" subject="${title}" sendPartial="Y"/>
+    <moqui.basic.email.EmailTemplate emailTemplateId="NOTIFICATION"
+        description="Default Notification" emailServerId="SYSTEM"
+        emailTypeEnumId="EMT_NOTIFICATION"
+        bodyScreenLocation="classpath://screen/NotificationEmail.xml"
+        webappName="webroot"
+        fromAddress="support@growerp.com" fromName="GrowERP system"
+        ccAddresses="" bccAddresses="" subject="${title}" sendPartial="Y"/>
     <!-- EmailTemplate for password reset email -->
-    <moqui.basic.email.EmailTemplate emailTemplateId="PASSWORD_RESET" description="Default Password Reset" 
+    <moqui.basic.email.EmailTemplate emailTemplateId="PASSWORD_RESET"
+        description="Default Password Reset" 
         emailServerId="SYSTEM" emailTypeEnumId="EMT_PWD_RESET" 
         bodyScreenLocation="component://growerp/screen/email/PasswordReset.xml"
-        fromAddress="support@growerp.org" ccAddresses="" bccAddresses="" subject="Password Reset" sendPartial="Y"/>
-    <moqui.basic.email.EmailTemplate emailTemplateId="WELCOME" description="Welcome email with Password" 
+        fromAddress="support@growerp.org" ccAddresses=""
+        bccAddresses="" subject="Password Reset" sendPartial="Y"/>
+    <!-- welcome email -->
+    <moqui.basic.email.EmailTemplate emailTemplateId="WELCOME"
+        description="Welcome email with Password" 
         emailServerId="SYSTEM" emailTypeEnumId="EMT_SYSTEM" 
         bodyScreenLocation="component://growerp/screen/email/Welcome.xml"
-        fromAddress="support@growerp.org" fromName="GrowERP system" ccAddresses="" bccAddresses="support@growerp.org" subject="Welcome and Password!" sendPartial="Y"/>
+        fromAddress="support@growerp.org" fromName="GrowERP system"
+        ccAddresses="" bccAddresses="support@growerp.org"
+        subject="Welcome and Password!" sendPartial="Y"/>
     <!-- export -->
     <moqui.basic.email.EmailTemplate emailTemplateId="GrowerpExportCategories"
-            description="GrowERP export Categories"
-            emailServerId="SYSTEM" webappName="webroot"
-            fromAddress="noreply@growerp.com" fromName="Support GrowERP" sendPartial="Y"
-            subject="Export Categories data"
-            bodyScreenLocation="component://growerp/screen/email/CategoriesExportBody.xml">
+        description="GrowERP export Categories"
+        emailServerId="SYSTEM" webappName="webroot"
+        fromAddress="support@growerp.org" fromName="Support GrowERP" sendPartial="Y"
+        subject="Export Categories data"
+        bodyScreenLocation="component://growerp/screen/email/CategoriesExportBody.xml">
         <attachments fileName="categories.csv"
-                attachmentLocation="component://growerp/screen/email/CategoriesExportAtt.xml"
-                screenRenderMode="text"/>
+            attachmentLocation="component://growerp/screen/email/CategoriesExportAtt.xml"
+            screenRenderMode="text"/>
     </moqui.basic.email.EmailTemplate>
     <moqui.basic.email.EmailTemplate emailTemplateId="GrowerpExportProducts"
-            description="GrowERP export Products"
-            emailServerId="SYSTEM" webappName="webroot"
-            fromAddress="noreply@growerp.com" fromName="Support GrowERP" sendPartial="Y"
-            subject="Export Products data"
-            bodyScreenLocation="component://growerp/screen/email/ProductsExportBody.xml">
+        description="GrowERP export Products"
+        emailServerId="SYSTEM" webappName="webroot"
+        fromAddress="support@growerp.org" fromName="Support GrowERP" sendPartial="Y"
+        subject="Export Products data"
+        bodyScreenLocation="component://growerp/screen/email/ProductsExportBody.xml">
         <attachments fileName="products.csv"
-                attachmentLocation="component://growerp/screen/email/ProductsExportAtt.xml"
-                screenRenderMode="text"/>
+            attachmentLocation="component://growerp/screen/email/ProductsExportAtt.xml"
+            screenRenderMode="text"/>
     </moqui.basic.email.EmailTemplate>
     
      <!--<growerp.InstallServices.deleteAssetClass/> existing classes used in accounting -->

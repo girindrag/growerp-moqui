@@ -790,7 +790,11 @@ along with this software (see the LICENSE.md file). If not, see
             <key-map field-name="productCategoryId"/></member-entity>
         <member-entity entity-alias="PRODUCT" join-from-alias="MEMBER" join-optional="true"
             entity-name="mantle.product.Product">
-            <key-map field-name="productId"/></member-entity>
+            <key-map field-name="productId"/>
+            <entity-condition>
+            <date-filter from-field-name="productFromDate" thru-field-name="productThruDate"/>
+            </entity-condition>
+        </member-entity>
         <alias name="parentProductCategoryId" entity-alias="ROLLUP"/>
         <alias name="ownerPartyId" entity-alias="PARENT"/>
         <alias name="fromDate" entity-alias="ROLLUP"/>
@@ -801,6 +805,8 @@ along with this software (see the LICENSE.md file). If not, see
         <alias name="description" entity-alias="CHILD"/>
         <alias name="productId" entity-alias="PRODUCT"/>
         <alias name="productName" entity-alias="PRODUCT"/>
+        <alias name="productFromDate" field="salesIntroductionDate" entity-alias="PRODUCT"/>
+        <alias name="productThruDate" field="salesDiscontinuationDate" entity-alias="PRODUCT"/>
     </view-entity>
 
     <view-entity entity-name="ProductCategoryAndProducts" package="growerp.mobile.party.category">

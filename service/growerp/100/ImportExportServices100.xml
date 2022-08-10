@@ -91,9 +91,6 @@ along with this software (see the LICENSE.md file). If not, see
         <description>
             send products csv file
         </description>
-        <in-parameters>
-            <parameter name="classificationId"/>
-        </in-parameters>
         <actions>
             <set field="emailAddress" from="ec.user.userAccount.emailAddress"/>
             <set field="userAccount" from="ec.user.userAccount"/>
@@ -109,16 +106,14 @@ along with this software (see the LICENSE.md file). If not, see
         <description>
             Get Products information into a CSV file attachement
         </description>
-        <in-parameters>
-            <parameter name="classificationId"></parameter>
-        </in-parameters>
         <out-parameters>
             <parameter name="fileText"/>
         </out-parameters>
         <actions>
+            <script>logger.warn("getting products")</script>
             <service-call name="growerp.100.CatgProdServices100.get#Products"
-                in-map="[classificationId: classificationId]" out-map="context"/>
-            <set field="fileText" value=""/>
+               out-map="context"/>
+               <set field="fileText" value=""/>
             <script><![CDATA[
                 import org.apache.commons.csv.CSVPrinter
                 import org.apache.commons.csv.CSVFormat
@@ -137,9 +132,9 @@ along with this software (see the LICENSE.md file). If not, see
                                         item.price,
                                         item.requireInventory,
                                         item.assetCount,
-                                        item.categories[0].categoryName,
-                                        item.categories[1].categoryName,
-                                        item.categories[2].categoryName,
+                                        item.categories[0] ? item.categories[0].categoryName :'',
+                                        item.categories[1] ? item.categories[1].categoryName :'',
+                                        item.categories[2] ? item.categories[2].categoryName :'',
                                         )}
                 fileText = outSb.toString()
             ]]></script>
@@ -166,8 +161,9 @@ along with this software (see the LICENSE.md file). If not, see
                         <parameter name="useWarehouse" type="Boolean"/>
                         <parameter name="assetCount"/>
                         <parameter name="image"/>
-                    </parameter>                </parameter>
+                    </parameter>
                 </parameter>
+            </parameter>
             <parameter name="classificationId" required="true"/>
         </in-parameters>
         <actions>

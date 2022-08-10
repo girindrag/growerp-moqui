@@ -131,7 +131,7 @@ along with this software (see the LICENSE.md file). If not, see
                 <econdition field-name="listPrice" operator="is-not-null"/>
                 <date-filter from-field-name="productFromDate"
                     thru-field-name="productThruDate" ignore="productId"/>
-                <date-filter/><!-- price thrudate-->
+                <date-filter/><!-- product from/thrudate-->
                 <date-filter from-field-name="listPriceFromDate" thru-field-name="listPriceThruDate"/>
                 <date-filter from-field-name="priceFromDate" thru-field-name="priceThruDate"/>
                 <order-by field-name="productName"/>
@@ -302,19 +302,34 @@ along with this software (see the LICENSE.md file). If not, see
                 in-map="priceMap + [priceTypeEnumId: 'PptCurrent',
                                     price: product.price,
                                     ]"/>
+            <!-- related categories -->
             <if condition="product.categories">
                 <set field="productCategories" from="product.categories"/>
                 <else><!-- empty -->
                     <set field="productCategories" from="[]"/>
                 </else>
             </if>
-            <!-- connect to category; allProducts first-->
+            <!-- always connect product to category allProducts -->
             <entity-find entity-name="mantle.product.category.ProductCategory" list="catgs">
                 <econdition field-name="ownerPartyId" from="companyPartyId"/>
                 <econdition field-name="productCategoryTypeEnumId" value="PctRoot"/>
             </entity-find>
             <script>productCategories.add([categoryId: catgs[0].productCategoryId])</script>
+            <!-- add as members -->
             <iterate list="productCategories" entry="productCategory">
+                <!-- if no id present, get it via the name -->
+                <if condition="!productCategory.categoryId">
+                    <entity-find entity-name="mantle.product.category.ProductCategory" list="catgNames">
+                        <econdition field-name="ownerPartyId" from="companyPartyId"/>
+                        <econdition field-name="categoryName" from="productCategory.categoryName"/>
+                    </entity-find>
+                    <if condition="catgNames">
+                        <set field="productCategory.categoryId" from="catgNames[0].productCategoryId"/>
+                        <else>
+                            <continue/><!-- ignore when not found -->
+                        </else>
+                    </if>
+                </if>
                 <service-call name="create#mantle.product.category.ProductCategoryMember"
                     in-map="[productCategoryId: productCategory.categoryId,
                                 productId: productId,
