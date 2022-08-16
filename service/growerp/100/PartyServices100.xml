@@ -75,8 +75,9 @@ along with this software (see the LICENSE.md file). If not, see
                         ignore-if-empty="true"/>
                 <econdition field-name="roleTypeId" from="notRoleTypeId"
                        operator="not-equals" ignore-if-empty="true"/>
-                <econdition field-name="disabled" operator="not-equals" value="Y"/>
-                <order-by field-name="organizationName"/>
+                <econdition field-name="disabled" operator="not-equals" value="Y"
+                        or-null="true"/>
+                    <order-by field-name="organizationName"/>
             </entity-find>
             <set field="companies" from="[]" />
             <iterate list="parties" entry="party">
@@ -1524,34 +1525,58 @@ along with this software (see the LICENSE.md file). If not, see
             </entity-find>
             <if condition="stores">
                 <set field="productStore" from="stores[0]"/>
-                <return/>
-            </if>
+                <else>
+                    <service-call name="growerp.100.PartyServices100.createBasicInfo#Company"
+                        in-map="companyPartyId: companyPartyId, classificationId: classificationId"
+                        out-map="context"/>
+                </else>
+            </if> 
+        </actions>
+    </service>
+
+    <service verb="createBasicInfo" noun="Company">
+        <in-parameters>
+            <parameter name="companyPartyId" required="true"/>
+            <parameter name="classificationId"/>
+        </in-parameters>
+        <out-parameters>
+            <parameter name="productStore"/>
+            <parameter name="partyClassification"/>
+        </out-parameters>
+        <actions>
 
             <entity-find-one entity-name="mantle.party.Organization" value-field="company">
                 <field-map field-name="partyId" from="companyPartyId"/>
             </entity-find-one>
 
-            <!-- create inventory facility -->
-            <entity-find-one entity-name="mantle.facility.Facility" value-field="facility">
-                <field-map field-name="facilityId" value="DEFAULT_WH"/>
-            </entity-find-one>
-            <service-call name="create#mantle.facility.Facility"
-                in-map="facility + [
-                    pseudoId: null,
-                    facilityId: null,
-                    ownerPartyId: companyPartyId,
-                    facilityName: company.organizationName + ' Inventory']"
-                out-map="context"/>
-
-            <!-- facility default locations -->
-            <entity-find entity-name="mantle.facility.FacilityLocation" list="locs">
-                <econdition field-name="facilityId" value="DEFAULT_WH"/>
+            <!-- if required create inventory facility -->
+            <entity-find entity-name="mantle.facility.Facility" list="facExists">
+                <econdition field-name="ownerPartyId" from="companyPartyId"/>
             </entity-find>
-            <iterate list="locs" entry="loc">
-                <service-call name="create#mantle.facility.FacilityLocation"
-                    in-map="loc + [facilityId: facilityId]"/>
-            </iterate>
+            <if condition="!facExists">
+                <entity-find-one entity-name="mantle.facility.Facility" value-field="facility">
+                    <field-map field-name="facilityId" value="DEFAULT_WH"/>
+                </entity-find-one>
+                <service-call name="create#mantle.facility.Facility"
+                    in-map="facility + [
+                        pseudoId: null,
+                        facilityId: null,
+                        ownerPartyId: companyPartyId,
+                        facilityName: company.organizationName + ' Inventory']"
+                    out-map="context"/>
 
+                <!-- facility default locations -->
+                <entity-find entity-name="mantle.facility.FacilityLocation" list="locs">
+                    <econdition field-name="facilityId" value="DEFAULT_WH"/>
+                </entity-find>
+                <iterate list="locs" entry="loc">
+                    <service-call name="create#mantle.facility.FacilityLocation"
+                        in-map="loc + [facilityId: facilityId]"/>
+                </iterate>
+                <else>
+                    <set field="facilityId" from="facExists[0].facilityId"/>
+                </else>
+            </if>
             <!-- get currency -->
             <entity-find-one entity-name="mantle.ledger.config.PartyAcctgPreference"
                     value-field="aPref">
@@ -1590,40 +1615,48 @@ along with this software (see the LICENSE.md file). If not, see
                             wikiPageId: null]"/>
             </iterate>
 
-            <!-- create map for productStore -->
-            <set field="inMap" from="defProductStore + [
-                productStoreId: null,
-                organizationPartyId: companyPartyId,
-                storeDomain: classificationId,
-                inventoryFacilityId: facilityId,
-                storeName: company.organizationName,
-                defaultCurrencyUomId: aPref.baseCurrencyUomId,
-                wikiSpaceId: wikiSpaceId,
-                ]"/>
-            <if condition="classificationId == 'AppAdmin'">
-                <set field="inMap" from="inMap + [
-                requireInventory: 'N',
-                reservationOrderEnumId:'AsResOrdNoRes',
-                ]"/>
-            </if>
-            <if condition="classificationId == 'AppHotel'">
-                <set field="inMap" from="inMap + [
-                requireInventory: 'N',
-                reservationOrderEnumId:'AsResOrdNoRes',
-                ]"/>
-            </if>
-            <service-call name="create#mantle.product.store.ProductStore"
-                out-map="context" in-map="inMap" />
-
-            <!-- store shipping options -->
-            <entity-find entity-name="mantle.product.store.ProductStoreShipOption" list="options">
-                <econdition field-name="productStoreId" value="POPC_DEFAULT"/>
+            <entity-find entity-name="mantle.product.store.ProductStore" list="prodStoreExists">
+                <econdition field-name="organizationPartyId" from="companyPartyId"/>
+                <econdition field-name="productStoreId" operator="not-equals" value="POPC_DEFAULT"/>
             </entity-find>
-            <iterate list="options" entry="option">
-                <service-call name="create#mantle.product.store.ProductStoreShipOption"
-                    in-map="option + [productStoreId: productStoreId]"/>
-            </iterate>
+            <if condition="!prodStoreExists">
+                <!-- create map for productStore -->
+                <set field="inMap" from="defProductStore + [
+                    productStoreId: null,
+                    organizationPartyId: companyPartyId,
+                    storeDomain: classificationId,
+                    inventoryFacilityId: facilityId,
+                    storeName: company.organizationName,
+                    defaultCurrencyUomId: aPref.baseCurrencyUomId,
+                    wikiSpaceId: wikiSpaceId,
+                    ]"/>
+                <if condition="classificationId == 'AppAdmin'">
+                    <set field="inMap" from="inMap + [
+                    requireInventory: 'N',
+                    reservationOrderEnumId:'AsResOrdNoRes',
+                    ]"/>
+                </if>
+                <if condition="classificationId == 'AppHotel'">
+                    <set field="inMap" from="inMap + [
+                    requireInventory: 'N',
+                    reservationOrderEnumId:'AsResOrdNoRes',
+                    ]"/>
+                </if>
+                <service-call name="create#mantle.product.store.ProductStore"
+                    out-map="context" in-map="inMap" />
 
+                <!-- store shipping options -->
+                <entity-find entity-name="mantle.product.store.ProductStoreShipOption" list="options">
+                    <econdition field-name="productStoreId" value="POPC_DEFAULT"/>
+                </entity-find>
+                <iterate list="options" entry="option">
+                    <service-call name="create#mantle.product.store.ProductStoreShipOption"
+                        in-map="option + [productStoreId: productStoreId]"/>
+                </iterate>
+                <else>
+                    <set field="productStoreId" from="prodStoreExists[0].productStoreId"/>
+                </else>
+            </if>
             <!-- update website settings-->
             <set field="hostName" from="ec.web.getHostName(false)"/>
             <if condition="hostName == '10.0.2.2' || hostname == '127.0.0.1'">

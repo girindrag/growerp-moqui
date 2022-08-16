@@ -145,6 +145,9 @@ along with this software (see the LICENSE.md file). If not, see
                 <econdition field-name="ownerPartyId" from="companyPartyId"/>
                 <econdition field-name="productCategoryTypeEnumId" value="PctRoot"/>
             </entity-find>
+            <if condition="!catgs">
+                <return error="true" message="Internal data error; mandatory root category not found for company $companyPartyId"/>
+            </if>
             <iterate entry="product" list="productList">
                 <if condition="lastItem &amp;&amp; lastItem.productId != product.productId">
                     <set field="productOut.categories" from="categories"/>
@@ -196,7 +199,7 @@ along with this software (see the LICENSE.md file). If not, see
                         price: product.price ? product.price.toString() : null,
                         listPrice: product.listPrice ? product.listPrice.toString() : null,
                         useWarehouse: product.requireInventory == 'Y' ? true : false,
-                        assetCount: assetCount ? assetCount[0].totalAssets : null,
+                        assetCount: assetCount ? (int) assetCount[0].totalAssets : null,
                         image: imageFile]"/>
                 </if>
                 <if condition="product.categoryId &amp;&amp; 
@@ -898,6 +901,7 @@ along with this software (see the LICENSE.md file). If not, see
                 <set field="filter" value="%${filter}%"/></if>
             <if condition="search != null">
                 <set field="search" value="%${search}%"/></if>
+            <log message="=======companypartId: $companyPartyId"/>
             <entity-find  offset="start" limit="limit" list="groups"
                 entity-name="growerp.mobile.party.category.ProductCategoryParentsChildAndProducts">
                 <econdition field-name="ownerPartyId" from="companyPartyId"/>
