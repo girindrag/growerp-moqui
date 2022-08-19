@@ -1544,7 +1544,6 @@ along with this software (see the LICENSE.md file). If not, see
             <parameter name="partyClassification"/>
         </out-parameters>
         <actions>
-
             <entity-find-one entity-name="mantle.party.Organization" value-field="company">
                 <field-map field-name="partyId" from="companyPartyId"/>
             </entity-find-one>

@@ -748,34 +748,6 @@ along with this software (see the LICENSE.md file). If not, see
     </view-entity>
 
     <view-entity entity-name="ProductCategoryParentsAndChild" package="growerp.mobile.party.category">
-        <member-entity entity-alias="PARENT" entity-name="mantle.product.category.ProductCategory">
-            <entity-condition>
-                <econditions combine="or">
-                    <econdition field-name="productCategoryTypeEnumId" 
-                        value="PctRestaurant"/><!-- used in nativescript -->
-                    <econdition field-name="productCategoryTypeEnumId"
-                        value="PctRoot"/>
-                </econditions>
-            </entity-condition>
-        </member-entity>
-        <member-entity entity-alias="ROLLUP"
-            entity-name="mantle.product.category.ProductCategoryRollup" join-from-alias="PARENT">
-            <key-map field-name="productCategoryId"
-                related="parentProductCategoryId"/></member-entity>
-        <member-entity entity-alias="CHILD" join-from-alias="ROLLUP"
-            entity-name="mantle.product.category.ProductCategory">
-            <key-map field-name="productCategoryId"/></member-entity>
-        <alias name="parentProductCategoryId" entity-alias="ROLLUP"/>
-        <alias name="ownerPartyId" entity-alias="PARENT"/>
-        <alias name="fromDate" entity-alias="ROLLUP"/>
-        <alias name="thruDate" entity-alias="ROLLUP"/>
-        <alias name="sequenceNum" entity-alias="ROLLUP"/>
-        <alias name="productCategoryId" entity-alias="ROLLUP"/>
-        <alias name="categoryName" entity-alias="CHILD"/>
-        <alias name="description" entity-alias="CHILD"/>
-    </view-entity>
-
-    <view-entity entity-name="ProductCategoryParentsChildAndProducts" package="growerp.mobile.party.category">
         <member-entity entity-alias="PARENT"
             entity-name="mantle.product.category.ProductCategory"></member-entity>
         <member-entity entity-alias="ROLLUP"
@@ -785,16 +757,6 @@ along with this software (see the LICENSE.md file). If not, see
         <member-entity entity-alias="CHILD" join-from-alias="ROLLUP"
             entity-name="mantle.product.category.ProductCategory">
             <key-map field-name="productCategoryId"/></member-entity>
-        <member-entity entity-alias="MEMBER" join-from-alias="CHILD" join-optional="true"
-            entity-name="mantle.product.category.ProductCategoryMember">
-            <key-map field-name="productCategoryId"/></member-entity>
-        <member-entity entity-alias="PRODUCT" join-from-alias="MEMBER" join-optional="true"
-            entity-name="mantle.product.Product">
-            <key-map field-name="productId"/>
-            <entity-condition>
-            <date-filter from-field-name="productFromDate" thru-field-name="productThruDate"/>
-            </entity-condition>
-        </member-entity>
         <alias name="parentProductCategoryId" entity-alias="ROLLUP"/>
         <alias name="ownerPartyId" entity-alias="PARENT"/>
         <alias name="fromDate" entity-alias="ROLLUP"/>
@@ -803,47 +765,15 @@ along with this software (see the LICENSE.md file). If not, see
         <alias name="productCategoryId" entity-alias="ROLLUP"/>
         <alias name="categoryName" entity-alias="CHILD"/>
         <alias name="description" entity-alias="CHILD"/>
-        <alias name="productId" entity-alias="PRODUCT"/>
-        <alias name="productName" entity-alias="PRODUCT"/>
-        <alias name="productFromDate" field="salesIntroductionDate" entity-alias="PRODUCT"/>
-        <alias name="productThruDate" field="salesDiscontinuationDate" entity-alias="PRODUCT"/>
     </view-entity>
 
-    <view-entity entity-name="ProductCategoryAndProducts" package="growerp.mobile.party.category">
-        <member-entity entity-alias="PARENT" entity-name="mantle.product.category.ProductCategory">
-            <entity-condition>
-            <econdition field-name="productCategoryTypeEnumId" value="PctRestaurant"/>
-            </entity-condition>
-        </member-entity>
-        <member-entity entity-alias="ROLLUP" entity-name="mantle.product.category.ProductCategoryRollup" join-from-alias="PARENT">
-            <key-map field-name="productCategoryId" related="parentProductCategoryId"/>
-            <entity-condition><date-filter/></entity-condition></member-entity>
-        <member-entity entity-alias="CHILD" entity-name="mantle.product.category.ProductCategory" join-from-alias="ROLLUP">
-            <key-map field-name="productCategoryId"/></member-entity>
-        <member-entity entity-alias="CATGMEMBER" entity-name="mantle.product.category.ProductCategoryMember" join-from-alias="CHILD">
-            <key-map field-name="productCategoryId"/>
-            <entity-condition><date-filter from-field-name="memberFromDate" thru-field-name="memberThruDate"/></entity-condition></member-entity>
+    <view-entity entity-name="ProductCategoryMemberAndProduct" package="growerp.mobile.party.category">
+        <member-entity entity-alias="CATGMEMBER" entity-name="mantle.product.category.ProductCategoryMember"/>
         <member-entity entity-alias="PRODUCT" entity-name="mantle.product.Product" join-from-alias="CATGMEMBER">
             <key-map field-name="productId"/></member-entity>
-        <member-entity entity-alias="PRICE" entity-name="mantle.product.ProductPrice" join-from-alias="PRODUCT">
-            <key-map field-name="productId"/>
-            <entity-condition><econdition field-name="priceTypeEnumId" value="PptCurrent"/>
-            <date-filter from-field-name="priceFromDate" thru-field-name="priceThruDate"/></entity-condition></member-entity>
-        <alias name="parentProductCategoryId" entity-alias="ROLLUP"/>
-        <alias name="ownerPartyId" entity-alias="PARENT"/>
-        <alias name="fromDate" entity-alias="ROLLUP"/>
-        <alias name="thruDate" entity-alias="ROLLUP"/>
-        <alias name="memberFromDate" field="fromDate" entity-alias="ROLLUP"/>
-        <alias name="memberThruDate" field="thruDate" entity-alias="ROLLUP"/>
-        <alias name="sequenceNum" entity-alias="ROLLUP"/>
-        <alias name="productCategoryId" entity-alias="ROLLUP"/>
-        <alias name="categoryName" entity-alias="CHILD"/>
+        <alias name="productCategoryId" entity-alias="CATGMEMBER"/>
         <alias name="productId" entity-alias="PRODUCT"/>
         <alias name="productName" entity-alias="PRODUCT"/>
-        <alias name="priceFromDate" field="fromDate" entity-alias="PRICE"/>
-        <alias name="priceThruDate" field="thruDate" entity-alias="PRICE"/>
-        <alias name="priceTypeEnumId" entity-alias="PRICE"/>
-        <alias name="price" entity-alias="PRICE"/>
     </view-entity>
 
     <view-entity entity-name="OpportunityAndParties" package="growerp.crm">

@@ -852,24 +852,13 @@ along with this software (see the LICENSE.md file). If not, see
             <parameter name="search" default="null"/>
         </in-parameters>
         <out-parameters>
-            <parameter name="category" type="Map">
-                <parameter name="categoryId"/>
-                <parameter name="categoryName"/>
-                <parameter name="description"/>
-                <parameter name="image"/>
-                <parameter name="products" type="List">
-                    <parameter name="product" type="Map">
-                        <parameter name="productId"/>
-                        <parameter name="productName"/>
-                    </parameter>
-                </parameter>
-            </parameter>
             <parameter name="categories" type="List">
                 <parameter name="category" type="Map">
                     <parameter name="categoryId"/>
                     <parameter name="categoryName"/>
                     <parameter name="description"/>
                     <parameter name="image"/>
+                    <parameter name="nbrOfProducts"/>
                     <parameter name="products" type="List">
                         <parameter name="product" type="Map">
                             <parameter name="productId"/>
@@ -901,9 +890,8 @@ along with this software (see the LICENSE.md file). If not, see
                 <set field="filter" value="%${filter}%"/></if>
             <if condition="search != null">
                 <set field="search" value="%${search}%"/></if>
-            <log message="=======companypartId: $companyPartyId"/>
             <entity-find  offset="start" limit="limit" list="groups"
-                entity-name="growerp.mobile.party.category.ProductCategoryParentsChildAndProducts">
+                entity-name="growerp.mobile.party.category.ProductCategoryParentsAndChild">
                 <econdition field-name="ownerPartyId" from="companyPartyId"/>
                 <econdition field-name="parentProductCategoryId"
                     from="parentProductCategoryId"/>
@@ -923,58 +911,50 @@ along with this software (see the LICENSE.md file). If not, see
                 <order-by field-name="categoryName"/>
             </entity-find>
             <set field="categories" from="[]"/>
-            <set field="products" from="[]"/>
             <set field="lastItem" from="null"/>
             <iterate entry="group" list="groups">
-                <if condition="lastItem &amp;&amp; lastItem.productCategoryId != group.productCategoryId">
-                    <if condition="filter == null">
-                        <set field="groupOut.products" from="products"/>
-                        <set field="products" from="[]"/> 
-                        <script>categories.add(groupOut)</script>
-                        <else>
-                            <script>categories.add([
-                                    categoryId: group.productCategoryId,
-                                    categoryName: group.categoryName,
-                                        ])</script>
-                            <continue/>
-                        </else>
-                    </if>
+                <!-- number of products -->
+                <entity-find-count entity-name="mantle.product.category.ProductCategoryMember"
+                        count-field="nbrOfProducts">
+                    <econdition field-name="productCategoryId" from="group.productCategoryId"/>
+                    <date-filter/>
+                </entity-find-count>
+                <!-- content -->
+                <entity-find entity-name="mantle.product.category.ProductCategoryContent" list="contents">
+                    <econdition field-name="productCategoryId" from="group.productCategoryId"/>
+                    <econdition field-name="categoryContentTypeEnumId"
+                        from="categoryId? 'PcctImageMedium' : 'PcctImageThumbNail'" />
+                    <date-filter/>
+                </entity-find>
+                <if condition="contents">
+                    <service-call name="growerp.100.ImageServices100.download#Image"
+                        in-map="[contentLocation: contents[0].contentLocation]" out-map="context"/>
+                    <else>
+                        <set field="imageFile" from="null"/>
+                    </else>
                 </if>
-                <if condition="!lastItem || lastItem.productCategoryId != group.productCategoryId">
-                    <entity-find entity-name="mantle.product.category.ProductCategoryContent" list="contents">
-                        <econdition field-name="productCategoryId" from="group.productCategoryId"/>
-                        <econdition field-name="categoryContentTypeEnumId"
-                            from="categoryId? 'PcctImageMedium' : 'PcctImageThumbNail'" />
-                        <date-filter/>
-                    </entity-find>
-                    <if condition="contents">
-                        <service-call name="growerp.100.ImageServices100.download#Image"
-                            in-map="[contentLocation: contents[0].contentLocation]" out-map="context"/>
-                        <else>
-                            <set field="imageFile" from="null"/>
-                        </else>
-                    </if>
-                    <set field="groupOut" from="[
+                <!-- first 10 products -->
+                <entity-find entity-name="growerp.mobile.party.category.ProductCategoryMemberAndProduct"
+                        limit="10" list="productList">
+                    <econdition field-name="productCategoryId" from="group.productCategoryId"/>
+                </entity-find>
+                <set field="products" from="[]"/>
+                <iterate list="productList" entry="product">
+                    <script>products.add([productName: product.productName,
+                            productId: product.productId])
+                    </script>
+                </iterate>
+                <!-- output -->
+                <set field="groupOut" from="[
                         categoryId: group.productCategoryId,
                         categoryName: group.categoryName,
                         description: group.description,
+                        nbrOfProducts: nbrOfProducts,
+                        products: products,
                         image: imageFile,
                         ]"/>
-                </if>
-                <if condition="group.productId">
-                    <script>products.add([productId: group.productId,
-                            productName: group.productName])</script>
-                </if>
-                <set field="lastItem" from="group"/>
-            </iterate>
-            <if condition="lastItem">
-                <set field="groupOut.products" from="products"/>
                 <script>categories.add(groupOut)</script>
-            </if>
-            <if condition="categories &amp;&amp; categories.size() > 0">
-                <script>categories.sort{a, b -> 
-                    a.categoryName.compareToIgnoreCase(b.categoryName) } </script>
-            </if>
+            </iterate>
         </actions>
     </service>
 
@@ -1059,6 +1039,7 @@ along with this software (see the LICENSE.md file). If not, see
             <!-- get added category -->
             <service-call name="growerp.100.CatgProdServices100.get#ProductCategories"
                 in-map="[categoryId: productCategoryId]" out-map="context"/>
+            <set field="category" from="categories[0]"/>
             </actions>
     </service>
 
@@ -1128,6 +1109,7 @@ along with this software (see the LICENSE.md file). If not, see
             <!-- return category information -->
             <service-call name="growerp.100.CatgProdServices100.get#ProductCategories"
                 in-map="[categoryId: category.categoryId]" out-map="context"/>
+                <set field="category" from="categories[0]"/>
         </actions>
     </service>
 
@@ -1179,6 +1161,7 @@ along with this software (see the LICENSE.md file). If not, see
                     message="could not find rollup for category: ${category.categoryId}"/></else></if>
             <service-call name="growerp.100.CatgProdServices100.get#ProductCategories"
                 in-map="[categoryId: category.categoryId]" out-map="context"/>
+            <set field="category" from="categories[0]"/>
         </actions>
     </service>
 

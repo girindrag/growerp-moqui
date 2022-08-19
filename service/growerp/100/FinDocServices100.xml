@@ -184,6 +184,7 @@ along with this software (see the LICENSE.md file). If not, see
                 <parameter name="finDoc" type="Map">
                     <parameter name="docType"/>
                     <parameter name="sales" type="Boolean"/>
+                    <parameter name="id"/>
                     <parameter name="orderId"/>
                     <parameter name="shipmentId"/>
                     <parameter name="invoiceId"/>
@@ -244,6 +245,7 @@ along with this software (see the LICENSE.md file). If not, see
             <parameter name="finDoc" type="Map">
                 <parameter name="docType"/>
                 <parameter name="sales" type="Boolean"/>
+                <parameter name="id"/>
                 <parameter name="orderId"/>
                 <parameter name="shipmentId"/>
                 <parameter name="invoiceId"/>
@@ -418,6 +420,7 @@ along with this software (see the LICENSE.md file). If not, see
                         <service-call name="growerp.100.FinDocServices100.convert#StatusId"
                             in-map="[sales: sales, docType: docType, statusId: item.statusId]" out-map="context"/>
                         <set field="finDocOut" from="[
+                            id: item.orderId,
                             orderId: item.orderId,
                             paymentId: item.paymentId,
                             description: item.orderName,
@@ -538,6 +541,7 @@ along with this software (see the LICENSE.md file). If not, see
                             sales: sales,
                             orderId: item.orderId,
                             invoiceId: item.invoiceId,
+                            Id: item.invoiceId,
                             description: item.invoiceName,
                             statusId: convertedStatusId,
                             creationDate: item.invoiceDate
@@ -659,6 +663,7 @@ along with this software (see the LICENSE.md file). If not, see
                             orderId: item.orderId,
                             paymentInstrument: item.paymentInstrumentId.substring(2),
                             paymentId: item.paymentId,
+                            id: item.paymentId,
                             invoiceId: item.invoiceId ? item.invoiceId : item.forInvoiceId,
                             statusId: convertedStatusId,
                             creationDate: item.effectiveDate
@@ -779,6 +784,7 @@ along with this software (see the LICENSE.md file). If not, see
                             docType: docType,
                             sales: sales,
                             orderId: item.orderId,
+                            Id: item.shipmentId,
                             shipmentId: item.shipmentId,
                             statusId: convertedStatusId,
                             shipmentMethod: item.shipmentMethod,
@@ -864,6 +870,7 @@ along with this software (see the LICENSE.md file). If not, see
                             paymentId: item.paymentId,
                             invoiceId: item.invoiceId,
                             shipmentId: item.shipmentId,
+                            id: item.transactionId,
                             transactionId: item.transactionId,
                             statusId: convertedStatusId,
                             creationDate: item.transactionDate 

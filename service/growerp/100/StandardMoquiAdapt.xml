@@ -200,24 +200,22 @@ along with this software (see the LICENSE.md file). If not, see
         <in-parameters><parameter name="companyPartyId" required="true"/></in-parameters>
         <actions>
             <!-- add all categories to the product store root category-->
-            <service-call name="growerp.100.PartyServices100.verifyAndGet#ProductStore"
+            <service-call name="growerp.100.PartyServices100.createBasicInfo#Company"
                 in-map="[companyPartyId: companyPartyId, classificationId: 'AppAdmin']"
                 out-map="context"/>
-            <set field="productStoreId" from="productStore.productStoreId"/>
-            <service-call name="growerp.100.PartyServices100.createBasicInfo#Company"
-                in-map="[companyPartyId: companyPartyId, classificationId: 'AppAdmin']"/>
             <!-- get root category -->
             <entity-find-one entity-name="mantle.product.category.ProductCategory" value-field="rootCategory">
                 <field-map field-name="ownerPartyId" from="companyPartyId"/>
                 <field-map field-name="productCategoryTypeEnumId" value="PctRoot"/>
             </entity-find-one>
             <if condition="!rootCategory">
-                <log message="==========root category not found!"/>
+                <log message="====root category not found!"/>
             </if>
             <!-- get 'non root' categories -->
             <entity-find entity-name="mantle.product.category.ProductCategory" list="categories">
                 <econdition field-name="ownerPartyId" operator="not-equals" value="_NA_"/>
-                <econdition field-name="productCategoryTypeEnumId" operator="not-equals" value="PctRoot"/>
+                <econdition field-name="categoryName" operator="not-in" 
+                    from="['Deals','New','Featured','Home','Root','All Products Category']"/>
             </entity-find>
             <!-- add to top category if not connected -->
             <iterate list="categories" entry="category">
